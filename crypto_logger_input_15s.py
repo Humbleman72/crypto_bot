@@ -9,6 +9,6 @@
 # Library imports.
 from cryptocurrency.crypto_logger_input import Crypto_logger_input
 
-crypto_logger_input_15s = Crypto_logger_input(delay=4.7, interval='15s', buffer_size=2000, 
-                                              price_percent=0.5, volume_percent=0.0)
-crypto_logger_input_15s.start(append=True, roll=600)
+crypto_logger_input_15s = Crypto_logger_input(delay=4.7, interval='15s', buffer_size=3000, 
+                                              price_percent=1.0, volume_percent=0.0)
+crypto_logger_input_15s.start(append=True, roll=20)

@@ -34,3 +34,4 @@ def download_pair(client, symbol, interval='1m', period=60):
     data = data.astype(float)
     data['n_trades'] = data['n_trades'].astype(int)
     return data
+

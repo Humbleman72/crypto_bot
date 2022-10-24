@@ -40,7 +40,7 @@ def get_relative_volume_levels_smoothed_thresholded(data):
         rvol_indicator = ta.hma(rvol, length=14, talib=True)
         rvol_indicator = rvol_indicator.rename('relative_volume_levels_smoothed')
         #threshold = (ta.sma(rvol, length=100, talib=True) + ta.stdev(rvol, length=100, talib=True))
-        threshold = 2
+        threshold = 0
         rvol_thresholded = (rvol_indicator > threshold).iloc[-1]
     except:
         rvol_thresholded = False
@@ -216,10 +216,10 @@ def screen_one(pair):
     else:
         if get_not_square_wave_trigger_1(pair):
             if get_not_square_wave_trigger_2(pair):
-                #if frequency < frequency_1min:
-                #    return True
-                #else:
-                    #if get_rising_volume_trigger(pair):
-                #if get_heikin_ashi_trigger(pair):
-                return True
+                if frequency < frequency_1min:
+                    return True
+                else:
+                    if get_rising_volume_trigger(pair):
+                        if get_heikin_ashi_trigger(pair):
+                            return True
     return False

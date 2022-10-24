@@ -9,7 +9,7 @@
 # Library imports.
 from cryptocurrency.crypto_logger_output import Crypto_logger_output
 
-crypto_logger_output_12h = Crypto_logger_output(delay=36, 
+crypto_logger_output_12h = Crypto_logger_output(delay=222, 
                                                 interval_input='1h', 
                                                 interval='12h', 
                                                 buffer_size=100, 

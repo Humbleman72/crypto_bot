@@ -20,21 +20,21 @@ class Cryptocurrency_exchange:
     def get_exchange_info(self):
         def build_filters(symbols_info, index):
             try:
-                symbol = symbols_info['symbol'].iloc[index]
-                df = pd.DataFrame(symbols_info['filters'].iloc[index])
-                min_price = df[df['filterType'] == 'PRICE_FILTER']['minPrice'].iloc[0]
-                max_price = df[df['filterType'] == 'PRICE_FILTER']['maxPrice'].iloc[0]
-                tick_size = df[df['filterType'] == 'PRICE_FILTER']['tickSize'].iloc[0]
-                step_size = df[df['filterType'] == 'LOT_SIZE']['stepSize'].iloc[0]
-                multiplier_up = df[df['filterType'] == 'PERCENT_PRICE']['multiplierUp'].iloc[0]
-                multiplier_down = df[df['filterType'] == 'PERCENT_PRICE']['multiplierDown'].iloc[0]
+                symbol = symbols_info['symbol'].iat[index]
+                df = pd.DataFrame(symbols_info['filters'].iat[index])
+                min_price = df[df['filterType'] == 'PRICE_FILTER']['minPrice'].iat[0]
+                max_price = df[df['filterType'] == 'PRICE_FILTER']['maxPrice'].iat[0]
+                tick_size = df[df['filterType'] == 'PRICE_FILTER']['tickSize'].iat[0]
+                step_size = df[df['filterType'] == 'LOT_SIZE']['stepSize'].iat[0]
+                multiplier_up = df[df['filterType'] == 'PERCENT_PRICE']['multiplierUp'].iat[0]
+                multiplier_down = df[df['filterType'] == 'PERCENT_PRICE']['multiplierDown'].iat[0]
                 df = pd.DataFrame([[symbol, min_price, max_price, tick_size, step_size, multiplier_up, multiplier_down]], 
                                   columns=['symbol', 'min_price', 'max_price', 'tick_size', 'step_size', 'multiplier_up', 'multiplier_down'])
             except Exception as e:
                 df = None
             return df
         symbols_info = self.client.get_exchange_info()
-        symbols_info = pd.DataFrame(pd.DataFrame([symbols_info])['symbols'].iloc[0])
+        symbols_info = pd.DataFrame(pd.DataFrame([symbols_info])['symbols'].iat[0])
         symbols_info = symbols_info[symbols_info['status'] == 'TRADING']
         symbols_info = symbols_info[symbols_info['isSpotTradingAllowed']]
         symbols_info = symbols_info[symbols_info['quoteOrderQtyMarketAllowed']]

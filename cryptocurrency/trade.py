@@ -30,7 +30,7 @@ def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset
         pair_exchange_info = exchange_info[exchange_info['symbol'] == pair].iloc[0]
         tick_size = float(pair_exchange_info['tick_size'])
         step_size = float(pair_exchange_info['step_size'])
-        precision = pair_exchange_info['quotePrecision']
+        precision = pair_exchange_info['quote_precision']
         coins_available = float(coins_available) - subtract * tick_size
         quantity = round_step_size(quantity=coins_available, step_size=tick_size)
         quantity = compact_float_string(float(quantity), precision)

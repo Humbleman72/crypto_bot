@@ -4,9 +4,12 @@
 # By:          Samuel Duclos
 # For:         Myself
 # Description: This file handles python-binance global exchange info.
+
+# Library imports.
 from os import mkdir
 from os.path import exists, join
 import pandas as pd
+
 class Cryptocurrency_exchange:
     def __init__(self, client=None, directory='crypto_logs'):
         self.client, self.info_path = client, join('crypto_logs', 'crypto_exchange_info.txt')
@@ -17,6 +20,7 @@ class Cryptocurrency_exchange:
         else:
             self.get_exchange_info()
             self.info.to_csv(self.info_path)
+
     def get_exchange_info(self):
         def build_filters(symbols_info, index):
             try:
@@ -48,3 +52,8 @@ class Cryptocurrency_exchange:
         df = df.set_index('symbol')
         symbols_info = pd.concat([symbols_info, df], axis='columns')
         self.info = symbols_info.drop(columns=['symbol', 'filters']).reset_index('symbol')
+        self.info = self.info.rename(columns={'baseAsset': 'base_asset', 'baseAssetPrecision': 'base_asset_precision', 'quoteAsset': 'quote_asset', 
+                                              'quotePrecision': 'quote_precision', 'quoteAssetPrecision': 'quote_asset_precision', 
+                                              'baseCommissionPrecision': 'base_asset_commission', 
+                                              'quoteCommissionPrecision': 'quote_commission_precision', 
+                                              'allowTrailingStop': 'allow_trailing_stop', 'cancelReplaceAllowed': 'cancel_replace_allowed'})

@@ -12,8 +12,8 @@ import pandas as pd
 def get_assets_from_pair(pair, exchange_info):
      try:
          pair_info = exchange_info[exchange_info['symbol'] == pair]
-         base_asset = pair_info['baseAsset'].iat[-1]
-         quote_asset = pair_info['quoteAsset'].iat[-1]
+         base_asset = pair_info['base_asset'].iat[-1]
+         quote_asset = pair_info['quote_asset'].iat[-1]
          return base_asset, quote_asset
      except Exception as e:
          print(e)
@@ -34,16 +34,16 @@ def get_quote_asset_from_pair(pair, exchange_info):
         base_asset, quote_asset = asset
     return quote_asset
 
-def get_connected_assets(asset, conversion_table):
-    connected_base_assets = conversion_table['base_asset'] == asset
-    connected_base_assets = conversion_table[connected_base_assets]
+def get_connected_assets(asset, exchange_info):
+    connected_base_assets = exchange_info['base_asset'] == asset
+    connected_base_assets = exchange_info[connected_base_assets]
     connected_base_assets = connected_base_assets['quote_asset'].tolist()
-    connected_quote_assets = conversion_table['quote_asset'] == asset
-    connected_quote_assets = conversion_table[connected_quote_assets]
+    connected_quote_assets = exchange_info['quote_asset'] == asset
+    connected_quote_assets = exchange_info[connected_quote_assets]
     connected_quote_assets = connected_quote_assets['base_asset'].tolist()
     return sorted(list(set(connected_base_assets + connected_quote_assets)))
 
-def get_shortest_pair_path_between_assets(from_asset, to_asset, conversion_table):
+def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info):
     def get_shortest_path_between_assets():
         path_list = [[from_asset]]
         path_index = 0
@@ -53,7 +53,7 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, conversion_table
         while path_index < len(path_list):
             current_path = path_list[path_index]
             last_node = current_path[-1]
-            next_nodes = get_connected_assets(last_node, conversion_table=conversion_table)
+            next_nodes = get_connected_assets(last_node, exchange_info=exchange_info)
             if to_asset in next_nodes:
                 current_path.append(to_asset)
                 return current_path
@@ -66,15 +66,15 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, conversion_table
             path_index += 1
         return []
     def get_pair_from_assets(from_asset, to_asset):
-        from_asset_is_base = conversion_table['base_asset'] == from_asset
-        from_asset_is_quote = conversion_table['quote_asset'] == from_asset
-        to_asset_is_base = conversion_table['base_asset'] == to_asset
-        to_asset_is_quote = conversion_table['quote_asset'] == to_asset
+        from_asset_is_base = exchange_info['base_asset'] == from_asset
+        from_asset_is_quote = exchange_info['quote_asset'] == from_asset
+        to_asset_is_base = exchange_info['base_asset'] == to_asset
+        to_asset_is_quote = exchange_info['quote_asset'] == to_asset
         from_asset_is_base_and_to_asset_is_quote = from_asset_is_base & to_asset_is_quote
         from_asset_is_quote_and_to_asset_is_base = from_asset_is_quote & to_asset_is_base
         pair = from_asset_is_base_and_to_asset_is_quote | from_asset_is_quote_and_to_asset_is_base
         if pair.any():
-            pair = conversion_table[pair]
+            pair = exchange_info[pair]
             base_asset = pair['base_asset'].iat[0]
             quote_asset = pair['quote_asset'].iat[0]
             return base_asset, quote_asset
@@ -89,19 +89,93 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, conversion_table
         shortest_path = shortest_path[1:]
     return pairs
 
-def convert_price(size, from_asset, to_asset, conversion_table):
-    size = float(size)
+def convert_price(size, from_asset, to_asset, conversion_table, exchange_info):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                           to_asset=to_asset, 
-                                                          conversion_table=conversion_table)
+                                                          exchange_info=exchange_info)
     for (base_asset, quote_asset) in shortest_path:
         to_asset = quote_asset if from_asset == base_asset else base_asset
+        size = float(size)
         pair = base_asset + quote_asset
         connection = conversion_table[conversion_table['symbol'] == pair]
         price = connection['close'].iat[0]
         size = size * price if base_asset == from_asset else size / price
         from_asset = to_asset
     return size
+
+def convert_ohlcv(from_asset, to_asset, conversion_table, exchange_info):
+    shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
+                                                          to_asset=to_asset, 
+                                                          exchange_info=exchange_info)
+    base_asset, quote_asset = shortest_path[0]
+    to_asset = quote_asset if from_asset == base_asset else base_asset
+    pair = base_asset + quote_asset
+    size = conversion_table[pair].copy()
+    size = size.astype(float)
+    size['quote_volume'] = size['quote_volume'] / size['close']
+    for (base_asset, quote_asset) in shortest_path[1:]:
+        to_asset = quote_asset if from_asset == base_asset else base_asset
+        size = size.astype(float)
+        pair = base_asset + quote_asset
+        connection = conversion_table[pair]
+        if base_asset == from_asset:
+            size['open'] = size['open'] * connection['open']
+            size['high'] = size['close'] * connection['high']
+            size['low'] = size['close'] * connection['low']
+            size['close'] = size['close'] * connection['close']
+            size['base_volume'] = size['close'] * connection['base_volume']
+            size['quote_volume'] = size['close'] * connection['quote_volume']
+        else:
+            size['open'] = size['open'] / connection['open']
+            size['high'] = size['close'] / connection['high']
+            size['low'] = size['close'] / connection['low']
+            size['close'] = size['close'] / connection['close']
+            size['base_volume'] = size['close'] / connection['base_volume']
+            size['quote_volume'] = size['close'] / connection['quote_volume']
+        from_asset = to_asset
+    return size.rename(columns={'open': 'open_' + to_asset, 
+                                'high': 'high_' + to_asset, 
+                                'low': 'low_' + to_asset, 
+                                'close': 'close_' + to_asset, 
+                                'base_volume': 'base_volume_' + to_asset, 
+                                'quote_volume': 'quote_volume_' + to_asset})
+
+'''
+def convert_ohlcvs(from_asset, to_asset, conversion_table, exchange_info):
+    results = conversion_table.copy()
+    
+    symbols = conversion_table.get_level_values(0).tolist()
+    assets = [get_base_asset_from_pair(symbol, exchange_info) for symbol in symbols]
+    for symbol in symbols:
+        shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
+                                                              to_asset=to_asset, 
+                                                              exchange_info=exchange_info)
+        base_asset, quote_asset = shortest_path[0]
+        to_asset = quote_asset if from_asset == base_asset else base_asset
+        size = size.astype(float)
+        pair = base_asset + quote_asset
+        size = conversion_table[pair].copy()
+        for (base_asset, quote_asset) in shortest_path[1:]:
+            to_asset = quote_asset if from_asset == base_asset else base_asset
+            size = size.astype(float)
+            pair = base_asset + quote_asset
+            connection = conversion_table[pair]
+            if base_asset == from_asset:
+                size['open'] = size['open'] * connection['open']
+                size['high'] = size['close'] * connection['high']
+                size['low'] = size['close'] * connection['low']
+                size['close'] = size['close'] * connection['close']
+                size['volume'] = size['close'] * connection['volume']
+            else:
+                size['open'] = size['open'] / connection['open']
+                size['high'] = size['close'] / connection['high']
+                size['low'] = size['close'] / connection['low']
+                size['close'] = size['close'] / connection['close']
+                size['volume'] = size['close'] / connection['volume']
+            from_asset = to_asset
+        results[symbol] = size
+    return results
+'''
 
 def select_asset_with_biggest_wallet(client, conversion_table):
     def get_account_balances():

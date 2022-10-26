@@ -43,9 +43,9 @@ class Crypto_logger_input(Crypto_logger_base):
 
     def filter_movers(self, dataset, count=1000, price_percent=5.0, volume_percent=0.0):
         dataset = dataset.reset_index()
-        dataset[['priceChangePercent', 'rolling_quote_volume']] = \
-            dataset[['priceChangePercent', 'rolling_quote_volume']].astype(float)
-        dataset['last_price_move'] = dataset['priceChangePercent'].copy()
+        dataset[['price_change_percent', 'rolling_quote_volume']] = \
+            dataset[['price_change_percent', 'rolling_quote_volume']].astype(float)
+        dataset['last_price_move'] = dataset['price_change_percent'].copy()
         dataset['last_volume_move'] = dataset['rolling_quote_volume'].copy()
         movers = dataset.groupby(['symbol'])
         dataset = dataset.drop(columns=['last_price_move', 'last_volume_move'])
@@ -97,13 +97,10 @@ class Crypto_logger_input(Crypto_logger_base):
         return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
 
     def prepare_downsampling(self, dataset):
-        dataset['closeTime'] /= 1000
-        dataset['openTime'] /= 1000
-        dataset['openTime'] = \
-            dataset['openTime'].apply(datetime.datetime.fromtimestamp)
-        dataset['closeTime'] = \
-            dataset['closeTime'].apply(datetime.datetime.fromtimestamp)
-        dataset['date'] = pd.DatetimeIndex(dataset['closeTime']).round(self.interval)
+        dataset['close_time'] /= 1000
+        dataset['close_time'] = \
+            dataset['close_time'].apply(datetime.datetime.fromtimestamp)
+        dataset['date'] = pd.DatetimeIndex(dataset['close_time']).round(self.interval)
         return dataset.set_index('date').sort_index()
 
     def get(self):

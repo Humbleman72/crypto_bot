@@ -26,6 +26,8 @@ def add_rolling_volumes(df):
     return df
 
 def recalculate_volumes(df):
+    #def do_sum(s):
+    #    return np.convolve(s, np.array([1, 0]), 'same')
     df.iloc[:,df.columns.get_level_values(1) == 'base_volume'] = \
         df.xs('rolling_base_volume', axis=1, level=1).diff(1) + \
         df.xs('base_volume', axis=1, level=1).shift(1440)

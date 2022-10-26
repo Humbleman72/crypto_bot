@@ -200,16 +200,22 @@ def screen_one(pair):
         pair['volume'] = pair['rolling_base_volume'].copy()
     else:
         pair['volume'] = pair['base_volume'].copy()
-    if frequency == frequency_30min:
+    if frequency == frequency_1min:
         if get_not_square_wave_trigger_1(pair):
             if get_not_square_wave_trigger_2(pair):
-                #if get_bullish_price_trigger(pair):
-                #if get_heikin_ashi_trigger(pair):
-                if get_renko_trigger(pair, compress=False, 
-                                     direction_type='long', 
-                                     trigger_type='simple', 
-                                     method='atr', plot=False):
-                    return True
+                if get_bullish_price_trigger(pair):
+                    if get_rising_volume_trigger(pair):
+                        if get_heikin_ashi_trigger(pair):
+                            return True
+    elif frequency == frequency_30min:
+        if get_not_square_wave_trigger_1(pair):
+            if get_not_square_wave_trigger_2(pair):
+                if get_heikin_ashi_trigger(pair):
+                    if get_renko_trigger(pair, compress=False, 
+                                         direction_type='long', 
+                                         trigger_type='simple', 
+                                         method='atr', plot=False):
+                        return True
     elif frequency == frequency_1h:
         if get_relative_volume_levels_smoothed_thresholded(pair):
             return True

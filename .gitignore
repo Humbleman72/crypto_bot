@@ -132,7 +132,6 @@ dmypy.json
 *.csv
 *.zip
 crypto_logs/
-install/
 
 # Credentials
 *keys.txt*

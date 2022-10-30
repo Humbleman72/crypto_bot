@@ -7,10 +7,15 @@
 # Description: Populate OHLCV DataFrames from the Binance API.
 
 # Library imports.
+from cryptocurrency.authentication import Cryptocurrency_authenticator
+from cryptocurrency.exchange import Cryptocurrency_exchange
+from cryptocurrency.conversion import convert_ohlcvs_from_pairs_to_assets
+from cryptocurrency.conversion_table import get_conversion_table
 from cryptocurrency.ohlcvs import download_pairs
-from cryptocurrency.volume_conversion import add_rolling_volumes
 from cryptocurrency.resampling import resample
+from cryptocurrency.volume_conversion import add_rolling_volumes
 from tqdm import tqdm
+import pandas as pd
 
 # Function definitions.
 def bootstrap_loggers(client, assets, intervals=None, pairs=None, 
@@ -22,9 +27,14 @@ def bootstrap_loggers(client, assets, intervals=None, pairs=None,
     if len(intervals) > 1:
         intervals = intervals[1:] 
     log_file = 'crypto_logs/crypto_output_log_{}.txt'
+    authenticator = Cryptocurrency_authenticator(use_keys=False, testnet=False)
+    client = authenticator.spot_client
+    exchange = Cryptocurrency_exchange(client=client, directory='crypto_logs')
+    exchange_info = exchange.info
     pairs[base_interval] = download_pairs(client=client, assets=assets, 
                                           interval=download_interval, period=period, 
                                           second_period=second_period)
+    pairs[base_interval] = convert_ohlcvs_from_pairs_to_assets(pairs[base_interval], exchange_info)
     pairs[base_interval] = add_rolling_volumes(pairs[base_interval])
     pairs[base_interval].to_csv(log_file.format(base_interval))
     if len(intervals) > 0:

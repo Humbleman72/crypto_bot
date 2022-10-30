@@ -110,6 +110,7 @@ def convert_price(size, from_asset, to_asset, conversion_table, exchange_info):
         from_asset = to_asset
     return size
 
+'''
 def convert_ohlcv(from_asset, to_asset, conversion_table, exchange_info):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                           to_asset=to_asset, 
@@ -140,6 +141,7 @@ def convert_ohlcv(from_asset, to_asset, conversion_table, exchange_info):
     size.loc[:, ['base_volume', 'quote_volume']] = \
         size.loc[:, ['base_volume', 'quote_volume']].fillna(0)
     return size.fillna(method='pad')
+'''
 
 def convert_ohlcvs(to_asset, conversion_table, exchange_info):
     def convert_ohlcv_prices(from_asset, to_asset, conversion_table, exchange_info):
@@ -268,6 +270,26 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
                                                      'base_volume', 'quote_volume']]
     conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 3)
     conversion_table_mixed = conversion_table_mixed[['not_inverted', 'inverted']]
+    conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 3)
+    conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 1)
+    conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(1, 2)
+    assets = conversion_table_mixed.columns.get_level_values(0).unique().tolist()
+    new_columns = []
+    for asset in tqdm(assets, unit=' asset'):
+        symbols = conversion_table_mixed[asset].columns.get_level_values(0)
+        trading_base_volume = \
+            conversion_table_mixed.loc[:, (asset, slice(None), 'base_volume')].sum(axis='columns')
+        trading_quote_volume = \
+            conversion_table_mixed.loc[:, (asset, slice(None), 'quote_volume')].sum(axis='columns')
+        new_columns.append(symbols[0])
+        for symbol in symbols:
+            conversion_table_mixed.loc[:, (asset, symbol, 'base_volume')] = trading_base_volume
+            conversion_table_mixed.loc[:, (asset, symbol, 'quote_volume')] = trading_quote_volume
+    conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 1)
+    conversion_table_mixed = conversion_table_mixed[new_columns]
+    conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 3)
+    conversion_table_mixed.columns = conversion_table_mixed.columns.droplevel(3)
+    conversion_table_mixed = conversion_table_mixed['not_inverted']
     return conversion_table_mixed
 
 def select_asset_with_biggest_wallet(client, conversion_table):

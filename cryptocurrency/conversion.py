@@ -110,7 +110,6 @@ def convert_price(size, from_asset, to_asset, conversion_table, exchange_info):
         from_asset = to_asset
     return size
 
-'''
 def convert_ohlcv(from_asset, to_asset, conversion_table, exchange_info):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                           to_asset=to_asset, 
@@ -149,13 +148,12 @@ def convert_ohlcvs(to_asset, conversion_table, exchange_info):
                                                               exchange_info=exchange_info)
         base_asset, quote_asset = shortest_path[0]
         to_asset = quote_asset if from_asset == base_asset else base_asset
-        pair = base_asset + quote_asset
-        size = conversion_table[pair].copy()
-        size['quote_volume'] = size['quote_volume'] / size['close']
+        symbol = base_asset + quote_asset
+        size = conversion_table[symbol].copy()
         for (base_asset, quote_asset) in shortest_path[1:]:
             to_asset = quote_asset if from_asset == base_asset else base_asset
-            pair = base_asset + quote_asset
-            connection = conversion_table[pair]
+            symbol = base_asset + quote_asset
+            connection = conversion_table[symbol]
             if base_asset == from_asset:
                 size['open'] = size['open'] * connection['open']
                 size['high'] = size['close'] * connection['high']
@@ -168,35 +166,109 @@ def convert_ohlcvs(to_asset, conversion_table, exchange_info):
                 size['close'] = size['close'] / connection['close']
             from_asset = to_asset
         return size
-    def convert_ohlcv_volumes(symbol, conversion_table, exchange_info):
+    def convert_ohlcv_volumes(symbol, price_conversion_table, 
+                              volume_conversion_table, exchange_info):
         from_asset = get_base_asset_from_pair(symbol, exchange_info)
-        size = conversion_table[symbol].copy()
-        size['base_volume'] = size['close'] * size['base_volume']
-        size['quote_volume'] = size['close'] * size['quote_volume']
-        size.replace([float('inf'), float('-inf')], float('nan'), inplace=True)
-        size.loc[:, ['base_volume', 'quote_volume']] = \
-            size.loc[:, ['base_volume', 'quote_volume']].fillna(0)
-        return size.fillna(method='pad')
-    def convert_ohlcv_prices_helper(symbol):
+        price_size = price_conversion_table[symbol].copy()
+        volume_size = volume_conversion_table[symbol].copy()
+        volume_size['quote_volume'] = volume_size['quote_volume'] / volume_size['close']
+        price_size['base_volume'] = price_size['close'] * volume_size['base_volume']
+        price_size['quote_volume'] = price_size['close'] * volume_size['quote_volume']
+        price_size.replace([float('inf'), float('-inf')], float('nan'), inplace=True)
+        price_size.loc[:, ['base_volume', 'quote_volume']] = \
+            price_size.loc[:, ['base_volume', 'quote_volume']].fillna(0)
+        return price_size.fillna(method='pad')
+    def convert_ohlcv_prices_helper(symbol, size):
         from_asset = get_base_asset_from_pair(symbol, exchange_info)
         if from_asset == to_asset:
-            size = conversion_table[symbol].copy()
-            size['quote_volume'] = size['quote_volume'] / size['close']
+            size = size[symbol].copy()
         else:
-            size = convert_ohlcv_prices(from_asset, to_asset, 
-                                        conversion_table, exchange_info)
+            size = convert_ohlcv_prices(from_asset, to_asset, size, exchange_info)
         return size
-    conversion_table = conversion_table.astype(float).copy()
-    symbols = conversion_table.columns.get_level_values(0).unique().tolist()
-    conversion_table = [convert_ohlcv_prices_helper(symbol) 
-                        for symbol in tqdm(symbols, unit=' pair conversion')]
-    conversion_table = named_pairs_to_df(symbols, conversion_table)
-    conversion_table = [convert_ohlcv_volumes(symbol, conversion_table, 
-                                              exchange_info) 
-                        for symbol in tqdm(symbols, unit=' pair conversion')]
-    conversion_table = named_pairs_to_df(symbols, conversion_table)
-    return conversion_table
-'''
+    volume_conversion_table = conversion_table.astype(float).copy()
+    price_conversion_table = conversion_table.astype(float).copy()
+    symbols = volume_conversion_table.columns.get_level_values(0).unique().tolist()
+    price_conversion_table = [convert_ohlcv_prices_helper(symbol, 
+                                                          price_conversion_table) 
+                              for symbol in tqdm(symbols, unit=' pair conversion')]
+    price_conversion_table = named_pairs_to_df(symbols, price_conversion_table)
+    volume_conversion_table = [convert_ohlcv_volumes(symbol, 
+                                                     price_conversion_table, 
+                                                     volume_conversion_table, 
+                                                     exchange_info) 
+                               for symbol in tqdm(symbols, unit=' pair conversion')]
+    volume_conversion_table = named_pairs_to_df(symbols, volume_conversion_table)
+    return volume_conversion_table
+
+def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
+    def add_base_asset_level_to_pairs(df, exchange_info):
+        def named_pairs_to_5dim_df(symbols, pairs):
+            df = pd.DataFrame()
+            column_names = pairs[0].columns.tolist()
+            for (symbol, pair) in tqdm(zip(symbols, pairs), unit=' named pair'):
+                columns = [('not_inverted', get_base_asset_from_pair(symbol, exchange_info), 
+                            symbol, column) for column in column_names]
+                pair.columns = pd.MultiIndex.from_tuples(
+                    columns, names=['is_inverted', 'asset', 'symbol', 'pair']
+                )
+                df = pd.concat([df, pair], axis='columns')
+            return df
+        df = df.astype(float).copy()
+        symbols = df.columns.get_level_values(0).unique().tolist()
+        df = [df[symbol] for symbol in tqdm(symbols, unit=' pair')]
+        return named_pairs_to_5dim_df(symbols, df)
+    def add_quote_asset_level_to_pairs_and_reverse(df, exchange_info):
+        def invert_symbol(symbol, exchange_info):
+            base_asset, quote_asset = get_assets_from_pair(symbol, exchange_info)
+            return quote_asset + base_asset
+        def named_pairs_to_5dim_df(symbols, pairs):
+            df = pd.DataFrame()
+            column_names = pairs[0].columns.tolist()
+            for (symbol, pair) in tqdm(zip(symbols, pairs), unit=' named pair'):
+                columns = [('inverted', get_quote_asset_from_pair(symbol, exchange_info), 
+                            invert_symbol(symbol, exchange_info), column) 
+                           for column in column_names]
+                pair.columns = pd.MultiIndex.from_tuples(
+                    columns, names=['is_inverted', 'asset', 'symbol', 'pair']
+                )
+                df = pd.concat([df, pair], axis='columns')
+            return df
+        df = df.astype(float).copy()
+        symbols = df.columns.get_level_values(0).unique().tolist()
+        df = [df[symbol] for symbol in tqdm(symbols, unit=' pair')]
+        return named_pairs_to_5dim_df(symbols, df)
+    def invert_pairs(conversion_table, exchange_info):
+        def invert_symbol(symbol, exchange_info):
+            base_asset, quote_asset = get_assets_from_pair(symbol, exchange_info)
+            return quote_asset + base_asset
+        conversion_table_swapped = conversion_table.copy()
+        conversion_table_swapped.columns = \
+            conversion_table_swapped.columns.swaplevel(0, 1)
+        conversion_table_swapped.loc[:, ['open', 'high', 'low', 'close', 
+                                         'base_volume', 'quote_volume']] = \
+            conversion_table_swapped.loc[:, ['open', 'high', 'low', 'close', 
+                                             'quote_volume', 'base_volume']].values
+        conversion_table_swapped.loc[:, ['open', 'high', 'low', 'close']] = \
+            1 / conversion_table_swapped.loc[:, ['open', 'high', 'low', 'close']]
+        conversion_table_swapped.columns = \
+            conversion_table_swapped.columns.swaplevel(0, 1)
+        conversion_table_swapped = conversion_table_swapped.astype(float).copy()
+        symbols = conversion_table_swapped.columns.get_level_values(0).unique().tolist()
+        return add_quote_asset_level_to_pairs_and_reverse(conversion_table_swapped, 
+                                                          exchange_info)
+    to_asset = 'USDT'
+    conversion_table = convert_ohlcvs(to_asset, conversion_table, exchange_info)
+    conversion_table_swapped = invert_pairs(conversion_table, exchange_info)
+    conversion_table = add_base_asset_level_to_pairs(conversion_table, exchange_info)
+    conversion_table_mixed = pd.concat([conversion_table, conversion_table_swapped], 
+                                       join='outer', axis='columns')
+    conversion_table_mixed = conversion_table_mixed.sort_index(axis='columns')
+    conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 3)
+    conversion_table_mixed = conversion_table_mixed[['open', 'high', 'low', 'close', 
+                                                     'base_volume', 'quote_volume']]
+    conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 3)
+    conversion_table_mixed = conversion_table_mixed[['not_inverted', 'inverted']]
+    return conversion_table_mixed
 
 def select_asset_with_biggest_wallet(client, conversion_table):
     def get_account_balances():

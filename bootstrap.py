@@ -20,7 +20,8 @@ def main():
     client = authenticator.spot_client
     exchange = Cryptocurrency_exchange(client=client, directory='crypto_logs')
     exchange_info = exchange.info
-    conversion_table = get_conversion_table(client=client, exchange_info=exchange_info)
+    conversion_table = get_conversion_table(client=client, exchange_info=exchange_info, 
+                                            as_pair=True)
     assets = get_new_tickers(conversion_table=conversion_table)
 
     directory = 'crypto_logs'

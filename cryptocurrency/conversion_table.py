@@ -10,7 +10,7 @@
 from cryptocurrency.conversion import convert_price, get_base_asset_from_pair, get_quote_asset_from_pair
 from pandas import concat, DataFrame
 
-def get_conversion_table(client, exchange_info):
+def get_conversion_table(client, exchange_info, as_pair=False):
     """
     Fetches and prepares data used to calculate prices, volumes and other stats.
     :param client: object from python-binance useful for calling client.get_ticker().
@@ -193,42 +193,44 @@ def get_conversion_table(client, exchange_info):
     conversion_table[['traded_bid_ask_change_percent', 'traded_bid_ask_volume_percent']] *= 100
 
     conversion_table = conversion_table[~conversion_table['is_shorted']]
-    #conversion_table = \
-    #    conversion_table[['symbol', 'base_asset', 'quote_asset', 'is_shorted', 'price_change_percent', 
-    #                      'weighted_average_price', 'open', 'high', 'low', 'close', 'close_shifted', 
-    #                      'last_volume', 'bid_price', 'bid_volume', 'ask_price', 'ask_volume', 
-    #                      'close_time', 'last_ID', 'count', 'rolling_base_volume', 'rolling_quote_volume', 
-    #                      'importance', 'USDT_price', 'rolling_USDT_base_volume', 'rolling_USDT_quote_volume', 
-    #                      'USDT_bid_price', 'USDT_ask_price', 'USDT_bid_volume', 'USDT_ask_volume', 
-    #                      'rolling_traded_volume', 'traded_bid_volume', 'traded_ask_volume', 'traded_price', 
-    #                      'traded_bid_price', 'traded_ask_price', 'bid_ask_change_percent', 
-    #                      'bid_ask_volume_percent', 'traded_bid_ask_change_percent', 
-    #                      'traded_bid_ask_volume_percent']]
-    conversion_table = \
-        conversion_table[['base_asset', 'price_change_percent', 'close_time', 'last_ID', 'count', 
-                          'rolling_traded_volume', 'traded_bid_volume', 'traded_ask_volume', 
-                          'traded_price', 'traded_bid_price', 'traded_ask_price', 
-                          'traded_bid_ask_change_percent', 'traded_bid_ask_volume_percent']]
-    conversion_table['rolling_quote_volume'] = conversion_table['rolling_traded_volume'].copy()
-    conversion_table = \
-        conversion_table.rename(columns={'rolling_traded_volume': 'rolling_base_volume', 
-                                         'traded_bid_volume': 'bid_volume', 
-                                         'traded_ask_volume': 'ask_volume', 
-                                         'traded_price': 'close', 
-                                         'traded_bid_price': 'bid_price', 
-                                         'traded_ask_price': 'ask_price', 
-                                         'traded_bid_ask_change_percent': 'bid_ask_change_percent', 
-                                         'traded_bid_ask_volume_percent': 'bid_ask_volume_percent'})
-    conversion_table['symbol'] = conversion_table['base_asset'].copy()
-    conversion_table['quote_asset'] = conversion_table['base_asset'].copy()
-    df = conversion_table.groupby(by=['base_asset']).agg({'price_change_percent': 'max', 
-                                                          'close_time': 'max', 
-                                                          'last_ID': 'sum', 
-                                                          'count': 'sum'})
-    conversion_table.loc[:, ['price_change_percent', 'close_time', 'last_ID', 'count']] = \
-        conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
-    conversion_table = conversion_table.drop_duplicates(subset=['base_asset'], keep='first')
-    conversion_table = conversion_table.reset_index(drop=True)
+    if as_pair:
+        conversion_table = \
+            conversion_table[['symbol', 'base_asset', 'quote_asset', 'is_shorted', 'price_change_percent', 
+                              'weighted_average_price', 'open', 'high', 'low', 'close', 'close_shifted', 
+                              'last_volume', 'bid_price', 'bid_volume', 'ask_price', 'ask_volume', 
+                              'close_time', 'last_ID', 'count', 'rolling_base_volume', 'rolling_quote_volume', 
+                              'importance', 'USDT_price', 'rolling_USDT_base_volume', 'rolling_USDT_quote_volume', 
+                              'USDT_bid_price', 'USDT_ask_price', 'USDT_bid_volume', 'USDT_ask_volume', 
+                              'rolling_traded_volume', 'traded_bid_volume', 'traded_ask_volume', 'traded_price', 
+                              'traded_bid_price', 'traded_ask_price', 'bid_ask_change_percent', 
+                              'bid_ask_volume_percent', 'traded_bid_ask_change_percent', 
+                              'traded_bid_ask_volume_percent']]
+    else:
+        conversion_table = \
+            conversion_table[['base_asset', 'price_change_percent', 'close_time', 'last_ID', 'count', 
+                              'rolling_traded_volume', 'traded_bid_volume', 'traded_ask_volume', 
+                              'traded_price', 'traded_bid_price', 'traded_ask_price', 
+                              'traded_bid_ask_change_percent', 'traded_bid_ask_volume_percent']]
+        conversion_table['rolling_quote_volume'] = conversion_table['rolling_traded_volume'].copy()
+        conversion_table = \
+            conversion_table.rename(columns={'rolling_traded_volume': 'rolling_base_volume', 
+                                             'traded_bid_volume': 'bid_volume', 
+                                             'traded_ask_volume': 'ask_volume', 
+                                             'traded_price': 'close', 
+                                             'traded_bid_price': 'bid_price', 
+                                             'traded_ask_price': 'ask_price', 
+                                             'traded_bid_ask_change_percent': 'bid_ask_change_percent', 
+                                             'traded_bid_ask_volume_percent': 'bid_ask_volume_percent'})
+        conversion_table['symbol'] = conversion_table['base_asset'].copy()
+        conversion_table['quote_asset'] = conversion_table['base_asset'].copy()
+        df = conversion_table.groupby(by=['base_asset']).agg({'price_change_percent': 'max', 
+                                                              'close_time': 'max', 
+                                                              'last_ID': 'sum', 
+                                                              'count': 'sum'})
+        conversion_table.loc[:, ['price_change_percent', 'close_time', 'last_ID', 'count']] = \
+            conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
+        conversion_table = conversion_table.drop_duplicates(subset=['base_asset'], keep='first')
+        conversion_table = conversion_table.reset_index(drop=True)
 
     conversion_table = conversion_table.sort_values(by='close_time')
     conversion_table = conversion_table.reset_index(drop=True)

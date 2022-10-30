@@ -34,9 +34,6 @@ def bootstrap_loggers(client, assets, intervals=None, pairs=None,
     pairs[base_interval] = download_pairs(client=client, assets=assets, 
                                           interval=download_interval, period=period, 
                                           second_period=second_period)
-    pairs[base_interval] = pd.read_csv(log_file.format(base_interval), header=[0, 1], index_col=0)
-    pairs[base_interval].index = pd.DatetimeIndex(pairs[base_interval].index)
-    pairs[base_interval].columns.names = ['symbol', 'pair']
     pairs[base_interval] = convert_ohlcvs_from_pairs_to_assets(pairs[base_interval], exchange_info)
     pairs[base_interval] = add_rolling_volumes(pairs[base_interval])
     pairs[base_interval].to_csv(log_file.format(base_interval))

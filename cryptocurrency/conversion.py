@@ -96,7 +96,8 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info):
         shortest_path = shortest_path[1:]
     return pairs
 
-def convert_price(size, from_asset, to_asset, conversion_table, exchange_info):
+def convert_price(size, from_asset, to_asset, conversion_table, 
+                  exchange_info, key='close'):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                           to_asset=to_asset, 
                                                           exchange_info=exchange_info)
@@ -105,7 +106,7 @@ def convert_price(size, from_asset, to_asset, conversion_table, exchange_info):
         size = float(size)
         pair = base_asset + quote_asset
         connection = conversion_table[conversion_table['symbol'] == pair]
-        price = connection['close'].iat[0]
+        price = connection[key].iat[0]
         size = size * price if base_asset == from_asset else size / price
         from_asset = to_asset
     return size

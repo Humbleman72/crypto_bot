@@ -290,6 +290,7 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
     conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 3)
     conversion_table_mixed.columns = conversion_table_mixed.columns.droplevel(3)
     conversion_table_mixed = conversion_table_mixed['not_inverted']
+    conversion_table_mixed.columns.names = ['symbol', 'pair']
     return conversion_table_mixed
 
 def select_asset_with_biggest_wallet(client, conversion_table):

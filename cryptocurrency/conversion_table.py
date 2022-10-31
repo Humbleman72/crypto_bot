@@ -22,9 +22,9 @@ def get_conversion_table(client, exchange_info, as_pair=False):
     :column base_asset: asset on the left.
     :column quote_asset: asset on the right.
     :column price_change: (close - open).
-    :column price_change_percent: ((close - open) / open).
+    :column price_change_percent: (((close - open) / open) * 100).
     :column USDT_price_change: (USDT_close - USDT_open).
-    :column USDT_price_change_percent: ((USDT_close - USDT_open) / USDT_open).
+    :column USDT_price_change_percent: (((USDT_close - USDT_open) / USDT_open) * 100).
     :column weighted_average_price: weighted average price.
     :column close_shifted: close price of the previous day.
     :column open: open price of the day.
@@ -132,7 +132,7 @@ def get_conversion_table(client, exchange_info, as_pair=False):
         (conversion_table['USDT_price'] * conversion_table['USDT_open']) / \
         conversion_table['USDT_open']
     conversion_table['USDT_price_change_percent'] = \
-        conversion_table['USDT_price_change'] / conversion_table['USDT_open']
+        ((conversion_table['USDT_price_change'] / conversion_table['USDT_open']) * 100)
 
     conversion_table['is_shorted'] = False
 

@@ -137,7 +137,7 @@ def get_conversion_table(client, exchange_info, as_pair=False):
         conversion_table['ask_volume'] * conversion_table['USDT_ask_price']
 
     conversion_table['USDT_price_change'] = \
-        (conversion_table['USDT_price'] * conversion_table['USDT_open'])
+        (conversion_table['USDT_price'] - conversion_table['USDT_open'])
     conversion_table['USDT_price_change_percent'] = \
         ((conversion_table['USDT_price_change'] / conversion_table['USDT_open']) * 100)
 

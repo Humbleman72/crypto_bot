@@ -20,7 +20,7 @@ pd.options.mode.chained_assignment = None
 
 class Crypto_logger_input(Crypto_logger_base):
     def __init__(self, delay=4.7, interval='15s', buffer_size=3000, 
-                 price_percent=5.0, volume_percent=0.0):
+                 price_percent=5.0, volume_percent=0.0, as_pair=False):
         """
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param delay: delay between Binance API requests. Minimum calculated was 4.7 seconds.
@@ -31,6 +31,7 @@ class Crypto_logger_input(Crypto_logger_base):
         self.resample = None
         self.price_percent = price_percent
         self.volume_percent = volume_percent
+        self.as_pair = as_pair
         super().__init__(interval=interval, delay=delay, buffer_size=buffer_size, 
                          directory='crypto_logs', log_name='crypto_input_log_' + interval, 
                          raw=True)
@@ -67,30 +68,8 @@ class Crypto_logger_input(Crypto_logger_base):
         movers = movers.tail(count).reset_index(drop=True)
         return dataset.merge(right=movers, how='right', on=['symbol']).set_index('date')
 
-    '''
     def screen(self, dataset):
-        dataset = dataset[['symbol', 'close', 'priceChangePercent', 
-                           'bidPrice', 'askPrice', 'bidQty', 'askQty', 
-                           'rolling_base_volume', 'rolling_quote_volume', 'count']]
-        dataset[['priceChangePercent', 'close', 'bidPrice', 'askPrice', 
-                 'bidQty', 'askQty', 'rolling_base_volume', 'rolling_quote_volume', 'count']] = \
-            dataset[['priceChangePercent', 'close', 'bidPrice', 'askPrice', 
-                     'bidQty', 'askQty', 'rolling_base_volume', 'rolling_quote_volume', 'count']].astype(float)
-        dataset = dataset[dataset['USDT_volume'] > 100000]
-        dataset['bidAskChangePercent'] = \
-            ((dataset['askPrice'] - dataset['bidPrice']) / dataset['askPrice'])
-        dataset['bidAskQtyPercent'] = \
-            (dataset['bidQty'] / (dataset['bidQty'] + dataset['askQty']))
-        dataset[['bidAskChangePercent', 'bidAskQtyPercent']] *= 100
-        dataset = dataset.dropna()
-        dataset = dataset[dataset['bidAskChangePercent'] < 0.8]
-        dataset = self.filter_movers(dataset, count=1000, price_percent=self.price_percent, 
-                                     volume_percent=self.volume_percent)
-        dataset = dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
-        return dataset
-    '''
-    def screen(self, dataset):
-        dataset = get_tradable_tickers_info(dataset)
+        dataset = get_tradable_tickers_info(dataset, as_pair=self.as_pair)
         dataset = self.filter_movers(dataset, count=1000, 
                                      price_percent=self.price_percent, 
                                      volume_percent=self.volume_percent)
@@ -105,10 +84,6 @@ class Crypto_logger_input(Crypto_logger_base):
 
     def get(self):
         """Get all pairs data from Binance API."""
-        #dataset = pd.DataFrame(self.client.get_ticker())
-        #dataset = dataset.rename(columns={'lastPrice': 'close', 
-        #                                  'volume': 'rolling_base_volume', 
-        #                                  'quoteVolume': 'rolling_quote_volume'})
         dataset = get_conversion_table(self.client, self.exchange_info)
         self.conversion_table = dataset.copy()
         self.conversion_table.to_csv(self.log_name.replace('.txt', '') + '_conversion_table.txt')

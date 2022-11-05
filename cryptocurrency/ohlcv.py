@@ -10,7 +10,7 @@
 from datetime import datetime
 import pandas as pd
 
-def download_pair(client, symbol, interval='1m', period=60):
+def download_pair(client, symbol, interval='1m', period=60, offset_s=0):
     def get_n_periods_from_time(period=60):
         interval_digits = int(''.join(filter(str.isdigit, interval)))
         interval_string = str(''.join(filter(str.isalpha, interval)))
@@ -23,7 +23,7 @@ def download_pair(client, symbol, interval='1m', period=60):
                                        'n_trades', 'taker_buy_base_volume', 
                                        'taker_buy_quote_volume', 'ignore'])
     data['date'] = data['date'].apply(lambda timestamp: \
-                                      datetime.fromtimestamp(timestamp / 1000))
+                                      datetime.fromtimestamp((timestamp / 1000) + int(offset_s)))
 
     data = data.drop(columns=['close_time', 'ignore']).set_index('date')
     data[['open', 'high', 'low', 'close', 'base_volume', 'quote_volume', 

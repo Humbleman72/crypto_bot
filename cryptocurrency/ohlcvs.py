@@ -8,6 +8,7 @@
 
 from cryptocurrency.ohlcv import download_pair
 from tqdm import tqdm
+import time
 import pandas as pd
 
 def named_pairs_to_df(assets, pairs):
@@ -20,23 +21,29 @@ def named_pairs_to_df(assets, pairs):
     return df
 
 def download_pairs(client, assets, interval='1m', period=2880, second_period=None):
-    def download_pairs_helper(period=2880):
+    def download_pairs_helper(period=2880, offset_s=0):
         pairs = [download_pair(client=client, symbol=symbol, interval=interval, 
-                               period=period) for symbol in tqdm(assets, unit=' pair')]
+                               period=period, offset_s=offset_s) 
+                 for symbol in tqdm(assets, unit=' pair')]
         pairs = named_pairs_to_df(assets, pairs)
         pairs = pairs.sort_index(axis='index')
         pairs.columns = pairs.columns.swaplevel(0, 1)
         pairs = pairs[['open', 'high', 'low', 'close', 'base_volume', 'quote_volume']]
         pairs.columns = pairs.columns.swaplevel(0, 1)
         return pairs.sort_index(axis='columns').sort_index(axis='index')
-    pairs_1 = download_pairs_helper(period=period)
+
+    is_dst = time.localtime().tm_isdst
+    timezone = time.tzname[is_dst]
+    offset_s = time.altzone if is_dst else time.timezone
+    offset = (offset_s / 60 / 60)
+
+    pairs_1 = download_pairs_helper(period=period, offset_s=offset_s)
     if second_period is None:
         pairs = pairs_1
     else:
-        pairs_2 = download_pairs_helper(period=second_period)
+        pairs_2 = download_pairs_helper(period=second_period, offset_s=offset_s)
         pairs = pd.concat([pairs_1, pairs_2], join='outer', axis='index')
     pairs = pairs[~pairs.index.duplicated(keep='last')]
-    pairs = pairs.loc[pairs.dropna(axis='index').first_valid_index():]
     pairs.iloc[:,pairs.columns.get_level_values(1) == 'base_volume'] = \
         pairs.xs('base_volume', axis=1, level=1).fillna(0)
     pairs.iloc[:,pairs.columns.get_level_values(1) == 'quote_volume'] = \

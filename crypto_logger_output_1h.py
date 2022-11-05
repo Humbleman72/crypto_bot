@@ -9,9 +9,9 @@
 # Library imports.
 from cryptocurrency.crypto_logger_output import Crypto_logger_output
 
-crypto_logger_output_1h = Crypto_logger_output(delay=188, 
+crypto_logger_output_1h = Crypto_logger_output(delay=111, 
                                                interval_input='30min', 
                                                interval='1h', 
-                                               buffer_size=100, 
+                                               buffer_size=200, 
                                                input_log_name='output')
 crypto_logger_output_1h.start(append=False, roll=1000)

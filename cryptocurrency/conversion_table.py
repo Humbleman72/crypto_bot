@@ -9,6 +9,7 @@
 # Library imports.
 from cryptocurrency.conversion import convert_price, get_base_asset_from_pair, get_quote_asset_from_pair
 from pandas import concat, DataFrame
+import time
 
 def get_conversion_table(client, exchange_info, as_pair=False):
     """
@@ -83,12 +84,19 @@ def get_conversion_table(client, exchange_info, as_pair=False):
                                          'weightedAvgPrice': 'weighted_average_price', 
                                          'priceChange': 'price_change', 
                                          'priceChangePercent': 'price_change_percent'})
-    conversion_table[['price_change_percent', 'open', 'high', 'low', 'close', 'close_shifted', 'bid_price', 
-                      'ask_price', 'bid_volume', 'ask_volume', 'rolling_base_volume', 'rolling_quote_volume', 
-                      'count']] = \
-        conversion_table[['price_change_percent', 'open', 'high', 'low', 'close', 'close_shifted', 'bid_price', 
-                          'ask_price', 'bid_volume', 'ask_volume', 'rolling_base_volume', 'rolling_quote_volume', 
-                          'count']].astype(float)
+    conversion_table[['price_change_percent', 'open', 'high', 'low', 'close', 'close_shifted', 
+                      'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 'rolling_base_volume', 
+                      'rolling_quote_volume', 'count']] = \
+        conversion_table[['price_change_percent', 'open', 'high', 'low', 'close', 'close_shifted', 
+                          'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 'rolling_base_volume', 
+                          'rolling_quote_volume', 'count']].astype(float)
+    conversion_table['close_time'] = conversion_table['close_time'].astype(int)
+
+    is_dst = time.localtime().tm_isdst
+    timezone = time.tzname[is_dst]
+    offset_s = time.altzone if is_dst else time.timezone
+    offset = (offset_s / 60 / 60)
+    conversion_table['close_time'] = (conversion_table['close_time'] + offset_s * 1000)
 
     conversion_table['rolling_base_quote_volume'] = \
         conversion_table['rolling_quote_volume'] / conversion_table['close']
@@ -267,26 +275,29 @@ def get_conversion_table(client, exchange_info, as_pair=False):
     conversion_table = conversion_table.reset_index(drop=True)
     return conversion_table
 
-def get_tradable_tickers_info(conversion_table):
-    #conversion_table = \
-    #    conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 'bid_volume', 
-    #                      'ask_volume', 'bid_ask_change_percent', 'bid_ask_volume_percent', 'rolling_base_volume', 
-    #                      'rolling_quote_volume', 'USDT_price', 'rolling_traded_volume', 'count']]
-    conversion_table = \
-        conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 'bid_volume', 
-                          'ask_volume', 'bid_ask_change_percent', 'bid_ask_volume_percent', 'rolling_base_volume', 
-                          'rolling_quote_volume', 'count']]
+def get_tradable_tickers_info(conversion_table, as_pair=False):
+    if as_pair:
+        conversion_table = \
+            conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 'bid_volume', 
+                              'ask_volume', 'bid_ask_change_percent', 'bid_ask_volume_percent', 'rolling_base_volume', 
+                              'rolling_quote_volume', 'USDT_price', 'rolling_traded_volume', 'count']]
+    else:
+        conversion_table = \
+            conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 'bid_volume', 
+                              'ask_volume', 'bid_ask_change_percent', 'bid_ask_volume_percent', 'rolling_base_volume', 
+                              'rolling_quote_volume', 'count']]
     conversion_table[['price_change_percent', 'close', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
                       'rolling_base_volume', 'rolling_quote_volume', 'count']] = \
         conversion_table[['price_change_percent', 'close', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
                           'rolling_base_volume', 'rolling_quote_volume', 'count']].astype(float)
     #conversion_table = conversion_table[conversion_table['rolling_traded_volume'] > 1000000]
-    conversion_table = conversion_table[conversion_table['rolling_base_volume'] > 1000000]
-    conversion_table = conversion_table[conversion_table['bid_ask_change_percent'] < 0.1]
+    #conversion_table = conversion_table[conversion_table['rolling_base_volume'] > 1000000]
+    #conversion_table = conversion_table[conversion_table['bid_ask_change_percent'] < 0.1]
+    #conversion_table = conversion_table[conversion_table['bid_ask_volume_percent'] > 0.0]
     return conversion_table.sort_index(axis='index')
 
 def get_new_tickers(conversion_table):
     return list(conversion_table['symbol'].unique())
 
-def get_new_filtered_tickers(conversion_table):
-    return list(get_tradable_tickers_info(conversion_table=conversion_table)['symbol'].unique())
+def get_new_filtered_tickers(conversion_table, as_pair):
+    return list(get_tradable_tickers_info(conversion_table=conversion_table, as_pair=as_pair)['symbol'].unique())

@@ -294,7 +294,7 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
     conversion_table_mixed.columns.names = ['symbol', 'pair']
     return conversion_table_mixed
 
-def select_asset_with_biggest_wallet(client, conversion_table):
+def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as_pair=True):
     def get_account_balances():
         balances = pd.DataFrame(client.get_account()['balances'])[['asset', 'free']]
         balances = balances.set_index('asset').drop(index=['XPR']).astype(float)
@@ -305,7 +305,8 @@ def select_asset_with_biggest_wallet(client, conversion_table):
     for (asset, quantity) in balances.iteritems():
         quantity = quantity.iat[0]
         converted_quantity = convert_price(size=quantity, from_asset=asset, to_asset='USDT', 
-                                           conversion_table=conversion_table)
+                                           conversion_table=conversion_table, 
+                                           exchange_info=exchange_info, key='close')
         ls.append((asset, converted_quantity, quantity))
 
     return sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]

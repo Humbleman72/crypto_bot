@@ -104,6 +104,26 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info):
         shortest_path = shortest_path[1:]
     return pairs
 
+def make_tradable_quantity(pair, coins_available, exchange_info, subtract=0):
+    def compact_float_string(number, precision):
+        return "{:0.0{}f}".format(number, precision).rstrip('0').rstrip('.')
+    def round_step_size(quantity: Union[float, Decimal], 
+                        step_size: Union[float, Decimal]) -> float:
+        """Rounds a given quantity to a specific step size
+        :param quantity: required
+        :param step_size: required
+        :return: decimal
+        """
+        quantity = Decimal(str(quantity))
+        return float(quantity - quantity % Decimal(str(step_size)))
+    pair_exchange_info = exchange_info[exchange_info['symbol'] == pair].iat[0]
+    tick_size = float(pair_exchange_info['tick_size'])
+    step_size = float(pair_exchange_info['step_size'])
+    precision = pair_exchange_info['quote_precision']
+    coins_available = float(coins_available) - subtract * tick_size
+    quantity = round_step_size(quantity=coins_available, step_size=tick_size)
+    return compact_float_string(float(quantity), precision)
+
 def convert_price(size, from_asset, to_asset, conversion_table, 
                   exchange_info, key='close'):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
@@ -117,6 +137,8 @@ def convert_price(size, from_asset, to_asset, conversion_table,
         price = connection[key].iat[0]
         size = size * price if base_asset == from_asset else size / price
         from_asset = to_asset
+    size = make_tradable_quantity(pair, float(size), subtract=0, 
+                                  exchange_info=exchange_info)
     return size
 
 '''
@@ -301,20 +323,3 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
     conversion_table_mixed = conversion_table_mixed['not_inverted']
     conversion_table_mixed.columns.names = ['symbol', 'pair']
     return conversion_table_mixed
-
-def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as_pair=True):
-    def get_account_balances():
-        balances = pd.DataFrame(client.get_account()['balances'])[['asset', 'free']]
-        balances = balances.set_index('asset').drop(index=['XPR']).astype(float)
-        balances = balances[balances['free'] > 0]
-        return balances.sort_values(by=['free'], ascending=False).T
-    balances = get_account_balances()
-    ls = []
-    for (asset, quantity) in balances.iteritems():
-        quantity = quantity.iat[0]
-        converted_quantity = convert_price(size=quantity, from_asset=asset, to_asset='USDT', 
-                                           conversion_table=conversion_table, 
-                                           exchange_info=exchange_info, key='close')
-        ls.append((asset, converted_quantity, quantity))
-
-    return sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]

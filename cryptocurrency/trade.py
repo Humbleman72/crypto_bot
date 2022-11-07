@@ -7,34 +7,31 @@
 # Description: Binance asset trading.
 
 # Library imports.
-from cryptocurrency.conversion import convert_price, get_shortest_pair_path_between_assets, select_asset_with_biggest_wallet
+from cryptocurrency.conversion import make_tradable_quantity, convert_price
+from cryptocurrency.conversion import get_shortest_pair_path_between_assets
 from binance.exceptions import BinanceAPIException
 from typing import Union
 from decimal import Decimal
 from time import sleep
 
+def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as_pair=True):
+    def get_account_balances():
+        balances = pd.DataFrame(client.get_account()['balances'])[['asset', 'free']]
+        balances = balances.set_index('asset').drop(index=['XPR']).astype(float)
+        balances = balances[balances['free'] > 0]
+        return balances.sort_values(by=['free'], ascending=False).T
+    balances = get_account_balances()
+    ls = []
+    for (asset, quantity) in balances.iteritems():
+        quantity = quantity.iat[0]
+        converted_quantity = convert_price(size=quantity, from_asset=asset, to_asset='USDT', 
+                                           conversion_table=conversion_table, 
+                                           exchange_info=exchange_info, key='close')
+        ls.append((asset, converted_quantity, quantity))
+    return sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]
+
 def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset, 
                  conversion_table, exchange_info, verbose=False):
-    def make_tradable_quantity(pair, coins_available, exchange_info, subtract=0):
-        def compact_float_string(number, precision):
-            return "{:0.0{}f}".format(number, precision).rstrip('0').rstrip('.')
-        def round_step_size(quantity: Union[float, Decimal], 
-                            step_size: Union[float, Decimal]) -> float:
-            """Rounds a given quantity to a specific step size
-            :param quantity: required
-            :param step_size: required
-            :return: decimal
-            """
-            quantity = Decimal(str(quantity))
-            return float(quantity - quantity % Decimal(str(step_size)))
-        pair_exchange_info = exchange_info[exchange_info['symbol'] == pair].iloc[0]
-        tick_size = float(pair_exchange_info['tick_size'])
-        step_size = float(pair_exchange_info['step_size'])
-        precision = pair_exchange_info['quote_precision']
-        coins_available = float(coins_available) - subtract * tick_size
-        quantity = round_step_size(quantity=coins_available, step_size=tick_size)
-        quantity = compact_float_string(float(quantity), precision)
-        return quantity
     pair = base_asset + quote_asset
     side = 'BUY' if from_asset != base_asset else 'SELL'
     if side == 'SELL':

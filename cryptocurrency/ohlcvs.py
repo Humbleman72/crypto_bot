@@ -6,10 +6,18 @@
 # For          Myself
 # Description: Populate OHLCV DataFrames from the Binance API.
 
+# Library imports.
 from cryptocurrency.ohlcv import download_pair
 from tqdm import tqdm
 import time
 import pandas as pd
+
+def get_timezone_offset_in_seconds():
+    is_dst = time.localtime().tm_isdst
+    timezone = time.tzname[is_dst]
+    offset_s = time.altzone if is_dst else time.timezone
+    #offset = (offset_s / 60 / 60)
+    return offset_s
 
 def named_pairs_to_df(assets, pairs):
     df = pd.DataFrame()
@@ -32,11 +40,7 @@ def download_pairs(client, assets, interval='1m', period=2880, second_period=Non
         pairs.columns = pairs.columns.swaplevel(0, 1)
         return pairs.sort_index(axis='columns').sort_index(axis='index')
 
-    is_dst = time.localtime().tm_isdst
-    timezone = time.tzname[is_dst]
-    offset_s = time.altzone if is_dst else time.timezone
-    offset = (offset_s / 60 / 60)
-
+    offset_s = get_timezone_offset_in_seconds()
     pairs_1 = download_pairs_helper(period=period, offset_s=offset_s)
     if second_period is None:
         pairs = pairs_1

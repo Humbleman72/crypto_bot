@@ -275,12 +275,14 @@ def screen_one(pair):
                 return True
     elif frequency == frequency_1h: # 1h intervals and up won't be active for at least a day after bootstrapping.
         # Supports 1h, 2h, 3h, 4h, 6h, 8h and 12h not_square_wave_triggers (too much for buffer size).
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 2, 3, 4, 6, 8, 12]):
+        #if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 2, 3, 4, 6, 8, 12]):
+        if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
             if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
                 return True
     elif frequency == frequency_1d: # 1d intervals and up won't be active for at least a day after bootstrapping.
         # Supports 1d, 3d, 7d and 28d not_square_wave_triggers (too much for buffer size).
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 3, 7, 28]):
+        #if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 3, 7, 28]):
+        if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
             if get_daily_volume_minimum_trigger(pair):
                 if get_daily_volume_change_trigger(pair):
                     if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.1):

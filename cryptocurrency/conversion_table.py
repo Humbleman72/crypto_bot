@@ -9,9 +9,8 @@
 # Library imports.
 from cryptocurrency.conversion import convert_price, get_base_asset_from_pair, get_quote_asset_from_pair
 from pandas import concat, DataFrame
-import time
 
-def get_conversion_table(client, exchange_info, as_pair=False):
+def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False):
     """
     Fetches and prepares data used to calculate prices, volumes and other stats.
     :param client: object from python-binance useful for calling client.get_ticker().
@@ -91,11 +90,6 @@ def get_conversion_table(client, exchange_info, as_pair=False):
                           'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 'rolling_base_volume', 
                           'rolling_quote_volume', 'count']].astype(float)
     conversion_table['close_time'] = conversion_table['close_time'].astype(int)
-
-    is_dst = time.localtime().tm_isdst
-    timezone = time.tzname[is_dst]
-    offset_s = time.altzone if is_dst else time.timezone
-    offset = (offset_s / 60 / 60)
     conversion_table['close_time'] = (conversion_table['close_time'] + offset_s * 1000)
 
     conversion_table['rolling_base_quote_volume'] = \

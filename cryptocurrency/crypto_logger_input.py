@@ -10,6 +10,7 @@
 from cryptocurrency.crypto_logger_base import Crypto_logger_base
 from cryptocurrency.authentication import Cryptocurrency_authenticator
 from cryptocurrency.exchange import Cryptocurrency_exchange
+from cryptocurrency.conversion import get_timezone_offset_in_seconds
 from cryptocurrency.conversion_table import get_conversion_table, get_tradable_tickers_info
 from os import mkdir
 from os.path import exists, join
@@ -41,6 +42,8 @@ class Crypto_logger_input(Crypto_logger_base):
 
         exchange = Cryptocurrency_exchange(client=self.client, directory=self.directory)
         self.exchange_info = exchange.info
+
+        self.offset_s = get_timezone_offset_in_seconds()
 
     def filter_movers(self, dataset, count=1000, price_percent=5.0, volume_percent=0.0):
         dataset = dataset.reset_index()
@@ -84,7 +87,8 @@ class Crypto_logger_input(Crypto_logger_base):
 
     def get(self):
         """Get all pairs data from Binance API."""
-        dataset = get_conversion_table(self.client, self.exchange_info)
+        dataset = get_conversion_table(self.client, self.exchange_info, offset_s=self.offset_s, 
+                                       as_pair=self.as_pair)
         self.conversion_table = dataset.copy()
         self.conversion_table.to_csv(self.log_name.replace('.txt', '') + '_conversion_table.txt')
         return self.prepare_downsampling(self.conversion_table)

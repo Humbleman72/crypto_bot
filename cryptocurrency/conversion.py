@@ -9,7 +9,15 @@
 # Library imports.
 from cryptocurrency.ohlcvs import named_pairs_to_df
 from tqdm import tqdm
+import time
 import pandas as pd
+
+def get_timezone_offset_in_seconds():
+    is_dst = time.localtime().tm_isdst
+    timezone = time.tzname[is_dst]
+    offset_s = time.altzone if is_dst else time.timezone
+    #offset = (offset_s / 60 / 60)
+    return offset_s
 
 def get_assets_from_pair(pair, exchange_info):
      try:

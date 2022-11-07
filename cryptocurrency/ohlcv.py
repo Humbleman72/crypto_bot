@@ -10,6 +10,18 @@
 from datetime import datetime
 import pandas as pd
 
+def fix_DST_bug(df):
+    timeseries_size = df.shape[0]
+    mid_series = timeseries_size // 2
+    frequency_1 = pd.tseries.frequencies.to_offset((df.index[-(mid_series)+1:] - df.index[-(mid_series):-1]).min())
+    frequency_2 = pd.tseries.frequencies.to_offset((df.index[1:mid_series] - df.index[:(mid_series)-1]).min())
+    frequency_1d = pd.tseries.frequencies.to_offset('1d')
+    frequency = frequency_2 if frequency_1 < frequency_2 else frequency_1
+    if frequency_1 != frequency_2:
+        if (frequency_1d > frequency_1) and (frequency_1d > frequency_2):
+            df.index = pd.date_range(end=df.index[-1], periods=timeseries_size, freq=frequency, name='date')
+    return df
+
 def download_pair(client, symbol, interval='1m', period=60, offset_s=0):
     def get_n_periods_from_time(period=60):
         interval_digits = int(''.join(filter(str.isdigit, interval)))
@@ -33,5 +45,6 @@ def download_pair(client, symbol, interval='1m', period=60, offset_s=0):
             lambda entry: entry.rstrip('0').rstrip('.'))
     data = data.astype(float)
     data['n_trades'] = data['n_trades'].astype(int)
+    data = fix_DST_bug(data)
     return data
 

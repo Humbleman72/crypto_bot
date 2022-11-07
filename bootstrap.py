@@ -9,6 +9,7 @@
 # Library imports.
 from cryptocurrency.authentication import Cryptocurrency_authenticator
 from cryptocurrency.exchange import Cryptocurrency_exchange
+from cryptocurrency.conversion import get_timezone_offset_in_seconds
 from cryptocurrency.conversion_table import get_conversion_table, get_new_tickers
 from cryptocurrency.bootstrap import bootstrap_loggers
 import os
@@ -16,7 +17,7 @@ import shutil
 
 def main():
     as_pair = False
-    directory = 'crypto_logs' 
+    directory = 'crypto_logs'
     if os.path.exists(directory):
         shutil.rmtree(directory)
     os.mkdir(directory)
@@ -24,7 +25,9 @@ def main():
     client = authenticator.spot_client
     exchange = Cryptocurrency_exchange(client=client, directory=directory)
     exchange_info = exchange.info
-    conversion_table = get_conversion_table(client=client, exchange_info=exchange_info, as_pair=True)
+    offset_s = get_timezone_offset_in_seconds()
+    conversion_table = get_conversion_table(client=client, exchange_info=exchange_info, 
+                                            offset_s=offset_s, as_pair=True)
     assets = get_new_tickers(conversion_table=conversion_table)
     pairs = bootstrap_loggers(client=client, assets=assets, pairs={}, 
                               download_interval='1d', exchange_info=exchange_info, as_pair=as_pair)

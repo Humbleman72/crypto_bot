@@ -10,8 +10,6 @@
 from cryptocurrency.conversion import make_tradable_quantity, convert_price
 from cryptocurrency.conversion import get_shortest_pair_path_between_assets
 from binance.exceptions import BinanceAPIException
-from typing import Union
-from decimal import Decimal
 from time import sleep
 
 def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as_pair=True):

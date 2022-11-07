@@ -7,7 +7,7 @@
 # Description: Populate OHLCV DataFrames from the Binance API.
 
 # Library imports.
-from cryptocurrency.conversion import convert_ohlcvs_from_pairs_to_assets
+from cryptocurrency.conversion_df import convert_ohlcvs_from_pairs_to_assets
 from cryptocurrency.ohlcvs import download_pairs
 from cryptocurrency.resample import resample
 from cryptocurrency.volume_conversion import add_rolling_volumes

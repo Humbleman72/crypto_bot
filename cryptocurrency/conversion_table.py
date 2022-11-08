@@ -10,7 +10,7 @@
 from cryptocurrency.conversion import convert_price, get_base_asset_from_pair, get_quote_asset_from_pair
 from pandas import concat, DataFrame
 
-def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False):
+def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False, dump_raw=False):
     """
     Fetches and prepares data used to calculate prices, volumes and other stats.
     :param client: object from python-binance useful for calling client.get_ticker().
@@ -83,6 +83,9 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False):
                                          'weightedAvgPrice': 'weighted_average_price', 
                                          'priceChange': 'price_change', 
                                          'priceChangePercent': 'price_change_percent'})
+    if dump_raw:
+        conversion_table.to_csv('crypto_logs/conversion_table.txt')
+
     conversion_table[['price_change_percent', 'open', 'high', 'low', 'close', 'close_shifted', 
                       'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 'rolling_base_volume', 
                       'rolling_quote_volume', 'count']] = \

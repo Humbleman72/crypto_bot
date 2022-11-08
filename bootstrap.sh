@@ -11,6 +11,7 @@ CONDA_ENV_NAME="crypto_logger"
 read -s -p "Password: " PASSWORD
 
 echo $PASSWORD | sudo -S supervisorctl stop all
+echo $PASSWORD | sudo -S rm -rf /tmp/crypto_*.[err,out]
 echo $PASSWORD | sudo -S supervisorctl status all
 
 source activate ${CONDA_ENV_NAME} && \

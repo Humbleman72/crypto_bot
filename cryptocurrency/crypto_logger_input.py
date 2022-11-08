@@ -88,7 +88,7 @@ class Crypto_logger_input(Crypto_logger_base):
     def get(self):
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(self.client, self.exchange_info, offset_s=self.offset_s, 
-                                       as_pair=self.as_pair)
+                                       as_pair=self.as_pair, dump_raw=False)
         self.conversion_table = dataset.copy()
-        self.conversion_table.to_csv(self.log_name.replace('.txt', '') + '_conversion_table.txt')
+        #self.conversion_table.to_csv('crypto_logs/conversion_table.txt')
         return self.prepare_downsampling(self.conversion_table)

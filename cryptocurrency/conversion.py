@@ -124,7 +124,7 @@ def make_tradable_quantity(pair, coins_available, exchange_info, subtract=0):
     return compact_float_string(float(quantity), precision)
 
 def convert_price(size, from_asset, to_asset, conversion_table, 
-                  exchange_info, key='close'):
+                  exchange_info, key='close', raw=False):
     if from_asset != to_asset:
         size = float(size)
         shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
@@ -137,6 +137,7 @@ def convert_price(size, from_asset, to_asset, conversion_table,
             price = connection[key].iat[0]
             size = size * price if base_asset == from_asset else size / price
             from_asset = to_asset
-        size = make_tradable_quantity(pair, float(size), subtract=0, 
-                                      exchange_info=exchange_info)
+        if not raw:
+            size = make_tradable_quantity(pair, float(size), subtract=0, 
+                                          exchange_info=exchange_info)
     return size

@@ -26,10 +26,10 @@ def add_rolling_volumes(df):
     return df
 
 def recalculate_volumes(df):
-    df.iloc[:,df.columns.get_level_values(1) == 'base_volume'] = \
-        df.xs('rolling_base_volume', axis=1, level=1).diff(1) + \
-        df.xs('base_volume', axis=1, level=1).shift(1440)
-    df.iloc[:,df.columns.get_level_values(1) == 'quote_volume'] = \
-        df.xs('rolling_quote_volume', axis=1, level=1).diff(1) + \
-        df.xs('quote_volume', axis=1, level=1).shift(1440)
+    df.iloc[-2:,df.columns.get_level_values(1) == 'base_volume'] = \
+        df.xs('rolling_base_volume', axis=1, level=1).diff(1).tail(2) + \
+        df.xs('base_volume', axis=1, level=1).shift(1440).tail(2)
+    df.iloc[-2:,df.columns.get_level_values(1) == 'quote_volume'] = \
+        df.xs('rolling_quote_volume', axis=1, level=1).diff(1).tail(2) + \
+        df.xs('quote_volume', axis=1, level=1).shift(1440).tail(2)
     return df

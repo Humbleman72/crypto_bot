@@ -258,13 +258,14 @@ def screen_one(pair):
             return True
     elif frequency == frequency_1min:
         # Supports 1min, 2min, 3min, 5min, 10min, 15min, 20min and 45min not_square_wave_triggers.
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 2, 3, 5, 10, 15, 20, 45]):
+        #if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 2, 3, 5, 10, 15, 20, 45]):
+        if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 3, 5, 15]):
             if get_bullish_price_trigger(pair):
                 if get_rising_volume_trigger(pair):
                     if get_minute_daily_volume_minimum_trigger(pair):
-                        if get_minute_daily_volume_change_trigger(pair):
-                            if get_heikin_ashi_trigger(pair):
-                                return True
+                        #if get_minute_daily_volume_change_trigger(pair):
+                        if get_heikin_ashi_trigger(pair):
+                            return True
     elif frequency == frequency_30min:
         # Supports 30min not_square_wave_triggers.
         if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):

@@ -35,7 +35,8 @@ def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset
     side = 'BUY' if from_asset != base_asset else 'SELL'
     if side == 'SELL':
         quantity = convert_price(float(quantity), from_asset=from_asset, to_asset=to_asset, 
-                                 conversion_table=conversion_table, exchange_info=exchange_info)
+                                 conversion_table=conversion_table, exchange_info=exchange_info, 
+                                 key='close')
     ticks = 0
     while True:
         try:
@@ -96,4 +97,3 @@ def trade(client, to_asset, conversion_table, exchange_info, verbose=True):
             from_asset = to_asset
             sleep(0.01)
         return request
-

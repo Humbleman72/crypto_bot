@@ -29,20 +29,19 @@ def bootstrap_loggers(client, assets, pairs=None, additional_intervals=None, ups
     if not as_pair:
         pairs[base_interval] = convert_ohlcvs_from_pairs_to_assets(pairs[base_interval], exchange_info)
     pairs[base_interval] = add_rolling_volumes(pairs[base_interval])
-    if download_interval == '1m':
-        pairs[base_interval] = pairs[base_interval].loc[pairs[base_interval].dropna().first_valid_index():]
+    pairs[base_interval] = pairs[base_interval].loc[pairs[base_interval].dropna().first_valid_index():]
     if additional_intervals is not None:
         for additional_interval in tqdm(additional_intervals, unit=' pair'):
             pairs[additional_interval] = resample(pairs[base_interval], interval=additional_interval)
             pairs[additional_interval] = pairs[additional_interval].tail(200)
             pairs[additional_interval].to_csv(log_file.format(additional_interval))
-    truncated_frequency = 200 if frequency > frequency_1min else 1500
+    truncated_frequency = 60 if frequency > frequency_1min else 1500
     pairs[base_interval] = pairs[base_interval].tail(truncated_frequency)
     pairs[base_interval].to_csv(log_file.format(base_interval))
     if upsampled_intervals is not None:
         for subminute_interval in tqdm(upsampled_intervals, unit=' pair'):
             pairs[subminute_interval] = pairs[base_interval].tail(25)
             pairs[subminute_interval] = pairs[subminute_interval].resample(subminute_interval).agg('max')
-            pairs[subminute_interval] = pairs[subminute_interval].fillna(method='pad').tail(200)
+            pairs[subminute_interval] = pairs[subminute_interval].fillna(method='pad').tail(60)
             pairs[subminute_interval].to_csv(log_file.format(subminute_interval))
     return pairs

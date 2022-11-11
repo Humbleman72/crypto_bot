@@ -12,6 +12,6 @@ from cryptocurrency.crypto_logger_output import Crypto_logger_output
 crypto_logger_output_1d = Crypto_logger_output(delay=222, 
                                                interval_input='1h', 
                                                interval='1d', 
-                                               buffer_size=200, 
+                                               buffer_size=60, 
                                                input_log_name='output')
-crypto_logger_output_1d.start(append=False, roll=1000)
+crypto_logger_output_1d.start(append=True, roll=12)

@@ -15,10 +15,10 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 
 class Crypto_logger_output(Crypto_logger_base):
-    def __init__(self, delay=10, interval_input='15s', interval='15s', buffer_size=100, 
+    def __init__(self, delay=12, interval_input='15s', interval='15s', buffer_size=60, 
                  input_log_name='input'):
         """
-        :param delay: delay between Binance API requests. Minimum calculated was 4.7 seconds.
+        :param delay: delay between logger/screener service interruptions.
         :param interval_input: OHLCV interval from input log. Default is 15 seconds.
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param buffer_size: buffer size to avoid crashing on memory accesses.
@@ -37,22 +37,16 @@ class Crypto_logger_output(Crypto_logger_base):
             join(self.directory, input_log_name + interval_input + '_screened.txt')
 
     def screen(self, dataset):
+        input_filtered = None
         if exists(self.input_log_screened_name):
             input_filtered = pd.read_csv(self.input_log_screened_name, header=0, index_col=0)
             input_filter = set(input_filtered['symbol'].tolist())
             old_columns = set(dataset.columns.get_level_values(0).tolist())
             new_columns = list(input_filter & old_columns)
             dataset = dataset[new_columns]
-            #dataset.columns = dataset.columns.swaplevel(0, 1)
-            #dataset = dataset.rename(columns={'base_volume': 'volume'})
-            #dataset.columns = dataset.columns.swaplevel(0, 1)
             assets = filter_in_market(screen_one, dataset)
-            #dataset.columns = dataset.columns.swaplevel(0, 1)
-            #dataset = dataset.rename(columns={'volume': 'base_volume'})
-            #dataset.columns = dataset.columns.swaplevel(0, 1)
-            return input_filtered[input_filtered['symbol'].isin(assets)]
-        else:
-            return None
+            input_filtered = input_filtered[input_filtered['symbol'].isin(assets)]
+        return input_filtered
 
     def resample_from_raw(self, df):
         df = df[['symbol', 'close', 'rolling_base_volume', 'rolling_quote_volume']]
@@ -66,7 +60,8 @@ class Crypto_logger_output(Crypto_logger_base):
                                      'base_volume': 'max', 'quote_volume': 'max', 
                                      'rolling_base_volume': 'max', 
                                      'rolling_quote_volume': 'max'})
-        df.columns = pd.MultiIndex.from_tuples([('_'.join(col[:2]), col[2]) for col in df.columns.values], 
+        df.columns = pd.MultiIndex.from_tuples([('_'.join(col[:2]), col[2]) 
+                                                for col in df.columns.values], 
                                                names=('pair', 'symbol'))
         df = df.rename(columns={'close_first': 'open', 'close_max': 'high', 
                                 'close_min': 'low', 'close_last': 'close', 
@@ -75,14 +70,10 @@ class Crypto_logger_output(Crypto_logger_base):
                                 'rolling_base_volume_max': 'rolling_base_volume', 
                                 'rolling_quote_volume_max': 'rolling_quote_volume'}, 
                        level=0)
-        df['base_volume'] = df['base_volume'].fillna(method='pad')
-        df['base_volume'].iloc[0] = 0
-        df['quote_volume'] = df['quote_volume'].fillna(method='pad')
-        df['quote_volume'].iloc[0] = 0
-        df['rolling_base_volume'] = df['rolling_base_volume'].fillna(method='pad')
-        df['rolling_base_volume'].iloc[0] = 0
-        df['rolling_quote_volume'] = df['rolling_quote_volume'].fillna(method='pad')
-        df['rolling_quote_volume'].iloc[0] = 0
+        df['base_volume'] = df['base_volume'].fillna(0)
+        df['quote_volume'] = df['quote_volume'].fillna(0)
+        df['rolling_base_volume'] = df['rolling_base_volume'].fillna(method='pad').fillna(0)
+        df['rolling_quote_volume'] = df['rolling_quote_volume'].fillna(method='pad').fillna(0)
         df = df.sort_index().iloc[1:]
         df.columns = df.columns.swaplevel(0, 1)
         return df

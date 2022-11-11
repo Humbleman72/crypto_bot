@@ -55,6 +55,18 @@ def get_connected_assets(asset, exchange_info):
         BNB, BTC = connected_assets.index('BNB'), connected_assets.index('BTC')
         connected_assets[BNB], connected_assets[BTC] = \
             connected_assets[BTC], connected_assets[BNB]
+    if 'BNB' in connected_assets and 'BUSD' in connected_assets:
+        BNB, BUSD = connected_assets.index('BNB'), connected_assets.index('BUSD')
+        connected_assets[BNB], connected_assets[BUSD] = \
+            connected_assets[BUSD], connected_assets[BNB]
+    if 'BNB' in connected_assets and 'ETH' in connected_assets:
+        BNB, ETH = connected_assets.index('BNB'), connected_assets.index('ETH')
+        connected_assets[BNB], connected_assets[ETH] = \
+            connected_assets[ETH], connected_assets[BNB]
+    if 'ETH' in connected_assets and 'BUSD' in connected_assets:
+        ETH, BUSD = connected_assets.index('ETH'), connected_assets.index('BUSD')
+        connected_assets[ETH], connected_assets[BUSD] = \
+            connected_assets[BUSD], connected_assets[ETH]
     return connected_assets
 
 def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info):

@@ -115,7 +115,7 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False, dump_
     conversion_table['USDT_price'] = \
         conversion_table.apply(lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
                                                        conversion_table=conversion_table, 
-                                                       exchange_info=exchange_info), 
+                                                       exchange_info=exchange_info, key='close'), 
                                axis='columns').astype(float)
     conversion_table['rolling_USDT_base_volume'] = \
         conversion_table['rolling_base_volume'] * conversion_table['USDT_price']

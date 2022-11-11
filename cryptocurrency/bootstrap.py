@@ -32,7 +32,7 @@ def bootstrap_loggers(client, assets, pairs=None, additional_intervals=None, ups
     pairs[base_interval] = pairs[base_interval].loc[pairs[base_interval].dropna().first_valid_index():]
     if additional_intervals is not None:
         for additional_interval in tqdm(additional_intervals, unit=' pair'):
-            pairs[additional_interval] = resample(pairs[base_interval], interval=additional_interval)
+            pairs[additional_interval] = resample(pairs[base_interval].copy(), interval=additional_interval)
             pairs[additional_interval] = pairs[additional_interval].tail(200)
             pairs[additional_interval].to_csv(log_file.format(additional_interval))
     truncated_frequency = 60 if frequency > frequency_1min else 1500

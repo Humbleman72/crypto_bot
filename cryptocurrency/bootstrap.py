@@ -35,7 +35,7 @@ def bootstrap_loggers(client, assets, pairs=None, additional_intervals=None, ups
             pairs[additional_interval] = resample(pairs[base_interval], interval=additional_interval)
             pairs[additional_interval] = pairs[additional_interval].tail(200)
             pairs[additional_interval].to_csv(log_file.format(additional_interval))
-    truncated_frequency = 60 if frequency > frequency_1min else 1500
+    truncated_frequency = 1500 download_interval == '1m' else 60
     pairs[base_interval] = pairs[base_interval].tail(truncated_frequency)
     pairs[base_interval].to_csv(log_file.format(base_interval))
     if upsampled_intervals is not None:

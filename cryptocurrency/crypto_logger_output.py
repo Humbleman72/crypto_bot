@@ -72,8 +72,8 @@ class Crypto_logger_output(Crypto_logger_base):
                        level=0)
         df['base_volume'] = df['base_volume'].fillna(0)
         df['quote_volume'] = df['quote_volume'].fillna(0)
-        df['rolling_base_volume'] = df['rolling_base_volume'].fillna(method='pad').fillna(0)
-        df['rolling_quote_volume'] = df['rolling_quote_volume'].fillna(method='pad').fillna(0)
+        df['rolling_base_volume'] = df['rolling_base_volume'].fillna(method='pad').fillna(method='backfill')
+        df['rolling_quote_volume'] = df['rolling_quote_volume'].fillna(method='pad').fillna(method='backfill')
         df = df.sort_index().iloc[1:]
         df.columns = df.columns.swaplevel(0, 1)
         return df

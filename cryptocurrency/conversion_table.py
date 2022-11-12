@@ -100,22 +100,26 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False, dump_
     conversion_table['USDT_open'] = \
         conversion_table.apply(lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
                                                        conversion_table=conversion_table, 
-                                                       exchange_info=exchange_info, key='open'), 
+                                                       exchange_info=exchange_info, key='open', 
+                                                       priority='accuracy'), 
                                axis='columns').astype(float)
     conversion_table['USDT_high'] = \
         conversion_table.apply(lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
                                                        conversion_table=conversion_table, 
-                                                       exchange_info=exchange_info, key='close'), 
+                                                       exchange_info=exchange_info, key='close', 
+                                                       priority='accuracy'), 
                                axis='columns').astype(float)
     conversion_table['USDT_low'] = \
         conversion_table.apply(lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
                                                        conversion_table=conversion_table, 
-                                                       exchange_info=exchange_info, key='close'), 
+                                                       exchange_info=exchange_info, key='close', 
+                                                       priority='accuracy'), 
                                axis='columns').astype(float)
     conversion_table['USDT_price'] = \
         conversion_table.apply(lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
                                                        conversion_table=conversion_table, 
-                                                       exchange_info=exchange_info, key='close'), 
+                                                       exchange_info=exchange_info, key='close', 
+                                                       priority='accuracy'), 
                                axis='columns').astype(float)
     conversion_table['rolling_USDT_base_volume'] = \
         conversion_table['rolling_base_volume'] * conversion_table['USDT_price']
@@ -125,12 +129,14 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False, dump_
     conversion_table['USDT_bid_price'] = \
         conversion_table.apply(lambda x: convert_price(size=x['bid_price'], from_asset=x['base_asset'], 
                                                        to_asset='USDT', conversion_table=conversion_table, 
-                                                       exchange_info=exchange_info), 
+                                                       exchange_info=exchange_info, key='close', 
+                                                       priority='accuracy'), 
                                axis='columns').astype(float)
     conversion_table['USDT_ask_price'] = \
         conversion_table.apply(lambda x: convert_price(size=x['ask_price'], from_asset=x['base_asset'], 
                                                        to_asset='USDT', conversion_table=conversion_table, 
-                                                       exchange_info=exchange_info), 
+                                                       exchange_info=exchange_info, key='close', 
+                                                       priority='accuracy'), 
                                axis='columns').astype(float)
     conversion_table['USDT_bid_volume'] = \
         conversion_table['bid_volume'] * conversion_table['USDT_bid_price']

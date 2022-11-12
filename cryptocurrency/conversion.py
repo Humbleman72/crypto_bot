@@ -43,7 +43,20 @@ def get_quote_asset_from_pair(pair, exchange_info):
         base_asset, quote_asset = asset
     return quote_asset
 
-def get_connected_assets(asset, exchange_info):
+def get_connected_assets(asset, exchange_info, priority='accuracy'):
+    def reorder(connected_assets, priority):
+        prioritized = [asset for asset in priority if asset in connected_assets]
+        order = {asset: i for i, asset in enumerate(prioritized)}
+        connected_assets_items = [asset for asset in connected_assets if asset in order]
+        connected_assets_items.sort(key=order.get)
+        connected_assets_iter = iter(connected_assets_items)
+        return [next(connected_assets_iter) if asset in order 
+                else asset for asset in connected_assets]
+    priorities = {}
+    priorities['accuracy'] = ['USDT', 'BTC', 'BUSD', 'ETH', 'BNB', 'AUD']
+    priorities['fees'] = ['BUSD', 'BTC', 'BNB', 'ETH', 'USDT', 'AUD']
+    priorities['wallet'] = ['BTC', 'ETH', 'BUSD', 'BNB', 'USDT', 'AUD']
+    priority = priorities[priority]
     connected_base_assets = exchange_info['base_asset'] == asset
     connected_base_assets = exchange_info[connected_base_assets]
     connected_base_assets = connected_base_assets['quote_asset'].tolist()
@@ -51,26 +64,12 @@ def get_connected_assets(asset, exchange_info):
     connected_quote_assets = exchange_info[connected_quote_assets]
     connected_quote_assets = connected_quote_assets['base_asset'].tolist()
     connected_assets = sorted(list(set(connected_base_assets + connected_quote_assets)))
-    if 'BNB' in connected_assets and 'BTC' in connected_assets:
-        BNB, BTC = connected_assets.index('BNB'), connected_assets.index('BTC')
-        connected_assets[BNB], connected_assets[BTC] = \
-            connected_assets[BTC], connected_assets[BNB]
-    if 'BNB' in connected_assets and 'BUSD' in connected_assets:
-        BNB, BUSD = connected_assets.index('BNB'), connected_assets.index('BUSD')
-        connected_assets[BNB], connected_assets[BUSD] = \
-            connected_assets[BUSD], connected_assets[BNB]
-    if 'BNB' in connected_assets and 'ETH' in connected_assets:
-        BNB, ETH = connected_assets.index('BNB'), connected_assets.index('ETH')
-        connected_assets[BNB], connected_assets[ETH] = \
-            connected_assets[ETH], connected_assets[BNB]
-    if 'ETH' in connected_assets and 'BUSD' in connected_assets:
-        ETH, BUSD = connected_assets.index('ETH'), connected_assets.index('BUSD')
-        connected_assets[ETH], connected_assets[BUSD] = \
-            connected_assets[BUSD], connected_assets[ETH]
-    return connected_assets
+    prioritized = reorder(connected_assets, priority)
+    return prioritized
 
-def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info):
-    def get_shortest_path_between_assets():
+def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info, 
+                                          priority='accuracy'):
+    def get_shortest_path_between_assets(priority):
         path_list = [[from_asset]]
         path_index = 0
         previous_nodes = [from_asset]
@@ -79,7 +78,8 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info):
         while path_index < len(path_list):
             current_path = path_list[path_index]
             last_node = current_path[-1]
-            next_nodes = get_connected_assets(last_node, exchange_info=exchange_info)
+            next_nodes = get_connected_assets(last_node, exchange_info=exchange_info, 
+                                              priority=priority)
             if to_asset in next_nodes:
                 current_path.append(to_asset)
                 return current_path
@@ -106,7 +106,7 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info):
             return base_asset, quote_asset
         else:
             return None
-    shortest_path = get_shortest_path_between_assets()
+    shortest_path = get_shortest_path_between_assets(priority=priority)
     pairs = []
     while len(shortest_path) > 1:
         base_asset, quote_asset = \
@@ -136,12 +136,13 @@ def make_tradable_quantity(pair, coins_available, exchange_info, subtract=0):
     return compact_float_string(float(quantity), precision)
 
 def convert_price(size, from_asset, to_asset, conversion_table, 
-                  exchange_info, key='close', raw=False):
+                  exchange_info, key='close', priority='accuracy'):
     if from_asset != to_asset:
         size = float(size)
         shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                               to_asset=to_asset, 
-                                                              exchange_info=exchange_info)
+                                                              exchange_info=exchange_info, 
+                                                              priority=priority)
         for (base_asset, quote_asset) in shortest_path:
             to_asset = quote_asset if from_asset == base_asset else base_asset
             pair = base_asset + quote_asset
@@ -149,7 +150,6 @@ def convert_price(size, from_asset, to_asset, conversion_table,
             price = connection[key].iat[0]
             size = size * price if base_asset == from_asset else size / price
             from_asset = to_asset
-        if not raw:
-            size = make_tradable_quantity(pair, float(size), subtract=0, 
-                                          exchange_info=exchange_info)
+        size = make_tradable_quantity(pair, float(size), subtract=0, 
+                                      exchange_info=exchange_info)
     return size

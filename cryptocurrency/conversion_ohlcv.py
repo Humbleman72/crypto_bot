@@ -17,7 +17,8 @@ import pandas as pd
 def convert_ohlcv(from_asset, to_asset, conversion_table, exchange_info):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                           to_asset=to_asset, 
-                                                          exchange_info=exchange_info)
+                                                          exchange_info=exchange_info, 
+                                                          priority='accuracy')
     base_asset, quote_asset = shortest_path[0]
     to_asset = quote_asset if from_asset == base_asset else base_asset
     pair = base_asset + quote_asset
@@ -50,7 +51,8 @@ def convert_ohlcvs(to_asset, conversion_table, exchange_info):
     def convert_ohlcv_prices(from_asset, to_asset, conversion_table, exchange_info):
         shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                               to_asset=to_asset, 
-                                                              exchange_info=exchange_info)
+                                                              exchange_info=exchange_info, 
+                                                              priority='accuracy')
         base_asset, quote_asset = shortest_path[0]
         to_asset = quote_asset if from_asset == base_asset else base_asset
         symbol = base_asset + quote_asset

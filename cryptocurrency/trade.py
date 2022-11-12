@@ -25,18 +25,19 @@ def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as
         quantity = quantity.iat[0]
         converted_quantity = convert_price(size=quantity, from_asset=asset, to_asset='USDT', 
                                            conversion_table=conversion_table, 
-                                           exchange_info=exchange_info, key='close')
+                                           exchange_info=exchange_info, key='close', 
+                                           priority='accuracy')
         ls.append((asset, converted_quantity, quantity))
     return sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]
 
 def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset, 
-                 conversion_table, exchange_info, verbose=False):
+                 conversion_table, exchange_info, priority='accuracy', verbose=False):
     pair = base_asset + quote_asset
     side = 'BUY' if from_asset != base_asset else 'SELL'
     if side == 'SELL':
         quantity = convert_price(float(quantity), from_asset=from_asset, to_asset=to_asset, 
                                  conversion_table=conversion_table, exchange_info=exchange_info, 
-                                 key='close')
+                                 key='close', priority=priority)
     ticks = 0
     while True:
         try:
@@ -66,12 +67,13 @@ def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset
         print('ticks:', ticks)
     return request
 
-def trade(client, to_asset, conversion_table, exchange_info, verbose=True):
+def trade(client, to_asset, conversion_table, exchange_info, priority='accuracy', verbose=True):
     from_asset, converted_quantity, quantity = \
         select_asset_with_biggest_wallet(client=client, conversion_table=conversion_table, 
                                          exchange_info=exchange_info)
     shortest_path = \
-        get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info=exchange_info)
+        get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info=exchange_info, 
+                                              priority=priority)
     if verbose:
         print(shortest_path)
     if from_asset == to_asset:
@@ -89,7 +91,7 @@ def trade(client, to_asset, conversion_table, exchange_info, verbose=True):
             request = trade_assets(client=client, quantity=quantity, from_asset=from_asset, 
                                    to_asset=to_asset, base_asset=base_asset, quote_asset=quote_asset, 
                                    conversion_table=conversion_table, exchange_info=exchange_info, 
-                                   verbose=False)
+                                   priority=priority, verbose=False)
             if request is None:
                 return trade(client=client, to_asset=to_asset, conversion_table=conversion_table, 
                              exchange_info=exchange_info)

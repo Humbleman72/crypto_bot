@@ -243,54 +243,43 @@ def get_heikin_ashi_trigger(data):
               get_not_negative_trend_strength_trigger(heikin_ashi_dataset_1))
 
 def screen_one(pair):
-    frequency = pd.tseries.frequencies.to_offset((pair.index[1:] - pair.index[:-1]).min())
-    frequency_1min = pd.tseries.frequencies.to_offset('1min')
-    frequency_30min = pd.tseries.frequencies.to_offset('30min')
-    frequency_1h = pd.tseries.frequencies.to_offset('1h')
-    frequency_1d = pd.tseries.frequencies.to_offset('1d')
-    if frequency == frequency_1min:
-        pair['volume'] = pair['rolling_base_volume'].copy()
-    else:
-        pair['volume'] = pair['base_volume'].copy()
-    if frequency < frequency_1min: # 15s for now, 5s later.
-        # Supports 15s and 30s not_square_wave_triggers.
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 2]):
-            return True
-    elif frequency == frequency_1min:
-        # Supports 1min, 2min, 3min, 5min, 10min, 15min, 20min and 45min not_square_wave_triggers.
-        #if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 2, 3, 5, 10, 15, 20, 45]):
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 3, 5, 15]):
-            if get_bullish_price_trigger(pair):
-                if get_rising_volume_trigger(pair):
+    if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
+        frequency = pd.tseries.frequencies.to_offset((pair.index[1:] - pair.index[:-1]).min())
+        frequency_1min = pd.tseries.frequencies.to_offset('1min')
+        frequency_30min = pd.tseries.frequencies.to_offset('30min')
+        frequency_1h = pd.tseries.frequencies.to_offset('1h')
+        frequency_1d = pd.tseries.frequencies.to_offset('1d')
+        if frequency == frequency_1min:
+            pair['volume'] = pair['rolling_base_volume'].copy()
+        else:
+            pair['volume'] = pair['base_volume'].copy()
+        if frequency < frequency_1min: # 15s for now, 5s later.
+            if get_not_square_wave_triggers(pair, multiplier_schedule=[2]):
+                return True
+        elif frequency == frequency_1min:
+            if get_rising_volume_trigger(pair):
+                if get_not_square_wave_triggers(pair, multiplier_schedule=[3, 5, 15]):
+                    #if get_bullish_price_trigger(pair):
                     if get_minute_daily_volume_minimum_trigger(pair):
                         #if get_minute_daily_volume_change_trigger(pair):
                         if get_heikin_ashi_trigger(pair):
                             return True
-    elif frequency == frequency_30min:
-        # Supports 30min not_square_wave_triggers.
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
-            if get_renko_trigger(pair, compress=False, 
-                                 direction_type='long', 
-                                 trigger_type='simple', 
-                                 method='atr', plot=False):
-                return True
-    elif frequency == frequency_1h: # 1h intervals and up won't be active for at least a day after bootstrapping.
-        # Supports 1h, 2h, 3h, 4h, 6h, 8h and 12h not_square_wave_triggers (too much for buffer size).
-        #if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 2, 3, 4, 6, 8, 12]):
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
-            if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
-                return True
-    elif frequency == frequency_1d: # 1d intervals and up won't be active for at least a day after bootstrapping.
-        # Supports 1d, 3d, 7d and 28d not_square_wave_triggers (too much for buffer size).
-        #if get_not_square_wave_triggers(pair, multiplier_schedule=[1, 3, 7, 28]):
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
-            if get_daily_volume_minimum_trigger(pair):
-                if get_daily_volume_change_trigger(pair):
-                    if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.1):
-                        return True
-    else:
-        # Supports 1T not_square_wave_triggers.
-        if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
+        elif frequency == frequency_30min:
             if get_rising_volume_trigger(pair):
+                if get_renko_trigger(pair, compress=False, 
+                                     direction_type='long', 
+                                     trigger_type='simple', 
+                                     method='atr', plot=False):
+                    return True
+        elif frequency == frequency_1h:
+            if get_rising_volume_trigger(pair):
+                if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
+                    return True
+        elif frequency == frequency_1d:
+            if get_daily_volume_minimum_trigger(pair):
+                #if get_daily_volume_change_trigger(pair):
+                #if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.1):
                 return True
+        else:
+            return True
     return False

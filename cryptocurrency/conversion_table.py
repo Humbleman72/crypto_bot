@@ -279,7 +279,6 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False, dump_
         conversion_table = conversion_table.reset_index(drop=True)
 
     conversion_table = conversion_table.sort_values(by='close_time')
-    #conversion_table = conversion_table.reset_index(drop=True)
     conversion_table['close_time'] /= 1000
     conversion_table['close_time'] = conversion_table['close_time'].apply(datetime.datetime.fromtimestamp)
     conversion_table['close_time'] = pd.DatetimeIndex(conversion_table['close_time'])

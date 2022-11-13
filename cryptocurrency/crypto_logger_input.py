@@ -15,7 +15,6 @@ from cryptocurrency.conversion_table import get_conversion_table, get_tradable_t
 from os import mkdir
 from os.path import exists, join
 
-#import datetime
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
@@ -78,21 +77,10 @@ class Crypto_logger_input(Crypto_logger_base):
                                      volume_percent=self.volume_percent)
         return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
 
-    '''
-    def prepare_downsampling(self, dataset):
-        dataset['close_time'] /= 1000
-        dataset['close_time'] = dataset['close_time'].apply(datetime.datetime.fromtimestamp)
-        #dataset['date'] = pd.DatetimeIndex(dataset['close_time']).round(self.interval)
-        #return dataset.set_index('date').sort_index()
-        dataset['close_time'] = pd.DatetimeIndex(dataset['close_time']).round(self.interval)
-        return dataset.set_index('close_time').sort_index()
-    '''
-
     def get(self):
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(self.client, self.exchange_info, offset_s=self.offset_s, 
                                        as_pair=self.as_pair, dump_raw=False)
-        #dataset = self.prepare_downsampling(dataset)
         dataset.index = dataset.index.round(self.interval)
         dataset.index.name = 'date'
         return dataset

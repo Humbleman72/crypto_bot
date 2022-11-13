@@ -6,7 +6,6 @@
 # For          Myself
 # Description: Indicators and triggers for output screeners.
 
-
 # Library imports.
 from cryptocurrency.renko import get_renko_trigger
 from sys import float_info as sflt
@@ -31,36 +30,43 @@ def get_relative_volume_levels_smoothed_trigger(data, average1=26, average2=14, 
     smoothed_relative_volume = ta.sma(close=relative_volume, length=average2)
     return (smoothed_relative_volume > threshold).iat[-1]
 
+def get_relative_volume_levels_trigger(data, average=10, threshold=0.1):
+    volume = data['volume']
+    volume_average = ta.sma(close=volume, length=average)
+    relative_volume = volume / volume_average
+    return (relative_volume > threshold).iat[-1]
+
 def get_relative_volume_levels_at_time_smoothed_thresholded(data):
     try:
         volume = data['volume']
         #volume = volume.groupby(pd.Grouper(freq='D')).cumsum()
         cum_volume = volume.groupby(pd.Grouper(freq='24h')).cumsum()
         #volume = volume.groupby(pd.Grouper(freq='60m')).cumsum()
-        cum_rvol = (cum_volume / cum_volume.shift(1)).fillna(method='pad')
+        #cum_rvol = (cum_volume / cum_volume.shift(1)).fillna(method='pad')
         rvol = (volume / volume.shift(1)).fillna(method='pad')
-        bar_up = (data['close'] > data['open'])
-        bar_up |= (data['close'] == data['open']) & (data['close'].diff() > 0)
-        bar_up = bar_up.astype(int)
-        bar_up = bar_up * 2 - 1
-        cum_rvol_dir = cum_rvol * bar_up
-        rvol_dir = rvol * bar_up
+        #bar_up = (data['close'] > data['open'])
+        #bar_up |= (data['close'] == data['open']) & (data['close'].diff() > 0)
+        #bar_up = bar_up.astype(int)
+        #bar_up = bar_up * 2 - 1
+        #cum_rvol_dir = cum_rvol * bar_up
+        #rvol_dir = rvol * bar_up
         rvol_indicator = ta.hma(rvol, length=14, talib=True)
-        rvol_dir_indicator = ta.hma(rvol_dir, length=14, talib=True)
-        cum_rvol_indicator = ta.hma(cum_rvol, length=14, talib=True)
-        cum_rvol_dir_indicator = ta.hma(cum_rvol_dir, length=14, talib=True)
+        #rvol_dir_indicator = ta.hma(rvol_dir, length=14, talib=True)
+        #cum_rvol_indicator = ta.hma(cum_rvol, length=14, talib=True)
+        #cum_rvol_dir_indicator = ta.hma(cum_rvol_dir, length=14, talib=True)
         rvol_indicator = rvol_indicator.rename('relative_volume_levels_smoothed')
-        rvol_dir_indicator = rvol_dir_indicator.rename('relative_volume_levels_dir_smoothed')
-        cum_rvol_indicator = cum_rvol_indicator.rename('cum_relative_volume_levels_smoothed')
-        cum_rvol_dir_indicator = cum_rvol_dir_indicator.rename('cum_relative_volume_levels_dir_smoothed')
-        #threshold = (ta.sma(rvol, length=100, talib=True) + ta.stdev(rvol, length=100, talib=True))
-        threshold_dir = 0
+        #rvol_dir_indicator = rvol_dir_indicator.rename('relative_volume_levels_dir_smoothed')
+        #cum_rvol_indicator = cum_rvol_indicator.rename('cum_relative_volume_levels_smoothed')
+        #cum_rvol_dir_indicator = cum_rvol_dir_indicator.rename('cum_relative_volume_levels_dir_smoothed')
+        ##threshold = (ta.sma(rvol, length=100, talib=True) + ta.stdev(rvol, length=100, talib=True))
+        #threshold_dir = 0
         threshold = 2
         rvol_thresholded = (rvol_indicator > threshold)
-        rvol_dir_thresholded = (rvol_dir_indicator > threshold_dir)
-        cum_rvol_thresholded = (cum_rvol_indicator > threshold)
-        cum_rvol_dir_thresholded = (cum_rvol_dir_indicator > threshold_dir)
-        trigger = (rvol_thresholded | rvol_dir_thresholded | cum_rvol_thresholded | cum_rvol_dir_thresholded)
+        #rvol_dir_thresholded = (rvol_dir_indicator > threshold_dir)
+        #cum_rvol_thresholded = (cum_rvol_indicator > threshold)
+        #cum_rvol_dir_thresholded = (cum_rvol_dir_indicator > threshold_dir)
+        #trigger = (rvol_thresholded | rvol_dir_thresholded | cum_rvol_thresholded | cum_rvol_dir_thresholded)
+        trigger = rvol_thresholded
         trigger = trigger.at[-1]
     except Exception as e:
         print('rvol exception:', e)
@@ -276,10 +282,11 @@ def screen_one(pair):
                 if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
                     return True
         elif frequency == frequency_1d:
-            if get_daily_volume_minimum_trigger(pair):
-                #if get_daily_volume_change_trigger(pair):
+            #if get_daily_volume_minimum_trigger(pair):
+            if get_daily_volume_change_trigger(pair):
                 #if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.1):
-                return True
+                if get_relative_volume_levels_trigger(pair, average=10, threshold=0.1):
+                    return True
         else:
             return True
     return False

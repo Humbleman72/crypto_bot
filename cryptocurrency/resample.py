@@ -14,11 +14,12 @@ import pandas as pd
 def resample(df, interval='1min'):
     df.index = pd.DatetimeIndex(df.index).round(interval)
     df = df.stack(level=0).reset_index(level=1)
-    frequency = pd.tseries.frequencies.to_offset((df.index[1:] - df.index[:-1]).min())
+    frequency = (df.index[1:] - df.index[:-1]).min()
+    frequency = pd.tseries.frequencies.to_offset(frequency)
     frequency_interval = pd.tseries.frequencies.to_offset(interval)
     frequency_1min = pd.tseries.frequencies.to_offset('1min')
     frequency_1d = pd.tseries.frequencies.to_offset('1d')
-    volume_operation = 'sum' if frequency > frequency_1min else 'last'
+    volume_operation = 'last' if frequency < frequency_1min else 'sum'
     values = ['open', 'high', 'low', 'close', 'base_volume', 'quote_volume']
     aggfunc = {'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 
                'base_volume': volume_operation, 'quote_volume': volume_operation}

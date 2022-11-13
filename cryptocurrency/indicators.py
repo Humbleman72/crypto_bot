@@ -37,41 +37,38 @@ def get_relative_volume_levels_trigger(data, average=10, threshold=0.1):
     return (relative_volume > threshold).iat[-1]
 
 def get_relative_volume_levels_at_time_smoothed_thresholded(data):
-    try:
-        volume = data['volume']
-        #volume = volume.groupby(pd.Grouper(freq='D')).cumsum()
-        cum_volume = volume.groupby(pd.Grouper(freq='24h')).cumsum()
-        #volume = volume.groupby(pd.Grouper(freq='60m')).cumsum()
-        #cum_rvol = (cum_volume / cum_volume.shift(1)).fillna(method='pad')
-        rvol = (volume / volume.shift(1)).fillna(method='pad')
-        #bar_up = (data['close'] > data['open'])
-        #bar_up |= (data['close'] == data['open']) & (data['close'].diff() > 0)
-        #bar_up = bar_up.astype(int)
-        #bar_up = bar_up * 2 - 1
-        #cum_rvol_dir = cum_rvol * bar_up
-        #rvol_dir = rvol * bar_up
-        rvol_indicator = ta.hma(rvol, length=14, talib=True)
-        #rvol_dir_indicator = ta.hma(rvol_dir, length=14, talib=True)
-        #cum_rvol_indicator = ta.hma(cum_rvol, length=14, talib=True)
-        #cum_rvol_dir_indicator = ta.hma(cum_rvol_dir, length=14, talib=True)
-        rvol_indicator = rvol_indicator.rename('relative_volume_levels_smoothed')
-        #rvol_dir_indicator = rvol_dir_indicator.rename('relative_volume_levels_dir_smoothed')
-        #cum_rvol_indicator = cum_rvol_indicator.rename('cum_relative_volume_levels_smoothed')
-        #cum_rvol_dir_indicator = cum_rvol_dir_indicator.rename('cum_relative_volume_levels_dir_smoothed')
-        ##threshold = (ta.sma(rvol, length=100, talib=True) + ta.stdev(rvol, length=100, talib=True))
-        #threshold_dir = 0
-        threshold = 2
-        rvol_thresholded = (rvol_indicator > threshold)
-        #rvol_dir_thresholded = (rvol_dir_indicator > threshold_dir)
-        #cum_rvol_thresholded = (cum_rvol_indicator > threshold)
-        #cum_rvol_dir_thresholded = (cum_rvol_dir_indicator > threshold_dir)
-        #trigger = (rvol_thresholded | rvol_dir_thresholded | cum_rvol_thresholded | cum_rvol_dir_thresholded)
-        trigger = rvol_thresholded
-        trigger = trigger.at[-1]
-    except Exception as e:
-        print('rvol exception:', e)
-        trigger = False
-    return trigger
+    volume = data['volume']
+    #volume = volume.groupby(pd.Grouper(freq='D')).cumsum()
+    cum_volume = volume.groupby(pd.Grouper(freq='24h')).cumsum()
+    #volume = volume.groupby(pd.Grouper(freq='60m')).cumsum()
+    cum_rvol = (cum_volume / cum_volume.shift(1)).fillna(method='pad')
+    rvol = (volume / volume.shift(1)).fillna(method='pad')
+    bar_up = (data['close'] > data['open'])
+    bar_up |= (data['close'] == data['open']) & (data['close'].diff() > 0)
+    bar_up = bar_up.astype(int)
+    bar_up = bar_up * 2 - 1
+    cum_rvol_dir = cum_rvol * bar_up
+    rvol_dir = rvol * bar_up
+    rvol_indicator = ta.hma(rvol, length=14, talib=True)
+    rvol_dir_indicator = ta.hma(rvol_dir, length=14, talib=True)
+    cum_rvol_indicator = ta.hma(cum_rvol, length=14, talib=True)
+    cum_rvol_dir_indicator = ta.hma(cum_rvol_dir, length=14, talib=True)
+    rvol_indicator = rvol_indicator.rename('relative_volume_levels_smoothed')
+    rvol_dir_indicator = rvol_dir_indicator.rename('relative_volume_levels_dir_smoothed')
+    cum_rvol_indicator = cum_rvol_indicator.rename('cum_relative_volume_levels_smoothed')
+    cum_rvol_dir_indicator = cum_rvol_dir_indicator.rename('cum_relative_volume_levels_dir_smoothed')
+    #threshold = (ta.sma(rvol, length=100, talib=True) + ta.stdev(rvol, length=100, talib=True))
+    threshold_dir = 0
+    threshold = 2
+    rvol_thresholded = (rvol_indicator > threshold)
+    rvol_dir_thresholded = (rvol_dir_indicator > threshold_dir)
+    cum_rvol_thresholded = (cum_rvol_indicator > threshold)
+    cum_rvol_dir_thresholded = (cum_rvol_dir_indicator > threshold_dir)
+    trigger = rvol_thresholded
+    trigger |= rvol_dir_thresholded
+    trigger |= cum_rvol_thresholded
+    trigger |= cum_rvol_dir_thresholded
+    return trigger.iloc[-1]
 
 def get_not_square_wave_trigger_1(data):
     return not (data.iloc[-4:]['close'].unique().size < 2)
@@ -177,8 +174,14 @@ def get_RSI_reversal_trigger(data, rsi_length=2, upper_threshold=95,
                              lower_threshold=5, positive=True):
     RSI = data.ta.rsi(length=rsi_length, talib=True)
     RSI_prev = RSI.shift(1)
-    thresholds_bear = -((RSI_prev >= upper_threshold) & (RSI < upper_threshold)).astype(int)
-    thresholds_bull = ((RSI_prev <= lower_threshold) & (RSI > lower_threshold)).astype(int)
+    thresholds_bear_up = (RSI_prev >= upper_threshold)
+    thresholds_bear_down = (RSI < upper_threshold)
+    thresholds_bull_up = (RSI_prev <= lower_threshold)
+    thresholds_bull_down = (RSI > lower_threshold)
+    thresholds_bear = -(thresholds_bear_up & thresholds_bear_down)
+    thresholds_bull = (thresholds_bull_up & thresholds_bull_down)
+    thresholds_bear = thresholds_bear.astype(int)
+    thresholds_bull = thresholds_bull.astype(int)
     thresholds = (thresholds_bear + thresholds_bull)
     thresholds = thresholds.replace(to_replace=0, method='pad')
     return (thresholds == (1 if positive else -1)).iat[-1]
@@ -250,15 +253,14 @@ def get_heikin_ashi_trigger(data):
 
 def screen_one(pair):
     if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
-        frequency = pd.tseries.frequencies.to_offset((pair.index[1:] - pair.index[:-1]).min())
+        frequency = (pair.index[1:] - pair.index[:-1]).min()
+        frequency = pd.tseries.frequencies.to_offset(frequency)
         frequency_1min = pd.tseries.frequencies.to_offset('1min')
         frequency_30min = pd.tseries.frequencies.to_offset('30min')
         frequency_1h = pd.tseries.frequencies.to_offset('1h')
         frequency_1d = pd.tseries.frequencies.to_offset('1d')
-        if frequency == frequency_1min:
-            pair['volume'] = pair['rolling_base_volume'].copy()
-        else:
-            pair['volume'] = pair['base_volume'].copy()
+        pair['volume'] = pair['rolling_base_volume'].copy() \
+            if frequency == frequency_1min else pair['base_volume'].copy()
         if frequency < frequency_1min: # 15s for now, 5s later.
             if get_not_square_wave_triggers(pair, multiplier_schedule=[2]):
                 return True

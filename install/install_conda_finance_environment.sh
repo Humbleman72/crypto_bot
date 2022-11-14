@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# File:        install/install_conda_environment.sh
+# File:        install/install_conda_finance_environment.sh
 # By:          Samuel Duclos
 # For:         Myself
-# Usage:       cd ~/workspace/secret_money && bash install/install_conda_environment.sh
+# Usage:       cd ~/workspace/crypto_logger && bash install/install_conda_finance_environment.sh
 # Description: Installs all packages required for finance data science and analysis.
 
 CONDA_ENV_NAME="finance"
@@ -15,12 +15,6 @@ ONNX_VERSION="1.4.1"
 TENSORFLOW_VERSION="2.4.1"
 PYTORCH_VERSION="1.7"
 TORCHVISION_VERSION="0.8"
-
-# Manual.
-#conda create --yes --name crypto_logger --channel conda-forge pandas=1.2.5 numpy pip python=3
-#conda activate crypto_logger
-#conda install --yes --channel conda-forge gcc gxx_linux-64 gcc_linux-64 cython pandas=1.2.5 numpy scipy matplotlib tqdm setuptools-git ta-lib jupyterlab ipywidgets widgetsnbextension typeguard
-#yes | pip install --upgrade --no-cache-dir numpy python-binance ta 'typing_extensions==3.10.0.2' git+https://github.com/twopirllc/pandas-ta
 
 # Automagic.
 conda create --yes --name ${CONDA_ENV_NAME} --channel pytorch --channel conda-forge gcc gxx_linux-64 gcc_linux-64 cython pandas=1.2.5 numpy matplotlib tqdm setuptools-git ta-lib featuretools python-graphviz lunarcalendar convertdate holidays requests==2.23.0 requests-cache flask beautifulsoup4 selenium jupyterlab ipywidgets widgetsnbextension scipy scikit-learn statsmodels gym h5py tensortrade tensorflow-gpu=${TENSORFLOW_VERSION} tensorflow-estimator tensorflow-datasets tensorflow-hub tensorflow-metadata tensorflow-probability keras keras-applications keras-preprocessing tensorboard typeguard pytorch=${PYTORCH_VERSION} torchvision=${TORCHVISION_VERSION} cudatoolkit=${CUDATOOLKIT_VERSION} pip=${PIP_VERSION} python=${PYTHON_VERSION} && \

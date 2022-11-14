@@ -19,7 +19,7 @@ def resample(df, interval='1min'):
     frequency_interval = pd.tseries.frequencies.to_offset(interval)
     frequency_1min = pd.tseries.frequencies.to_offset('1min')
     frequency_1d = pd.tseries.frequencies.to_offset('1d')
-    volume_operation = 'sum' if frequency >= frequency_1min else 'last'
+    volume_operation = 'sum' if frequency_interval >= frequency_1min else 'last'
     values = ['open', 'high', 'low', 'close', 'base_volume', 'quote_volume']
     aggfunc = {'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 
                'base_volume': volume_operation, 'quote_volume': volume_operation}

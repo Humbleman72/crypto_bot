@@ -162,7 +162,7 @@ def get_positive_PVR_trigger(data):
 '''
 
 def get_daily_volume_minimum_trigger(data):
-    return (data['volume'] > 1000000).iat[-1]
+    return (data['volume'] > 1000000).iloc[-1]
 
 def get_minute_daily_volume_minimum_trigger(data):
     return (data['rolling_base_volume'] > 1000000).iat[-1]

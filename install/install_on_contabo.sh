@@ -39,11 +39,14 @@ sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "sed -i 's/I
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} bash -c "ufw default deny incoming" && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} bash -c "ufw default allow outgoing" && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} bash -c "ufw allow OpenSSH" && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} bash -c "ufw allow 60000:61000/udp" && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} bash -c "yes | ufw enable" && \
-sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get update && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} echo -e "AllowUsers\t${NEW_USER}" >> /etc/ssh/sshd_config && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} systemctl restart sshd && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} sed -i 's/HISTSIZE=1000/HISTSIZE=100000/g' /home/${NEW_USER}/.bashrc && \
-sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} sed -i 's/HISTFILESIZE=2000/HISTFILESIZE=20000/g' /home/${NEW_USER}/.bashrc #&& \
-#sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} echo "HEY!" && \
-
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} sed -i 's/HISTFILESIZE=2000/HISTFILESIZE=20000/g' /home/${NEW_USER}/.bashrc && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get update && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get install -y mosh supervisor #&& \
+#cat install/install_conda.sh ${NEW_USER} | sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} && \
+#cat install/install_crypto_logger_conda_environment.sh | sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} && \
+#sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} env | grep USER | sed 's/USER=//'

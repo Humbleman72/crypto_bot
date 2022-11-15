@@ -17,7 +17,7 @@ import pandas as pd
 
 class Crypto_logger_base(ABC):
     def __init__(self, interval='15s', delay=4.7, buffer_size=3000, directory='crypto_logs', 
-                 log_name='crypto_log', raw=False):
+                 log_name='crypto_log', raw=False, log=True):
         """
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param delay: delay between Binance API requests. Minimum calculated was 4.7 seconds.
@@ -31,6 +31,7 @@ class Crypto_logger_base(ABC):
         self.buffer_size = buffer_size
         self.directory = directory
         self.raw = raw
+        self.log = log
 
         self.log_name = join(self.directory, log_name + '.txt')
         self.log_screened_name = join(self.directory, log_name + '_screened.txt')
@@ -48,11 +49,10 @@ class Crypto_logger_base(ABC):
         dataset.index = pd.DatetimeIndex(dataset.index)
         return dataset.sort_index(axis='index')
 
-    def init(self, append=False, roll=0, log=True):
+    def init(self, append=False, roll=0):
         """Initialization of the main logger loop."""
         self.append = append
         self.roll = roll
-        self.log = log
         if exists(self.log_name) and 'output' in self.log_name:
             self.dataset = self.get_from_file(log_name=self.log_name, from_raw=False)
             self.dataset = self.dataset.tail(self.buffer_size)
@@ -122,42 +122,35 @@ class Crypto_logger_base(ABC):
 
     def loop_next(self):
         """Main logger single loop."""
+        t1 = time.time()
         dataset = self.concat_next()
         self.process_next(dataset)
         self.log_next()
+        t2 = time.time()
+        print('Time spent for one loop:', t2 - t1)
         time.sleep(self.delay)
 
     def loop(self):
         """Main logger loop."""
-        while True:
-            try:
+        try:
+            while True:
+                t1 = time.time()
                 dataset = self.concat_next()
-            except (KeyboardInterrupt, SystemExit):
-                print('User terminated crypto logger process.')
-                break
-            except Exception as e:
-                print(e)
-            try:
                 self.process_next(dataset)
-            except (KeyboardInterrupt, SystemExit):
-                print('Saving latest complete dataset...')
-                self.process_next(dataset)
-                print('User terminated crypto logger process.')
-                break
-            except Exception as e:
-                print(e)
-            try:
                 self.log_next()
-            except (KeyboardInterrupt, SystemExit):
-                print('User terminated crypto logger process.')
-                break
-            except Exception as e:
-                print(e)
-            time.sleep(self.delay)
+                t2 = time.time()
+                print('Time spent for one loop:', t2 - t1)
+                time.sleep(self.delay)
+        except (KeyboardInterrupt, SystemExit):
+            print('Saving latest complete dataset...')
+            self.process_next(dataset)
+            print('User terminated crypto logger process.')
+        except Exception as e:
+            print(e)
 
-    def start(self, append=False, roll=0, log=True):
+    def start(self, append=False, roll=0):
         """Initialized main logger loop."""
         print('Starting crypto logger.')
-        self.init(append=append, roll=roll, log=log)
+        self.init(append=append, roll=roll)
         self.loop()
         print('Crypto logger process done.')

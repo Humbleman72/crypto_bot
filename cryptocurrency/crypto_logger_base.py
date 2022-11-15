@@ -10,10 +10,9 @@
 from cryptocurrency.resample import resample
 from binance.client import Client
 from abc import abstractmethod, ABC
-from time import sleep, time
 from os.path import exists, join
 from os import mkdir
-
+import time
 import pandas as pd
 
 class Crypto_logger_base(ABC):
@@ -49,6 +48,19 @@ class Crypto_logger_base(ABC):
         dataset.index = pd.DatetimeIndex(dataset.index)
         return dataset.sort_index(axis='index')
 
+    def init(self, append=False, roll=0, log=True):
+        """Initialization of the main logger loop."""
+        self.append = append
+        self.roll = roll
+        self.log = log
+        if exists(self.log_name) and 'output' in self.log_name:
+            self.dataset = self.get_from_file(log_name=self.log_name, from_raw=False)
+            self.dataset = self.dataset.tail(self.buffer_size)
+        else:
+            self.dataset = self.get()
+        self.min_index = self.dataset.index[-1]
+        self.dataset = self.put(self.dataset)
+
     @abstractmethod
     def get(self, **kwargs):
         raise NotImplementedError()
@@ -78,60 +90,74 @@ class Crypto_logger_base(ABC):
         self.min_index = dataset.index[0]
         return dataset
 
-    def start(self, append=False, roll=0):
-        """Main logger loop."""
-        print('Starting crypto logger.')
+    def concat_next(self):
+        """Concatenate old dataset with new dataset in main logger loop."""
+        return pd.concat([self.dataset, self.get()], axis='index', join='outer')
 
-        if exists(self.log_name) and 'output' in self.log_name:
-            self.dataset = self.get_from_file(log_name=self.log_name, from_raw=False)
-            self.dataset = self.dataset.tail(self.buffer_size)
+    def process_next(self, dataset):
+        """Process dataset in main logger loop."""
+        self.dataset = self.put(dataset)
+
+    def log_next(self):
+        """Log dataset in main logger loop."""
+        if exists(self.log_screened_name):
+            dataset_screened_old = \
+                pd.read_csv(self.log_screened_name, index_col=0, header=0)
         else:
-            self.dataset = self.get()
+            dataset_screened_old = None
+        dataset_screened = self.screen(self.dataset)
+        if dataset_screened is not None:
+            if self.roll != 0:
+                if self.append and exists(self.log_screened_name):
+                    dataset_screened = \
+                        pd.concat([dataset_screened_old, dataset_screened], axis='index')
+                    dataset_screened = \
+                        dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
+                dataset_screened = dataset_screened.tail(self.roll)
+                dataset_screened.to_csv(self.log_screened_name)
+            elif self.append:
+                dataset_screened.to_csv(self.log_screened_name, mode='a')
+            else:
+                dataset_screened.to_csv(self.log_screened_name)
 
-        self.min_index = self.dataset.index[-1]
-        self.dataset = self.put(self.dataset)
+    def loop_next(self):
+        """Main logger single loop."""
+        dataset = self.concat_next()
+        self.process_next(dataset)
+        self.log_next()
+        time.sleep(self.delay)
 
+    def loop(self):
+        """Main logger loop."""
         while True:
             try:
-                dataset = pd.concat([self.dataset, self.get()], axis='index', join='outer')
+                dataset = self.concat_next()
             except (KeyboardInterrupt, SystemExit):
                 print('User terminated crypto logger process.')
                 break
             except Exception as e:
                 print(e)
             try:
-                self.dataset = self.put(dataset)
+                self.process_next(dataset)
             except (KeyboardInterrupt, SystemExit):
                 print('Saving latest complete dataset...')
-                self.dataset = self.put(dataset)
+                self.process_next(dataset)
                 print('User terminated crypto logger process.')
                 break
             except Exception as e:
                 print(e)
             try:
-                if exists(self.log_screened_name):
-                    dataset_screened_old = \
-                        pd.read_csv(self.log_screened_name, index_col=0, header=0)
-                else:
-                    dataset_screened_old = None
-                dataset_screened = self.screen(self.dataset)
-                if dataset_screened is not None:
-                    if roll != 0:
-                        if append and exists(self.log_screened_name):
-                            dataset_screened = \
-                                pd.concat([dataset_screened_old, dataset_screened], axis='index')
-                            dataset_screened = \
-                                dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
-                        dataset_screened = dataset_screened.tail(roll)
-                        dataset_screened.to_csv(self.log_screened_name)
-                    elif append:
-                        dataset_screened.to_csv(self.log_screened_name, mode='a')
-                    else:
-                        dataset_screened.to_csv(self.log_screened_name)
+                self.log_next()
             except (KeyboardInterrupt, SystemExit):
                 print('User terminated crypto logger process.')
                 break
             except Exception as e:
                 print(e)
-            sleep(self.delay)
+            time.sleep(self.delay)
+
+    def start(self, append=False, roll=0, log=True):
+        """Initialized main logger loop."""
+        print('Starting crypto logger.')
+        self.init(append=append, roll=roll, log=log)
+        self.loop()
         print('Crypto logger process done.')

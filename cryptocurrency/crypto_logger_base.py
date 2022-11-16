@@ -123,16 +123,6 @@ class Crypto_logger_base(ABC):
             else:
                 dataset_screened.to_csv(self.log_screened_name)
 
-    def loop_next(self):
-        """Main logger single loop."""
-        t1 = time.time()
-        dataset = self.concat_next()
-        self.process_next(dataset)
-        self.log_next()
-        t2 = time.time()
-        print('Time spent for one loop:', t2 - t1)
-        time.sleep(self.delay)
-
     def start(self):
         """Main logger loop."""
         print('Starting crypto logger.')

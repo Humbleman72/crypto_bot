@@ -16,7 +16,7 @@ pd.options.mode.chained_assignment = None
 
 class Crypto_logger_output(Crypto_logger_base):
     def __init__(self, delay=12, interval_input='15s', interval='15s', buffer_size=60, 
-                 input_log_name='input'):
+                 input_log_name='input', append=True, roll=60, log=True):
         """
         :param delay: delay between logger/screener service interruptions.
         :param interval_input: OHLCV interval from input log. Default is 15 seconds.
@@ -29,7 +29,7 @@ class Crypto_logger_output(Crypto_logger_base):
         self.load_from_ohlcv = interval_input != interval
         super().__init__(interval=interval, delay=delay, buffer_size=buffer_size, 
                          directory='crypto_logs', log_name='crypto_output_log_' + interval, 
-                         raw=False)
+                         raw=False, append=append, roll=roll, log=log)
 
         self.input_log_name = \
             join(self.directory, input_log_name + interval_input + '.txt')

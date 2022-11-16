@@ -20,7 +20,8 @@ pd.options.mode.chained_assignment = None
 
 class Crypto_logger_input(Crypto_logger_base):
     def __init__(self, delay=4.7, interval='15s', buffer_size=3000, 
-                 price_percent=5.0, volume_percent=0.0, as_pair=False):
+                 price_percent=5.0, volume_percent=0.0, as_pair=False, 
+                 append=False, roll=1000, log=True):
         """
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param delay: delay between Binance API requests. Minimum calculated was 4.7 seconds.
@@ -34,7 +35,7 @@ class Crypto_logger_input(Crypto_logger_base):
         self.as_pair = as_pair
         super().__init__(interval=interval, delay=delay, buffer_size=buffer_size, 
                          directory='crypto_logs', log_name='crypto_input_log_' + interval, 
-                         raw=True)
+                         raw=True, append=append, roll=roll, log=log)
 
         authenticator = Cryptocurrency_authenticator(use_keys=False, testnet=False)
         self.client = authenticator.spot_client

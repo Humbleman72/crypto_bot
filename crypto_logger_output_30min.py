@@ -13,5 +13,8 @@ crypto_logger_output_30min = Crypto_logger_output(delay=66,
                                                   interval_input='1min', 
                                                   interval='30min', 
                                                   buffer_size=60, 
-                                                  input_log_name='output')
-crypto_logger_output_30min.start(append=False, roll=1000)
+                                                  input_log_name='output', 
+                                                  append=False, 
+                                                  roll=1000, 
+                                                  log=True)
+crypto_logger_output_30min.start()

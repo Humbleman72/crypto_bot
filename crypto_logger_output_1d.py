@@ -13,5 +13,8 @@ crypto_logger_output_1d = Crypto_logger_output(delay=222,
                                                interval_input='1h', 
                                                interval='1d', 
                                                buffer_size=60, 
-                                               input_log_name='output')
-crypto_logger_output_1d.start(append=True, roll=12)
+                                               input_log_name='output', 
+                                               append=True, 
+                                               roll=12, 
+                                               log=True)
+crypto_logger_output_1d.start()

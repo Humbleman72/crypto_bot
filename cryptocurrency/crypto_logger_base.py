@@ -17,7 +17,7 @@ import pandas as pd
 
 class Crypto_logger_base(ABC):
     def __init__(self, interval='15s', delay=4.7, buffer_size=3000, directory='crypto_logs', 
-                 log_name='crypto_log', raw=False, log=True):
+                 log_name='crypto_log', raw=False, append=False, roll=0, log=True):
         """
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param delay: delay between Binance API requests. Minimum calculated was 4.7 seconds.
@@ -25,12 +25,17 @@ class Crypto_logger_base(ABC):
         :param directory: the directory where to output the logs.
         :param log_name: name of the log file.
         :param raw: whether the log dumps raw (instantaneous) or OHLCV data.
+        :param append: whether to append the latest screened data to the log dumps or not.
+        :param roll: buffer size to cut oldest data (0 means don't cut).
+        :param log: whether to log to files.
         """
         self.interval = interval
         self.delay = delay
         self.buffer_size = buffer_size
         self.directory = directory
         self.raw = raw
+        self.append = append
+        self.roll = roll
         self.log = log
 
         self.log_name = join(self.directory, log_name + '.txt')
@@ -49,10 +54,8 @@ class Crypto_logger_base(ABC):
         dataset.index = pd.DatetimeIndex(dataset.index)
         return dataset.sort_index(axis='index')
 
-    def init(self, append=False, roll=0):
+    def init(self):
         """Initialization of the main logger loop."""
-        self.append = append
-        self.roll = roll
         if exists(self.log_name) and 'output' in self.log_name:
             self.dataset = self.get_from_file(log_name=self.log_name, from_raw=False)
             self.dataset = self.dataset.tail(self.buffer_size)
@@ -130,8 +133,10 @@ class Crypto_logger_base(ABC):
         print('Time spent for one loop:', t2 - t1)
         time.sleep(self.delay)
 
-    def loop(self):
+    def start(self):
         """Main logger loop."""
+        print('Starting crypto logger.')
+        self.init()
         try:
             while True:
                 t1 = time.time()
@@ -147,10 +152,6 @@ class Crypto_logger_base(ABC):
             print('User terminated crypto logger process.')
         except Exception as e:
             print(e)
-
-    def start(self, append=False, roll=0):
-        """Initialized main logger loop."""
-        print('Starting crypto logger.')
-        self.init(append=append, roll=roll)
-        self.loop()
-        print('Crypto logger process done.')
+        finally:
+            # Release resources.
+            print('crypto_logger process done.')

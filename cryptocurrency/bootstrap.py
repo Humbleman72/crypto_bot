@@ -29,7 +29,8 @@ def bootstrap_loggers(client, assets, pairs=None, additional_intervals=None, ups
     if not as_pair:
         pairs[base_interval] = convert_ohlcvs_from_pairs_to_assets(pairs[base_interval], exchange_info)
     pairs[base_interval] = add_rolling_volumes(pairs[base_interval])
-    pairs[base_interval] = pairs[base_interval].loc[pairs[base_interval].dropna().first_valid_index():]
+    if base_interval < frequency_1d:
+        pairs[base_interval] = pairs[base_interval].loc[pairs[base_interval].dropna().first_valid_index():]
     if additional_intervals is not None:
         for additional_interval in tqdm(additional_intervals, unit=' pair'):
             pairs[additional_interval] = resample(pairs[base_interval].copy(), interval=additional_interval)

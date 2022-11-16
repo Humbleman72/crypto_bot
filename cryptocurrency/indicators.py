@@ -162,7 +162,7 @@ def get_positive_PVR_trigger(data):
 '''
 
 def get_daily_volume_minimum_trigger(data):
-    return (data['volume'] > 1000000).iloc[-1]
+    return (data['volume'] > 1000000).iat[-1]
 
 def get_minute_daily_volume_minimum_trigger(data):
     return (data['rolling_base_volume'] > 1000000).iat[-1]
@@ -298,9 +298,9 @@ def screen_one(pair):
         elif frequency == frequency_1d:
             #if get_daily_volume_minimum_trigger(pair):
             if get_daily_volume_change_trigger(pair, threshold=300):
-                #if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.1):
                 #if get_relative_volume_levels_trigger(pair, average=10, threshold=0.1):
-                return True
+                if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.1):
+                    return True
         else:
             return True
     return False

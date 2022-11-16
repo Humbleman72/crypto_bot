@@ -16,9 +16,8 @@ import logging
 logging.basicConfig()
 LOGLEVEL = logging.getLogger().getEffectiveLevel()
 
-def start_loggers():
-    """Main logger loop."""
-    print('Starting crypto logger.')
+def init_loggers():
+    """Main logger configuration."""
     crypto_logger_input_15s = Crypto_logger_input(delay=4.7, interval='15s', buffer_size=3000, 
                                                   price_percent=5.0, volume_percent=0.0, 
                                                   as_pair=False, append=True, roll=60, log=True)
@@ -62,20 +61,25 @@ def start_loggers():
                                                    append=False, 
                                                    roll=1000, 
                                                    log=True)
-    crypto_loggers = [
-        crypto_logger_input_15s, 
-        crypto_logger_output_15s, 
-        crypto_logger_output_1min, 
-        crypto_logger_output_30min, 
-        crypto_logger_output_1h, 
-        crypto_logger_output_1d
-    ]
-    for crypto_logger in crypto_loggers:
+    crypto_loggers = {
+        'input_15s': crypto_logger_input_15s, 
+        'output_15s': crypto_logger_output_15s, 
+        'output_1min': crypto_logger_output_1min, 
+        'output_30min': crypto_logger_output_30min, 
+        'output_1h': crypto_logger_output_1h, 
+        'output_1d': crypto_logger_output_1d
+    }
+    for crypto_logger in crypto_loggers.values():
         crypto_logger.init()
+    return crypto_loggers
+
+def loop_loggers(crypto_loggers):
+    """Main logger loop."""
+    print('Starting crypto logger.')
     try:
         while True:
             #t1 = time.time()
-            for crypto_logger in crypto_loggers:
+            for crypto_logger in crypto_loggers.values():
                 dataset = crypto_logger.concat_next()
                 crypto_logger.process_next(dataset)
                 crypto_logger.log_next()
@@ -94,7 +98,8 @@ def start_loggers():
 
 def main():
     """crypto_logger main."""
-    start_loggers()
+    crypto_loggers = init_loggers()
+    loop_loggers(crypto_loggers)
 
 if __name__ == '__main__':
     main()

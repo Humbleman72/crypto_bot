@@ -12,8 +12,6 @@ from cryptocurrency.authentication import Cryptocurrency_authenticator
 from cryptocurrency.exchange import Cryptocurrency_exchange
 from cryptocurrency.conversion import get_timezone_offset_in_seconds
 from cryptocurrency.conversion_table import get_conversion_table, get_tradable_tickers_info
-from os import mkdir
-from os.path import exists, join
 
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -29,12 +27,12 @@ class Crypto_logger_input(Crypto_logger_base):
         :param price_percent: price move percent.
         :param volume_percent: volume move percent.
         """
-        self.resample = None
         self.price_percent = price_percent
         self.volume_percent = volume_percent
         self.as_pair = as_pair
-        super().__init__(interval=interval, delay=delay, buffer_size=buffer_size, 
-                         directory='crypto_logs', log_name='crypto_input_log_' + interval, 
+        super().__init__(delay=delay, interval=interval, interval_input='', 
+                         buffer_size=buffer_size, directory='crypto_logs', 
+                         log_name='crypto_input_log_' + interval, input_log_name='', 
                          raw=True, append=append, roll=roll, log=log)
 
         authenticator = Cryptocurrency_authenticator(use_keys=False, testnet=False)

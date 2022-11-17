@@ -9,7 +9,6 @@
 # Library imports.
 from cryptocurrency.crypto_logger_base import Crypto_logger_base
 from cryptocurrency.indicators import filter_in_market, screen_one
-from os.path import exists, join
 
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -22,24 +21,19 @@ class Crypto_logger_output(Crypto_logger_base):
         :param interval_input: OHLCV interval from input log. Default is 15 seconds.
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param buffer_size: buffer size to avoid crashing on memory accesses.
-        :param input_log_name: the directory where to take the logs from.
+        :param input_log_name: either input or output (this ends up in the log file name).
+        :param append: whether to append the latest screened data to the log dumps or not.
+        :param roll: buffer size to cut oldest data (0 means don't cut).
+        :param log: whether to log to files.
         """
-        self.data_before = pd.DataFrame()
-        input_log_name = 'crypto_' + input_log_name + '_log_'
-        self.load_from_ohlcv = interval_input != interval
-        super().__init__(interval=interval, delay=delay, buffer_size=buffer_size, 
-                         directory='crypto_logs', log_name='crypto_output_log_' + interval, 
+        super().__init__(delay=delay, interval=interval, interval_input=interval_input, 
+                         buffer_size=buffer_size, directory='crypto_logs', 
+                         log_name='crypto_output_log_' + interval, input_log_name=input_log_name, 
                          raw=False, append=append, roll=roll, log=log)
 
-        self.input_log_name = \
-            join(self.directory, input_log_name + interval_input + '.txt')
-        self.input_log_screened_name = \
-            join(self.directory, input_log_name + interval_input + '_screened.txt')
-
     def screen(self, dataset):
-        input_filtered = None
-        if exists(self.input_log_screened_name):
-            input_filtered = pd.read_csv(self.input_log_screened_name, header=0, index_col=0)
+        input_filtered = self.get_from_file(log_name=self.input_log_screened_name, from_raw=True)
+        if input_filtered is not None:
             input_filter = set(input_filtered['symbol'].tolist())
             old_columns = set(dataset.columns.get_level_values(0).tolist())
             new_columns = list(input_filter & old_columns)

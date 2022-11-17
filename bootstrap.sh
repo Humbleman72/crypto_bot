@@ -11,7 +11,7 @@ CONDA_ENV_NAME="crypto_logger"
 read -s -p "Password: " PASSWORD
 
 echo $PASSWORD | sudo -S supervisorctl stop all
-echo $PASSWORD | sudo -S rm -rf /tmp/crypto_*.[err,out]
+echo $PASSWORD | sudo -S rm -rf /tmp/crypto.[err,out]
 echo $PASSWORD | sudo -S supervisorctl status all
 
 source activate ${CONDA_ENV_NAME} && \
@@ -28,4 +28,4 @@ sleep 15
 echo $PASSWORD | sudo -S supervisorctl status all
 sleep 10
 
-watch -n 5 tail -n 40 ~/workspace/crypto_logs/crypto_input_log_15s_screened.txt
+watch -n 30 tail -n 40 ~/workspace/crypto_logs/crypto_input_log_15s_screened.txt

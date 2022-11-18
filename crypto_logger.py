@@ -18,10 +18,10 @@ LOGLEVEL = logging.getLogger().getEffectiveLevel()
 
 def init_loggers():
     """Main logger initialization."""
-    crypto_logger_input_15s = Crypto_logger_input(delay=8, interval='15s', buffer_size=3000, 
+    crypto_logger_input_15s = Crypto_logger_input(delay=4, interval='15s', buffer_size=3000, 
                                                   price_percent=1.0, volume_percent=0.0, 
                                                   as_pair=False, append=True, roll=60, log=True)
-    crypto_logger_output_15s = Crypto_logger_output(delay=0, 
+    crypto_logger_output_15s = Crypto_logger_output(delay=1, 
                                                     interval_input='15s', 
                                                     interval='15s', 
                                                     buffer_size=60, 
@@ -29,7 +29,7 @@ def init_loggers():
                                                     append=False, 
                                                     roll=1000, 
                                                     log=True)
-    crypto_logger_output_1min = Crypto_logger_output(delay=0, 
+    crypto_logger_output_1min = Crypto_logger_output(delay=1, 
                                                      interval_input='15s', 
                                                      interval='1min', 
                                                      buffer_size=1500, 
@@ -37,7 +37,7 @@ def init_loggers():
                                                      append=False, 
                                                      roll=1000, 
                                                      log=True)
-    crypto_logger_output_30min = Crypto_logger_output(delay=0, 
+    crypto_logger_output_30min = Crypto_logger_output(delay=1, 
                                                       interval_input='1min', 
                                                       interval='30min', 
                                                       buffer_size=60, 
@@ -45,7 +45,7 @@ def init_loggers():
                                                       append=False, 
                                                       roll=1000, 
                                                       log=True)
-    crypto_logger_output_1h = Crypto_logger_output(delay=0, 
+    crypto_logger_output_1h = Crypto_logger_output(delay=1, 
                                                    interval_input='30min', 
                                                    interval='1h', 
                                                    buffer_size=60, 
@@ -53,7 +53,7 @@ def init_loggers():
                                                    append=False, 
                                                    roll=1000, 
                                                    log=True)
-    crypto_logger_output_1d = Crypto_logger_output(delay=0, 
+    crypto_logger_output_1d = Crypto_logger_output(delay=1, 
                                                    interval_input='1h', 
                                                    interval='1d', 
                                                    buffer_size=60, 

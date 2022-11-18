@@ -45,10 +45,10 @@ class Crypto_logger_input(Crypto_logger_base):
 
     def filter_movers(self, dataset, count=1000, price_percent=5.0, volume_percent=0.0):
         dataset = dataset.reset_index()
-        dataset[['price_change_percent', 'rolling_quote_volume']] = \
-            dataset[['price_change_percent', 'rolling_quote_volume']].astype(float)
+        dataset[['price_change_percent', 'rolling_base_volume']] = \
+            dataset[['price_change_percent', 'rolling_base_volume']].astype(float)
         dataset['last_price_move'] = dataset['price_change_percent'].copy()
-        dataset['last_volume_move'] = dataset['rolling_quote_volume'].copy()
+        dataset['last_volume_move'] = dataset['rolling_base_volume'].copy()
         movers = dataset.groupby(['symbol'])
         dataset = dataset.drop(columns=['last_price_move', 'last_volume_move'])
         price_movers = movers['last_price_move']
@@ -66,8 +66,14 @@ class Crypto_logger_input(Crypto_logger_base):
         volume_movers_mask = movers['last_volume_move'] > volume_percent
         movers = movers[price_movers_mask & volume_movers_mask]
         movers = movers.sort_values(by=['last_volume_move', 'last_price_move'], ascending=False)
-        movers = movers.tail(count).reset_index(drop=True)
-        return dataset.merge(right=movers, how='right', on=['symbol']).set_index('date')
+        movers = movers.tail(count)
+        movers = movers.reset_index(drop=True)
+        #dataset = dataset.set_index('symbol')
+        #movers = movers.set_index('symbol')
+        #dataset = dataset.merge(right=movers, how='right', left_index=True, right_index=True)
+        dataset = dataset.merge(right=movers, how='right', on=['symbol'])
+        dataset = dataset.set_index('date')
+        return dataset
 
     def screen(self, dataset):
         dataset = get_tradable_tickers_info(dataset, as_pair=self.as_pair)
@@ -79,7 +85,8 @@ class Crypto_logger_input(Crypto_logger_base):
     def get(self):
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(self.client, self.exchange_info, offset_s=self.offset_s, 
-                                       as_pair=self.as_pair, dump_raw=False)
+                                       as_pair=self.as_pair, dump_raw=False, minimal=True, 
+                                       convert_to_USDT=True)
         dataset.index = dataset.index.round(self.interval)
         dataset.index.name = 'date'
         return dataset

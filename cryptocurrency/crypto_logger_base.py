@@ -115,7 +115,8 @@ class Crypto_logger_base(ABC):
 
     def log_next(self):
         """Log dataset in main logger loop."""
-        dataset_screened_old = self.get_from_file(log_name=self.log_screened_name, from_raw=True)
+        dataset_screened_old = self.get_from_file(log_name=self.log_screened_name, 
+                                                  from_raw=True)
         dataset_screened = self.screen(self.dataset)
         if dataset_screened is not None:
             if self.roll != 0:

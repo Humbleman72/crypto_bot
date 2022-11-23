@@ -31,16 +31,17 @@ class Crypto_logger_output(Crypto_logger_base):
                          log_name='crypto_output_log_' + interval, input_log_name=input_log_name, 
                          raw=False, append=append, roll=roll, log=log)
 
-    def screen(self, dataset):
-        input_filtered = self.get_from_file(log_name=self.input_log_screened_name, from_raw=True)
-        if input_filtered is not None:
-            input_filter = set(input_filtered['symbol'].tolist())
+    def screen(self, dataset, dataset_screened=None):
+        if dataset_screened is None:
+            dataset_screened = self.get_from_file(log_name=self.input_log_screened_name, from_raw=True)
+        if dataset_screened is not None:
+            input_filter = set(dataset_screened['symbol'].tolist())
             old_columns = set(dataset.columns.get_level_values(0).tolist())
             new_columns = list(input_filter & old_columns)
             dataset = dataset[new_columns]
             assets = filter_in_market(screen_one, dataset)
-            input_filtered = input_filtered[input_filtered['symbol'].isin(assets)]
-        return input_filtered
+            dataset_screened = dataset_screened[dataset_screened['symbol'].isin(assets)]
+        return dataset_screened
 
     def resample_from_raw(self, df):
         df = df[['symbol', 'close', 'rolling_base_volume', 'rolling_quote_volume']]
@@ -72,9 +73,10 @@ class Crypto_logger_output(Crypto_logger_base):
         df.columns = df.columns.swaplevel(0, 1)
         return df
 
-    def get(self):
-        dataset = self.get_from_file(log_name=self.input_log_name, 
-                                     from_raw=not self.load_from_ohlcv)
+    def get(self, dataset=None):
+        if dataset is None:
+            dataset = self.get_from_file(log_name=self.input_log_name, 
+                                         from_raw=not self.load_from_ohlcv)
         if not self.load_from_ohlcv:
             dataset = self.resample_from_raw(dataset)
         return dataset.tail(2)

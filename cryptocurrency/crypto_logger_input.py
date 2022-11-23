@@ -75,14 +75,14 @@ class Crypto_logger_input(Crypto_logger_base):
         dataset = dataset.set_index('date')
         return dataset
 
-    def screen(self, dataset):
+    def screen(self, dataset, dataset_screened=None):
         dataset = get_tradable_tickers_info(dataset, as_pair=self.as_pair)
         dataset = self.filter_movers(dataset, count=1000, 
                                      price_percent=self.price_percent, 
                                      volume_percent=self.volume_percent)
         return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
 
-    def get(self):
+    def get(self, dataset=None):
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(self.client, self.exchange_info, offset_s=self.offset_s, 
                                        as_pair=self.as_pair, dump_raw=False, minimal=True, 

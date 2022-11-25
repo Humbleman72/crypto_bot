@@ -44,43 +44,26 @@ class Crypto_logger_input(Crypto_logger_base):
         self.offset_s = get_timezone_offset_in_seconds()
 
     def filter_movers(self, dataset, count=1000, price_percent=5.0, volume_percent=0.0):
-        dataset = dataset.reset_index()
-        dataset[['price_change_percent', 'rolling_base_volume']] = \
-            dataset[['price_change_percent', 'rolling_base_volume']].astype(float)
-        dataset['last_price_move'] = dataset['price_change_percent'].copy()
-        dataset['last_volume_move'] = dataset['rolling_base_volume'].copy()
-        movers = dataset.groupby(['symbol'])
-        dataset = dataset.drop(columns=['last_price_move', 'last_volume_move'])
-        price_movers = movers['last_price_move']
-        volume_movers = movers['last_volume_move']
-        price_movers = price_movers.agg(lambda x: x.diff(1).abs().iloc[-1])
-        volume_movers = volume_movers.agg(lambda x: (100 * x.pct_change(1)).iloc[-1])
-        price_movers = price_movers.sort_values(ascending=False)
-        volume_movers = volume_movers.sort_values(ascending=False)
-        price_movers = price_movers[price_movers > 0.0]
-        price_movers = price_movers.to_frame(name='last_price_move')
-        volume_movers = volume_movers.to_frame(name='last_volume_move')
-        movers = pd.concat([price_movers, volume_movers], axis='columns')
-        movers = movers.reset_index()
-        price_movers_mask = movers['last_price_move'] > price_percent
-        volume_movers_mask = movers['last_volume_move'] > volume_percent
-        movers = movers[price_movers_mask & volume_movers_mask]
-        movers = movers.sort_values(by=['last_volume_move', 'last_price_move'], ascending=False)
+        dataset = get_tradable_tickers_info(dataset, as_pair=False)
+        movers = dataset.reset_index()
+        movers['price_change_percent'] = movers['price_change_percent'].astype(float)
+        movers = movers[['symbol', 'price_change_percent']]
+        movers = movers.groupby(['symbol'])
+        movers = movers.agg(lambda x: x.diff(1).abs().iloc[-1])
+        movers = movers['price_change_percent']
+        movers = movers.dropna()
+        movers = movers.sort_values(ascending=False)
         movers = movers.tail(count)
-        movers = movers.reset_index(drop=True)
-        #dataset = dataset.set_index('symbol')
-        #movers = movers.set_index('symbol')
-        #dataset = dataset.merge(right=movers, how='right', left_index=True, right_index=True)
-        dataset = dataset.merge(right=movers, how='right', on=['symbol'])
-        dataset = dataset.set_index('date')
-        return dataset
+        movers = movers[movers > price_percent]
+        movers = movers.index.tolist()
+        dataset = dataset[dataset['symbol'].isin(movers)]
+        return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
 
     def screen(self, dataset, dataset_screened=None):
         dataset = get_tradable_tickers_info(dataset, as_pair=self.as_pair)
-        dataset = self.filter_movers(dataset, count=1000, 
-                                     price_percent=self.price_percent, 
-                                     volume_percent=self.volume_percent)
-        return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
+        return self.filter_movers(dataset, count=1000, 
+                                  price_percent=self.price_percent, 
+                                  volume_percent=self.volume_percent)
 
     def get(self, dataset=None):
         """Get all pairs data from Binance API."""

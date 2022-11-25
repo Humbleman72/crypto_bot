@@ -126,9 +126,11 @@ class Crypto_logger_base(ABC):
         self.dataset_screened = self.screen(dataset, dataset_screened=self.dataset_screened_old)
         if self.dataset_screened is not None:
             if self.append:
-                self.dataset_screened = pd.concat([self.dataset_screened_old, self.dataset_screened], axis='index')
+                if self.dataset_screened_old is not None:
+                    self.dataset_screened = pd.concat([self.dataset_screened_old, self.dataset_screened], axis='index')
+                self.dataset_screened = self.dataset_screened.sort_index(axis='index')
                 self.dataset_screened = self.dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
-            if self.roll != 0:
+            if self.roll > 0:
                 self.dataset_screened = self.dataset_screened.tail(self.roll)
         return self.dataset_screened
 

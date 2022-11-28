@@ -62,7 +62,7 @@ class Crypto_logger_base(ABC):
             header = 0 if from_raw else [0, 1]
             dataset = pd.read_csv(log_name, header=header, index_col=0)
             dataset.index = pd.DatetimeIndex(dataset.index)
-            return dataset.sort_index(axis='index')
+            return dataset
         else:
             return None
 
@@ -72,7 +72,6 @@ class Crypto_logger_base(ABC):
             self.dataset = self.get_from_file(log_name=self.log_name, from_raw=False)
         else:
             self.dataset = self.get()
-        self.dataset_screened = None
         self.dataset = self.dataset.tail(self.buffer_size)
         self.min_index = self.dataset.index[-1]
         self.dataset = self.put(self.dataset)
@@ -101,14 +100,15 @@ class Crypto_logger_base(ABC):
         if 'date' in dataset.columns:
             dataset = dataset.iloc[min_index_int:]
 
+        dataset = dataset.sort_index(axis='index')
         dataset = dataset.tail(self.buffer_size)
-        dataset.to_csv(self.log_name)
         self.min_index = dataset.index[0]
+        dataset.to_csv(self.log_name)
         return dataset
 
-    def concat_next(self):
+    def concat_next(self, dataset=None):
         """Concatenate old dataset with new dataset in main logger loop."""
-        return pd.concat([self.dataset, self.get()], axis='index', join='outer')
+        return pd.concat([self.dataset, self.get(dataset)], axis='index', join='outer')
 
     def process_next(self, dataset):
         """Process dataset in main logger loop."""
@@ -120,44 +120,42 @@ class Crypto_logger_base(ABC):
         if dataset is None:
             dataset = self.dataset
         if dataset_screened is None:
-            self.dataset_screened_old = self.get_from_file(log_name=self.log_screened_name, from_raw=True)
+            dataset_screened_old = self.get_from_file(log_name=self.log_screened_name, from_raw=True)
         else:
-            self.dataset_screened_old = dataset_screened
-        self.dataset_screened = self.screen(dataset, dataset_screened=self.dataset_screened_old)
-        if self.dataset_screened is not None:
-            if self.append:
-                if self.dataset_screened_old is not None:
-                    self.dataset_screened = pd.concat([self.dataset_screened_old, self.dataset_screened], axis='index')
-                self.dataset_screened = self.dataset_screened.sort_index(axis='index')
-                self.dataset_screened = self.dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
-            if self.roll > 0:
-                self.dataset_screened = self.dataset_screened.tail(self.roll)
-        return self.dataset_screened
-
-    def log_screened_next(self, dataset_screened=None):
-        """Log dataset in main logger loop."""
-        if self.dataset_screened is not None and self.log:
-            self.dataset_screened.to_csv(self.log_screened_name)
+            dataset_screened_old = dataset_screened
+        dataset_screened = self.screen(dataset, dataset_screened=dataset_screened_old)
+        if dataset_screened is not None:
+            dataset_screened = dataset_screened.sort_index(axis='index')
+            if self.roll != 0:
+                if self.append and dataset_screened_old is not None:
+                    dataset_screened = pd.concat([dataset_screened_old, dataset_screened], axis='index')
+                    dataset_screened = dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
+                dataset_screened = dataset_screened.tail(self.roll)
+                dataset_screened.to_csv(self.log_screened_name)
+            elif self.append:
+                dataset_screened.to_csv(self.log_screened_name, mode='a')
+            else:
+                dataset_screened.to_csv(self.log_screened_name)
+        return dataset_screened
 
     def loop(self):
         """Main logger loop."""
         print('Starting crypto logger.')
+        dataset = dataset_screened = None
         try:
             t2 = time.time()
             while True:
                 t1 = t2
                 t2 = time.time()
                 print('Time spent for one loop:', t2 - t1)
-                dataset = self.concat_next()
+                dataset = self.concat_next(dataset)
                 dataset = self.process_next(dataset)
-                dataset_screened = self.screen_next(dataset=dataset, dataset_screened=dataset_screened)
-                self.log_screened_next(dataset_screened=dataset_screened)
-                time.sleep(self.delay)
+                dataset_screened = self.screen_next(dataset=dataset, dataset_screened=None)
+                #time.sleep(self.delay)
         except (KeyboardInterrupt, SystemExit):
             print('Saving latest complete dataset...')
-            self.process_next(dataset)
-            dataset_screened = self.screen_next(dataset=dataset, dataset_screened=dataset_screened)
-            self.log_screened_next(dataset_screened=dataset_screened)
+            dataset = self.process_next(dataset)
+            dataset_screened = self.screen_next(dataset=dataset, dataset_screened=None)
             print('User terminated crypto logger process.')
         except Exception as e:
             print(e)

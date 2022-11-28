@@ -18,10 +18,10 @@ LOGLEVEL = logging.getLogger().getEffectiveLevel()
 
 def init_loggers():
     """Main logger initialization."""
-    crypto_logger_input_15s = Crypto_logger_input(delay=12, interval='15s', buffer_size=3000, 
+    crypto_logger_input_15s = Crypto_logger_input(delay=1, interval='15s', buffer_size=3000, 
                                                   price_percent=1.0, volume_percent=0.0, 
                                                   as_pair=False, append=True, roll=60, log=True)
-    crypto_logger_output_15s = Crypto_logger_output(delay=12, 
+    crypto_logger_output_15s = Crypto_logger_output(delay=1, 
                                                     interval_input='15s', 
                                                     interval='15s', 
                                                     buffer_size=60, 
@@ -29,7 +29,7 @@ def init_loggers():
                                                     append=False, 
                                                     roll=1000, 
                                                     log=True)
-    crypto_logger_output_1min = Crypto_logger_output(delay=12, 
+    crypto_logger_output_1min = Crypto_logger_output(delay=1, 
                                                      interval_input='15s', 
                                                      interval='1min', 
                                                      buffer_size=1500, 
@@ -37,7 +37,7 @@ def init_loggers():
                                                      append=False, 
                                                      roll=1000, 
                                                      log=True)
-    crypto_logger_output_30min = Crypto_logger_output(delay=12, 
+    crypto_logger_output_30min = Crypto_logger_output(delay=1, 
                                                       interval_input='1min', 
                                                       interval='30min', 
                                                       buffer_size=60, 
@@ -45,7 +45,7 @@ def init_loggers():
                                                       append=False, 
                                                       roll=1000, 
                                                       log=True)
-    crypto_logger_output_1h = Crypto_logger_output(delay=12, 
+    crypto_logger_output_1h = Crypto_logger_output(delay=1, 
                                                    interval_input='30min', 
                                                    interval='1h', 
                                                    buffer_size=60, 
@@ -53,13 +53,13 @@ def init_loggers():
                                                    append=False, 
                                                    roll=1000, 
                                                    log=True)
-    crypto_logger_output_1d = Crypto_logger_output(delay=12, 
+    crypto_logger_output_1d = Crypto_logger_output(delay=1, 
                                                    interval_input='1h', 
                                                    interval='1d', 
                                                    buffer_size=60, 
                                                    input_log_name='output', 
-                                                   append=True, 
-                                                   roll=12, 
+                                                   append=False, 
+                                                   roll=1000, 
                                                    log=True)
     crypto_loggers = {
         'input_15s': crypto_logger_input_15s, 
@@ -76,26 +76,28 @@ def init_loggers():
 def loop_loggers(crypto_loggers):
     """Main logger loop."""
     print('Starting crypto loggers.')
-    dataset_screened = None
     try:
         t2 = time.time()
         while True:
             t1 = t2
             t2 = time.time()
             print('Time spent for one loop:', t2 - t1)
+            dataset = dataset_screened = None
             for i in list(crypto_loggers.keys()):
-                dataset = crypto_loggers[i].concat_next()
+                dataset = crypto_loggers[i].concat_next(dataset)
                 dataset = crypto_loggers[i].process_next(dataset)
-                dataset_screened = crypto_loggers[i].screen_next(dataset=dataset, dataset_screened=dataset_screened)
-            for i in list(crypto_loggers.keys()):
-                crypto_loggers[i].log_screened_next(dataset_screened=dataset_screened)
-            time.sleep(crypto_loggers[i].delay)
+                dataset_screened = \
+                    crypto_loggers[i].screen_next(dataset=dataset, 
+                                                  dataset_screened=dataset_screened)
+                #time.sleep(crypto_loggers[i].delay)
     except (KeyboardInterrupt, SystemExit):
         print('Saving latest complete dataset...')
+        crypto_loggers[i].process_next(dataset)
+        crypto_loggers[i].screen_next()
         dataset = crypto_loggers[i].process_next(dataset)
-        dataset_screened = crypto_loggers[i].screen_next(dataset=dataset)
-        for i in list(crypto_loggers.keys()):
-            crypto_loggers[i].log_screened_next(dataset_screened=dataset_screened)
+        dataset_screened = \
+            crypto_loggers[i].screen_next(dataset=dataset, 
+                                          dataset_screened=dataset_screened)
         print('User terminated crypto logger processes.')
     except Exception as e:
         print(e)

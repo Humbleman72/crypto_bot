@@ -85,25 +85,26 @@ class Crypto_logger_base(ABC):
         raise NotImplementedError()
 
     def put(self, dataset):
-        dataset = dataset.copy().reset_index()
-        if self.raw:
-            dataset = dataset.drop_duplicates(subset=['symbol', 'count'], 
-                                              keep='first', ignore_index=True)
-        else:
-            dataset = dataset.drop_duplicates(keep='last', ignore_index=True)
+        if dataset is not None:
+            dataset = dataset.copy().reset_index()
+            if self.raw:
+                dataset = dataset.drop_duplicates(subset=['symbol', 'count'], 
+                                                  keep='first', ignore_index=True)
+            else:
+                dataset = dataset.drop_duplicates(keep='last', ignore_index=True)
 
-        if 'date' in dataset.columns:
-            min_index_int = dataset[dataset['date'] == self.min_index].index[0]
-            dataset = dataset.set_index('date')
-        if not self.raw:
-            dataset = resample(dataset, self.interval)
-        if 'date' in dataset.columns:
-            dataset = dataset.iloc[min_index_int:]
+            if 'date' in dataset.columns:
+                min_index_int = dataset[dataset['date'] == self.min_index].index[0]
+                dataset = dataset.set_index('date')
+            if not self.raw:
+                dataset = resample(dataset, self.interval)
+            if 'date' in dataset.columns:
+                dataset = dataset.iloc[min_index_int:]
 
-        dataset = dataset.sort_index(axis='index')
-        dataset = dataset.tail(self.buffer_size)
-        self.min_index = dataset.index[0]
-        dataset.to_csv(self.log_name)
+            dataset = dataset.sort_index(axis='index')
+            dataset = dataset.tail(self.buffer_size)
+            self.min_index = dataset.index[0]
+            dataset.to_csv(self.log_name)
         return dataset
 
     def concat_next(self, dataset=None):

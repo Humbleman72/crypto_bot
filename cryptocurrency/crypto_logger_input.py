@@ -76,9 +76,12 @@ class Crypto_logger_input(Crypto_logger_base):
         return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
 
     def screen(self, dataset, dataset_screened=None):
-        dataset = get_tradable_tickers_info(dataset, as_pair=self.as_pair)
-        return self.filter_movers(dataset, count=1000, price_percent=self.price_percent, 
-                                  volume_percent=self.volume_percent)
+        if dataset is not None:
+            dataset = get_tradable_tickers_info(dataset, as_pair=self.as_pair)
+            dataset_screened = self.filter_movers(dataset, count=1000, 
+                                                  price_percent=self.price_percent, 
+                                                  volume_percent=self.volume_percent)
+        return dataset_screened
 
     def get(self, dataset=None):
         """Get all pairs data from Binance API."""

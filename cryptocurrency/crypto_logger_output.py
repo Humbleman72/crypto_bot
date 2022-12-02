@@ -32,15 +32,16 @@ class Crypto_logger_output(Crypto_logger_base):
                          raw=False, append=append, roll=roll, log=log)
 
     def screen(self, dataset, dataset_screened=None):
-        if dataset_screened is None:
-            dataset_screened = self.get_from_file(log_name=self.input_log_screened_name, from_raw=True)
-        if dataset_screened is not None:
-            input_filter = set(dataset_screened['symbol'].tolist())
-            old_columns = set(dataset.columns.get_level_values(0).tolist())
-            new_columns = list(input_filter & old_columns)
-            dataset = dataset[new_columns]
-            assets = filter_in_market(screen_one, dataset)
-            dataset_screened = dataset_screened[dataset_screened['symbol'].isin(assets)]
+        if dataset is not None:
+            if dataset_screened is None:
+                dataset_screened = self.get_from_file(log_name=self.input_log_screened_name, from_raw=True)
+            if dataset_screened is not None:
+                input_filter = set(dataset_screened['symbol'].tolist())
+                old_columns = set(dataset.columns.get_level_values(0).tolist())
+                new_columns = list(input_filter & old_columns)
+                dataset = dataset[new_columns]
+                assets = filter_in_market(screen_one, dataset)
+                dataset_screened = dataset_screened[dataset_screened['symbol'].isin(assets)]
         return dataset_screened
 
     def resample_from_raw(self, df):

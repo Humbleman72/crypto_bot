@@ -289,7 +289,7 @@ def screen_one(pair):
                 if get_renko_trigger(pair, compress=False, 
                                      direction_type='long', 
                                      trigger_type='simple', 
-                                     method='atr', plot=False):
+                                     method='auto_atr', plot=False):
                     return True
         elif frequency == frequency_1h:
             if get_rising_volume_trigger(pair):

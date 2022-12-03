@@ -265,8 +265,8 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False,
         traded_volume = traded_volume['rolling_USDT_base_volume']
         conversion_table['rolling_traded_volume'] = \
             conversion_table.apply(lambda x: traded_volume.loc[x['base_asset']], axis='columns')
-        traded_bid_volume = conversion_table.groupby(by='base_asset').agg('sum')
         if not extra_minimal:
+            traded_bid_volume = conversion_table.groupby(by='base_asset').agg('sum')
             traded_bid_volume = traded_bid_volume['USDT_bid_volume']
             conversion_table['traded_bid_volume'] = \
                 conversion_table.apply(lambda x: traded_bid_volume.loc[x['base_asset']], axis='columns')
@@ -275,20 +275,23 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False,
             conversion_table['traded_ask_volume'] = \
                 conversion_table.apply(lambda x: traded_ask_volume.loc[x['base_asset']], axis='columns')
 
-            conversion_table['importance'] = \
-                conversion_table['rolling_USDT_base_volume'] / conversion_table['rolling_traded_volume']
+        conversion_table['importance'] = \
+            conversion_table['rolling_USDT_base_volume'] / conversion_table['rolling_traded_volume']
+        conversion_table['importance_weighted_price'] = \
+            conversion_table['USDT_price'].astype(float) * conversion_table['importance']
 
-            conversion_table['importance_weighted_price'] = \
-                conversion_table['USDT_price'].astype(float) * conversion_table['importance']
+        if not extra_minimal:
             conversion_table['importance_weighted_bid_price'] = \
                 conversion_table['USDT_bid_price'].astype(float) * conversion_table['importance']
             conversion_table['importance_weighted_ask_price'] = \
                 conversion_table['USDT_ask_price'].astype(float) * conversion_table['importance']
 
-            importance_weighted_price = conversion_table.groupby(by='base_asset').agg('sum')
-            importance_weighted_price = importance_weighted_price['importance_weighted_price']
-            conversion_table['traded_price'] = \
-                conversion_table.apply(lambda x: importance_weighted_price.loc[x['base_asset']], axis='columns')
+        importance_weighted_price = conversion_table.groupby(by='base_asset').agg('sum')
+        importance_weighted_price = importance_weighted_price['importance_weighted_price']
+        conversion_table['traded_price'] = \
+            conversion_table.apply(lambda x: importance_weighted_price.loc[x['base_asset']], axis='columns')
+
+        if not extra_minimal:
             importance_weighted_bid_price = conversion_table.groupby(by='base_asset').agg('sum')
             importance_weighted_bid_price = importance_weighted_bid_price['importance_weighted_bid_price']
             conversion_table['traded_bid_price'] = \
@@ -321,7 +324,7 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False,
                                       'bid_price', 'bid_volume', 'ask_price', 'ask_volume', 'close_time', 
                                       'count', 'rolling_base_volume', 'rolling_quote_volume', 
                                       'USDT_price_change_percent', 'USDT_price', 'rolling_USDT_base_volume', 
-                                      'rolling_USDT_quote_volume', 'rolling_traded_volume', 
+                                      'rolling_USDT_quote_volume', 'rolling_traded_volume', 'traded_price', 
                                       'bid_ask_percent_change', 'bid_ask_volume_percent_change']]
             else:
                 conversion_table = \
@@ -357,7 +360,7 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False,
                         conversion_table[['base_asset', 'USDT_price_change_percent', 'close_time', 
                                           'bid_volume', 'ask_volume', 'bid_price', 'close', 'ask_price', 
                                           'count', 'rolling_traded_volume', 'bid_ask_percent_change', 
-                                          'bid_ask_volume_percent_change']]
+                                          'bid_ask_volume_percent_change', 'traded_price']]
                 else:
                     conversion_table = \
                         conversion_table[['base_asset', 'USDT_price_change_percent', 'close_time', 'count', 
@@ -373,6 +376,7 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False,
                                       'traded_ask_price', 'traded_bid_ask_percent_change', 
                                       'traded_bid_ask_volume_percent_change']]
             conversion_table['rolling_quote_volume'] = conversion_table['rolling_traded_volume'].copy()
+            conversion_table = conversion_table.drop(columns=['close'])
             if extra_minimal:
                 conversion_table = \
                     conversion_table.rename(columns={'USDT_price_change_percent': 'price_change_percent', 

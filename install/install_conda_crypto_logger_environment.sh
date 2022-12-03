@@ -20,4 +20,3 @@ then
 else
     echo "Could not source activate ${CONDA_ENV_NAME}..."
 fi
-

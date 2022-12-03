@@ -22,4 +22,3 @@ echo ${PASSWORD} | sudo -S chown -R ${WHOAMI} /opt/conda && \
 echo ${PASSWORD} | sudo -S chown -R ${WHOAMI} /home/${WHOAMI} && \
 source ~/.bashrc && \
 echo "conda install done. Please exit the terminal and open another one..."
-

@@ -364,7 +364,8 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
                                       'traded_ask_price', 'traded_bid_ask_percent_change', 
                                       'traded_bid_ask_volume_percent_change']]
             conversion_table['rolling_quote_volume'] = conversion_table['rolling_traded_volume'].copy()
-            conversion_table = conversion_table.drop(columns=['close'])
+            if 'close' in conversion_table.columns:
+                conversion_table = conversion_table.drop(columns=['close'])
             if extra_minimal:
                 conversion_table = \
                     conversion_table.rename(columns={'USDT_price_change_percent': 'price_change_percent', 

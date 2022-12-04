@@ -19,8 +19,8 @@ LOGLEVEL = logging.getLogger().getEffectiveLevel()
 def init_loggers():
     """Main logger initialization."""
     crypto_logger_input_15s = Crypto_logger_input(delay=1, interval='15s', buffer_size=3000, 
-                                                  price_percent=5.0, volume_percent=0.0, 
-                                                  as_pair=False, append=True, roll=20, log=True)
+                                                  price_percent=1.0, volume_percent=0.0, 
+                                                  as_pair=False, append=True, roll=60, log=True)
     crypto_logger_output_15s = Crypto_logger_output(delay=1, 
                                                     interval_input='15s', 
                                                     interval='15s', 

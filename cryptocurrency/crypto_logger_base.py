@@ -8,7 +8,6 @@
 
 # Library imports.
 from cryptocurrency.resample import resample
-from binance.client import Client
 from abc import abstractmethod, ABC
 from os.path import exists, join
 from os import mkdir

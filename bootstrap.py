@@ -27,7 +27,9 @@ def main():
     exchange_info = exchange.info
     offset_s = get_timezone_offset_in_seconds()
     conversion_table = get_conversion_table(client=client, exchange_info=exchange_info, 
-                                            offset_s=offset_s, as_pair=True)
+                                            offset_s=offset_s, dump_raw=False, 
+                                            as_pair=as_pair, minimal=False, 
+                                            extra_minimal=False, convert_to_USDT=True)
     assets = get_new_tickers(conversion_table=conversion_table)
     pairs = bootstrap_loggers(client=client, assets=assets, pairs={}, 
                               download_interval='1d', exchange_info=exchange_info, as_pair=as_pair)

@@ -11,8 +11,41 @@ from cryptocurrency.conversion import convert_price, get_base_asset_from_pair, g
 import datetime
 import pandas as pd
 
-def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False, 
-                         dump_raw=False, minimal=True, extra_minimal=True, convert_to_USDT=True):
+def get_conversion_table_from_binance(client, exchange_info, offset_s=0, dump_raw=False):
+    conversion_table = pd.DataFrame(client.get_ticker())
+    conversion_table = conversion_table[conversion_table['symbol'].isin(exchange_info['symbol'])]
+
+    conversion_table['base_asset'] = \
+        conversion_table['symbol'].apply(lambda x: get_base_asset_from_pair(x, exchange_info=exchange_info))
+    conversion_table['quote_asset'] = \
+        conversion_table['symbol'].apply(lambda x: get_quote_asset_from_pair(x, exchange_info=exchange_info))
+
+    conversion_table = \
+        conversion_table.rename(
+            columns={'openPrice': 'open', 'highPrice': 'high', 'lowPrice': 'low', 'lastPrice': 'close', 
+                     'lastQty': 'last_volume', 'volume': 'rolling_base_volume', 'quoteVolume': 'rolling_quote_volume', 
+                     'bidPrice': 'bid_price', 'askPrice': 'ask_price', 'bidQty': 'bid_volume', 'askQty': 'ask_volume', 
+                     'firstId': 'first_ID', 'lastId': 'last_ID', 'openTime': 'open_time', 'closeTime': 'close_time', 
+                     'prevClosePrice': 'close_shifted', 'weightedAvgPrice': 'weighted_average_price', 
+                     'priceChange': 'price_change', 'priceChangePercent': 'price_change_percent'})
+
+    if dump_raw:
+        conversion_table.to_csv('crypto_logs/conversion_table.txt')
+
+    conversion_table[['open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
+                      'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
+                      'price_change_percent']] = \
+        conversion_table[['open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
+                          'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
+                          'price_change_percent']].astype(float)
+
+    conversion_table[['close_time', 'count']] = \
+        conversion_table[['close_time', 'count']].astype(int)
+    conversion_table['close_time'] = (conversion_table['close_time'] + offset_s * 1000)
+    return conversion_table
+
+def process_conversion_table(conversion_table, exchange_info, as_pair=False, 
+                             minimal=True, extra_minimal=True, convert_to_USDT=True):
     """
     Fetches and prepares data used to calculate prices, volumes and other stats.
     :param client: object from python-binance useful for calling client.get_ticker().
@@ -71,56 +104,11 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False,
     if extra_minimal:
         minimal = True
 
-    conversion_table = pd.DataFrame(client.get_ticker())
-
-    conversion_table = conversion_table[conversion_table['symbol'].isin(exchange_info['symbol'])]
-    conversion_table['base_asset'] = \
-        conversion_table['symbol'].apply(lambda x: get_base_asset_from_pair(x, exchange_info=exchange_info))
-    conversion_table['quote_asset'] = \
-        conversion_table['symbol'].apply(lambda x: get_quote_asset_from_pair(x, exchange_info=exchange_info))
-
     if minimal:
         conversion_table = \
-            conversion_table[['symbol', 'base_asset', 'quote_asset', 'openPrice', 'lastPrice', 
-                              'volume', 'quoteVolume', 'count', 'bidPrice', 'askPrice', 'bidQty', 
-                              'askQty', 'closeTime', 'priceChangePercent']]
-
-    conversion_table = \
-        conversion_table.rename(columns={'openPrice': 'open', 'lastPrice': 'close', 
-                                         'volume': 'rolling_base_volume', 
-                                         'quoteVolume': 'rolling_quote_volume', 
-                                         'bidPrice': 'bid_price', 'askPrice': 'ask_price', 
-                                         'bidQty': 'bid_volume', 'askQty': 'ask_volume', 
-                                         'closeTime': 'close_time', 
-                                         'priceChangePercent': 'price_change_percent'})
-
-    if not minimal:
-        conversion_table = \
-            conversion_table.rename(columns={'highPrice': 'high', 'lowPrice': 'low', 
-                                             'lastQty': 'last_volume', 'firstId': 'first_ID', 
-                                             'lastId': 'last_ID', 'openTime': 'open_time', 
-                                             'prevClosePrice': 'close_shifted', 
-                                             'weightedAvgPrice': 'weighted_average_price', 
-                                             'priceChange': 'price_change'})
-    if dump_raw:
-        conversion_table.to_csv('crypto_logs/conversion_table.txt')
-
-    if minimal:
-        conversion_table[['open', 'close', 'rolling_base_volume', 'rolling_quote_volume', 'bid_price', 
-                          'ask_price', 'bid_volume', 'ask_volume', 'price_change_percent']] = \
-            conversion_table[['open', 'close', 'rolling_base_volume', 'rolling_quote_volume', 'bid_price', 
-                              'ask_price', 'bid_volume', 'ask_volume', 'price_change_percent']].astype(float)
-    else:
-        conversion_table[['open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
-                          'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
-                          'price_change_percent']] = \
-            conversion_table[['open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
-                              'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
-                              'price_change_percent']].astype(float)
-
-    conversion_table[['close_time', 'count']] = \
-        conversion_table[['close_time', 'count']].astype(int)
-    conversion_table['close_time'] = (conversion_table['close_time'] + offset_s * 1000)
+            conversion_table[['symbol', 'base_asset', 'quote_asset', 'open', 'close', 'rolling_base_volume', 
+                              'rolling_quote_volume', 'count', 'bid_price', 'ask_price', 'bid_volume', 
+                              'ask_volume', 'close_time', 'price_change_percent']]
 
     conversion_table['rolling_base_quote_volume'] = \
         conversion_table['rolling_quote_volume'] / conversion_table['close']
@@ -421,22 +409,30 @@ def get_conversion_table(client, exchange_info, offset_s=0, as_pair=False,
     conversion_table['close_time'] = pd.DatetimeIndex(conversion_table['close_time'])
     return conversion_table.set_index('close_time').sort_index()
 
+def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False, as_pair=True, minimal=False, 
+                         extra_minimal=False, convert_to_USDT=False):
+    conversion_table = get_conversion_table_from_binance(client=client, exchange_info=exchange_info, 
+                                                         offset_s=offset_s, dump_raw=False)
+    return process_conversion_table(conversion_table=conversion_table, exchange_info=exchange_info, 
+                                    as_pair=as_pair, minimal=False, extra_minimal=False, convert_to_USDT=False)
+
 def get_tradable_tickers_info(conversion_table, as_pair=False):
     if as_pair:
         conversion_table = \
             conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 'bid_volume', 
                               'ask_volume', 'bid_ask_percent_change', 'bid_ask_volume_percent_change', 'rolling_base_volume', 
-                              'rolling_quote_volume', 'USDT_price', 'rolling_traded_volume', 'count']]
+                              'rolling_quote_volume', 'count']]
     else:
         conversion_table = \
             conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 'bid_volume', 
                               'ask_volume', 'bid_ask_percent_change', 'bid_ask_volume_percent_change', 'rolling_base_volume', 
                               'rolling_quote_volume', 'count']]
+    conversion_table = conversion_table.copy()
     conversion_table[['price_change_percent', 'close', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
                       'rolling_base_volume', 'rolling_quote_volume', 'count']] = \
         conversion_table[['price_change_percent', 'close', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
                           'rolling_base_volume', 'rolling_quote_volume', 'count']].astype(float)
-    conversion_table = conversion_table[conversion_table['bid_ask_percent_change'] < 0.1]
+    conversion_table = conversion_table[conversion_table['bid_ask_percent_change'] < 0.8]
     #conversion_table = conversion_table[conversion_table['bid_ask_volume_percent_change'] > 0.0]
     return conversion_table.sort_index(axis='index')
 

@@ -12,6 +12,7 @@ from tqdm import tqdm
 import time
 import pandas as pd
 
+# Function definitions.
 def get_timezone_offset_in_seconds():
     is_dst = time.localtime().tm_isdst
     timezone = time.tzname[is_dst]

@@ -6,9 +6,11 @@
 # For:         Myself
 # Description: This file handles python-binance authentication.
 
+# Library imports.
 from os.path import exists
 from binance.client import Client
 
+# Class definition.
 class Cryptocurrency_authenticator:
     def __init__(self, use_keys=False, testnet=False, keys_path='keys.txt'):
         api_key, secret_key = self.get_API_keys(keys_path=keys_path)

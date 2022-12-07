@@ -11,6 +11,7 @@ from typing import Union
 from decimal import Decimal
 import time
 
+# Function definitions.
 def get_timezone_offset_in_seconds():
     is_dst = time.localtime().tm_isdst
     timezone = time.tzname[is_dst]

@@ -13,6 +13,7 @@ from cryptocurrency.ohlcvs import named_pairs_to_df
 from tqdm import tqdm
 import pandas as pd
 
+# Function definitions.
 '''
 def convert_ohlcv(from_asset, to_asset, conversion_table, exchange_info):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 

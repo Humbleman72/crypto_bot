@@ -14,6 +14,7 @@ from os import mkdir
 import time
 import pandas as pd
 
+# Class definition.
 class Crypto_logger_base(ABC):
     def __init__(self, delay=4.7, interval='15s', interval_input='', buffer_size=3000, 
                  directory='crypto_logs', log_name='crypto_log', input_log_name='', 

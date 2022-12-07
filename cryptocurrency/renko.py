@@ -6,8 +6,8 @@
 # For:         Myself
 # Description: This file handles the Renko technical indicator and trigger.
 
+# Library imports.
 from scipy.stats import iqr
-
 import math
 import numpy as np
 import scipy.optimize as opt
@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import talib
 
+# Class definition.
 class Renko:
     def __init__(self):
         self.source_prices = []
@@ -161,6 +162,7 @@ class Renko:
 
         plt.show()
 
+# Function definitions.
 def get_renko_trigger(data, compress=False, direction_type='long', trigger_type='simple', method='brent', plot=False):
     def identity(x):
         return x

@@ -6,8 +6,8 @@
 # For:         Myself
 # Description: This file handles the Renko technical indicator and trigger.
 
+# Library imports.
 from scipy.stats import iqr
-
 import math
 import numpy as np
 import scipy.optimize as opt
@@ -16,6 +16,7 @@ import matplotlib.patches as patches
 import talib
 import pandas as pd
 
+# Class definition.
 class Renko:      
     def __init__(self):
         self.source_prices = self.renko_prices = self.timed_renko_prices = self.renko_directions = []
@@ -155,6 +156,7 @@ class Renko:
 
         plt.show()
 
+# Function definitions.
 def get_renko_trigger(data, compress=False, direction_type='long', trigger_type='simple', 
                       method='brent', is_timed=False, plot=False, return_raw=False):
     def identity(x):
@@ -254,4 +256,3 @@ def get_renko_trigger(data, compress=False, direction_type='long', trigger_type=
                 if trigger_type == 'entry':
                     trigger = trigger and directions[-3] == 1
     return timed_renko_prices if return_raw else trigger
-

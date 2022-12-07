@@ -16,6 +16,7 @@ from cryptocurrency.conversion_table import get_conversion_table, get_tradable_t
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
+# Class definition.
 class Crypto_logger_input(Crypto_logger_base):
     def __init__(self, delay=4.7, interval='15s', buffer_size=3000, 
                  price_percent=5.0, volume_percent=0.0, as_pair=False, 
@@ -87,7 +88,8 @@ class Crypto_logger_input(Crypto_logger_base):
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(client=self.client, exchange_info=self.exchange_info, 
                                        offset_s=self.offset_s, dump_raw=False, as_pair=self.as_pair, 
-                                       minimal=False, extra_minimal=True, convert_to_USDT=False)
+                                       minimal=True, extra_minimal=True, super_extra_minimal=True, 
+                                       convert_to_USDT=not self.as_pair)
         dataset.index = dataset.index.round(self.interval)
         dataset.index.name = 'date'
         return dataset

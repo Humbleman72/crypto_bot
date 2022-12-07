@@ -10,6 +10,7 @@ from os import mkdir
 from os.path import exists, join
 import pandas as pd
 
+# Class definition.
 class Cryptocurrency_exchange:
     def __init__(self, client=None, directory='crypto_logs'):
         self.client, self.info_path = client, join('crypto_logs', 'crypto_exchange_info.txt')

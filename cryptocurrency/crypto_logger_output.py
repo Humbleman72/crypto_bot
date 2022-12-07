@@ -13,6 +13,7 @@ from cryptocurrency.indicators import filter_in_market, screen_one
 import pandas as pd
 pd.options.mode.chained_assignment = None
 
+# Class definition.
 class Crypto_logger_output(Crypto_logger_base):
     def __init__(self, delay=12, interval_input='15s', interval='15s', buffer_size=60, 
                  input_log_name='input', append=True, roll=60, log=True):

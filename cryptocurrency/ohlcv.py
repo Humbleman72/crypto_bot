@@ -10,6 +10,7 @@
 from datetime import datetime
 import pandas as pd
 
+# Function definitions.
 def fix_DST_bug(df):
     timeseries_size = df.shape[0]
     if timeseries_size > 4:
@@ -46,6 +47,4 @@ def download_pair(client, symbol, interval='1m', period=60, offset_s=0):
             lambda entry: entry.rstrip('0').rstrip('.'))
     data = data.astype(float)
     data['n_trades'] = data['n_trades'].astype(int)
-    data = fix_DST_bug(data)
-    return data
-
+    return fix_DST_bug(data)

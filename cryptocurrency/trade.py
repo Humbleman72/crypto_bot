@@ -13,6 +13,7 @@ from binance.exceptions import BinanceAPIException
 from time import sleep
 import pandas as pd
 
+# Function definitions.
 def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as_pair=True):
     def get_account_balances():
         balances = pd.DataFrame(client.get_account()['balances'])[['asset', 'free']]

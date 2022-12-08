@@ -14,8 +14,6 @@ from os import mkdir
 import time
 import pandas as pd
 
-pd.options.compute.use_numba = True
-
 # Class definition.
 class Crypto_logger_base(ABC):
     def __init__(self, delay=4.7, interval='15s', interval_input='', buffer_size=3000, 

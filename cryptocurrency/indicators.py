@@ -14,7 +14,7 @@ from pandas_ta.utils._core import signed_series, recent_minimum_index
 import pandas_ta as ta
 import pandas as pd
 
-pd.options.mode.chained_assignment = None
+#pd.options.mode.chained_assignment = None
 
 # Function definitions.
 def filter_in_market(function, dataset):

@@ -24,27 +24,25 @@ class Cryptocurrency_exchange:
 
     def get_exchange_info(self):
         def build_filters(symbols_info, index):
-            try:
-                symbol = symbols_info['symbol'].iat[index]
-                df = pd.DataFrame(symbols_info['filters'].iat[index])
-                min_price = df[df['filterType'] == 'PRICE_FILTER']['minPrice'].iat[0]
-                max_price = df[df['filterType'] == 'PRICE_FILTER']['maxPrice'].iat[0]
-                tick_size = df[df['filterType'] == 'PRICE_FILTER']['tickSize'].iat[0]
-                step_size = df[df['filterType'] == 'LOT_SIZE']['stepSize'].iat[0]
-                multiplier_up = df[df['filterType'] == 'PERCENT_PRICE']['multiplierUp'].iat[0]
-                multiplier_down = df[df['filterType'] == 'PERCENT_PRICE']['multiplierDown'].iat[0]
-                df = pd.DataFrame([[symbol, min_price, max_price, tick_size, step_size, multiplier_up, multiplier_down]], 
-                                  columns=['symbol', 'min_price', 'max_price', 'tick_size', 'step_size', 'multiplier_up', 'multiplier_down'])
-            except Exception as e:
-                df = None
-            return df
+            symbol = symbols_info['symbol'].iat[index]
+            df = pd.DataFrame(symbols_info['filters'].iat[index])
+            min_price = df[df['filterType'] == 'PRICE_FILTER']['minPrice'].iat[0]
+            max_price = df[df['filterType'] == 'PRICE_FILTER']['maxPrice'].iat[0]
+            tick_size = df[df['filterType'] == 'PRICE_FILTER']['tickSize'].iat[0]
+            step_size = df[df['filterType'] == 'LOT_SIZE']['stepSize'].iat[0]
+            multiplier_up = df[df['filterType'] == 'PERCENT_PRICE_BY_SIDE']['avgPriceMins'].iat[0]
+            return pd.DataFrame([[symbol, min_price, max_price, tick_size, step_size, multiplier_up]], 
+                                columns=['symbol', 'min_price', 'max_price', 'tick_size', 'step_size', 
+                                         'multiplier_up'])
         symbols_info = self.client.get_exchange_info()
         symbols_info = pd.DataFrame(pd.DataFrame([symbols_info])['symbols'].iat[0])
         symbols_info = symbols_info[symbols_info['status'] == 'TRADING']
         symbols_info = symbols_info[symbols_info['isSpotTradingAllowed']]
         symbols_info = symbols_info[symbols_info['quoteOrderQtyMarketAllowed']]
-        symbols_info = symbols_info.drop(columns=['status', 'isSpotTradingAllowed', 'isMarginTradingAllowed', 'permissions', 'icebergAllowed', 
-                                                  'ocoAllowed', 'quoteOrderQtyMarketAllowed', 'orderTypes']).set_index('symbol', drop=False)
+        symbols_info = symbols_info.drop(columns=['status', 'isSpotTradingAllowed', 'isMarginTradingAllowed', 
+                                                  'permissions', 'icebergAllowed', 'ocoAllowed', 
+                                                  'quoteOrderQtyMarketAllowed', 'orderTypes'])
+        symbols_info = symbols_info.set_index('symbol', drop=False)
         filters = [build_filters(symbols_info, i) for i in range(symbols_info.shape[0])]
         filters = [x for x in filters if x is not None]
         df = pd.DataFrame()
@@ -53,8 +51,12 @@ class Cryptocurrency_exchange:
         df = df.set_index('symbol')
         symbols_info = pd.concat([symbols_info, df], axis='columns')
         self.info = symbols_info.drop(columns=['symbol', 'filters']).reset_index('symbol')
-        self.info = self.info.rename(columns={'baseAsset': 'base_asset', 'baseAssetPrecision': 'base_asset_precision', 'quoteAsset': 'quote_asset', 
-                                              'quotePrecision': 'quote_precision', 'quoteAssetPrecision': 'quote_asset_precision', 
+        self.info = self.info.rename(columns={'baseAsset': 'base_asset', 
+                                              'baseAssetPrecision': 'base_asset_precision', 
+                                              'quoteAsset': 'quote_asset', 
+                                              'quotePrecision': 'quote_precision', 
+                                              'quoteAssetPrecision': 'quote_asset_precision', 
                                               'baseCommissionPrecision': 'base_asset_commission', 
                                               'quoteCommissionPrecision': 'quote_commission_precision', 
-                                              'allowTrailingStop': 'allow_trailing_stop', 'cancelReplaceAllowed': 'cancel_replace_allowed'})
+                                              'allowTrailingStop': 'allow_trailing_stop', 
+                                              'cancelReplaceAllowed': 'cancel_replace_allowed'})

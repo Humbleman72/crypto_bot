@@ -88,7 +88,7 @@ class Crypto_logger_input(Crypto_logger_base):
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(client=self.client, exchange_info=self.exchange_info, 
                                        offset_s=self.offset_s, dump_raw=False, as_pair=self.as_pair, 
-                                       minimal=True, extra_minimal=True, super_extra_minimal=True, 
+                                       minimal=True, extra_minimal=True, super_extra_minimal=False, 
                                        convert_to_USDT=not self.as_pair)
         dataset.index = dataset.index.round(self.interval)
         dataset.index.name = 'date'

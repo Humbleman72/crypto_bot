@@ -43,7 +43,10 @@ def get_conversion_table_from_binance(client, exchange_info, offset_s=0, dump_ra
     conversion_table[['close_time', 'count']] = \
         conversion_table[['close_time', 'count']].astype(int)
     conversion_table['close_time'] = (conversion_table['close_time'] + offset_s * 1000)
-    return conversion_table
+    conversion_table['close_time'] /= 1000
+    conversion_table['close_time'] = conversion_table['close_time'].apply(datetime.datetime.fromtimestamp)
+    conversion_table['close_time'] = pd.DatetimeIndex(conversion_table['close_time'])
+    return conversion_table.sort_values(by='close_time')
 
 def process_conversion_table(conversion_table, exchange_info, as_pair=False, minimal=True, 
                              extra_minimal=True, super_extra_minimal=True, convert_to_USDT=True):
@@ -166,7 +169,14 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table['USDT_ask_volume'] = \
                 conversion_table['ask_volume'] * conversion_table['USDT_ask_price'].astype(float)
 
-        if not super_extra_minimal:
+        if super_extra_minimal:
+            price_change_percent = conversion_table[['base_asset', 'price_change_percent']]
+            price_change_percent = \
+                price_change_percent.groupby(by='base_asset').agg(lambda x: x.iloc[x.abs().argmax()])
+            price_change_percent = price_change_percent['price_change_percent']
+            conversion_table['price_change_percent'] = \
+                conversion_table.apply(lambda x: price_change_percent.loc[x['base_asset']], axis='columns')
+        else:
             conversion_table['USDT_price_change'] = \
                 (conversion_table['USDT_price'].astype(float) - conversion_table['USDT_open'].astype(float))
             conversion_table['USDT_price_change_percent'] = \
@@ -278,14 +288,6 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
         conversion_table_swapped['is_shorted'] = True
 
         conversion_table = pd.concat([conversion_table, conversion_table_swapped], join='outer', axis='index')
-
-        if super_extra_minimal:
-            price_change_percent = conversion_table[['base_asset', 'price_change_percent']]
-            price_change_percent = \
-                price_change_percent.groupby(by='base_asset').agg(lambda x: x.iloc[x.abs().argmax()])
-            price_change_percent = price_change_percent['price_change_percent']
-            conversion_table['price_change_percent'] = \
-                conversion_table.apply(lambda x: price_change_percent.loc[x['base_asset']], axis='columns')
 
         traded_volume = conversion_table.groupby(by='base_asset').agg('sum')
         traded_volume = traded_volume['rolling_USDT_base_volume']
@@ -450,11 +452,6 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             conversion_table = conversion_table.drop_duplicates(subset=['base_asset'], keep='first')
         conversion_table = conversion_table.reset_index(drop=True)
-
-    conversion_table = conversion_table.sort_values(by='close_time')
-    conversion_table['close_time'] /= 1000
-    conversion_table['close_time'] = conversion_table['close_time'].apply(datetime.datetime.fromtimestamp)
-    conversion_table['close_time'] = pd.DatetimeIndex(conversion_table['close_time'])
     return conversion_table.set_index('close_time').sort_index()
 
 def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False, as_pair=True, minimal=False, 

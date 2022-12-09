@@ -136,14 +136,9 @@ def make_tradable_quantity(pair, coins_available, exchange_info, subtract=0):
     quantity = round_step_size(quantity=coins_available, step_size=tick_size)
     return compact_float_string(float(quantity), precision)
 
-def convert_price(size, from_asset, to_asset, conversion_table, 
-                  exchange_info, key='close', priority='accuracy'):
+def convert_price_from_shortest_path(size, from_asset, to_asset, conversion_table, exchange_info, 
+                                     shortest_path, key='close', priority='accuracy'):
     if from_asset != to_asset:
-        size = float(size)
-        shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
-                                                              to_asset=to_asset, 
-                                                              exchange_info=exchange_info, 
-                                                              priority=priority)
         for (base_asset, quote_asset) in shortest_path:
             to_asset = quote_asset if from_asset == base_asset else base_asset
             pair = base_asset + quote_asset
@@ -153,4 +148,17 @@ def convert_price(size, from_asset, to_asset, conversion_table,
             from_asset = to_asset
         size = make_tradable_quantity(pair, float(size), subtract=0, 
                                       exchange_info=exchange_info)
+    return size
+
+def convert_price(size, from_asset, to_asset, conversion_table, 
+                  exchange_info, key='close', priority='accuracy'):
+    if from_asset != to_asset:
+        size = float(size)
+        shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
+                                                              to_asset=to_asset, 
+                                                              exchange_info=exchange_info, 
+                                                              priority=priority)
+        size = convert_price_from_shortest_path(size, from_asset, to_asset, conversion_table, 
+                                                exchange_info, shortest_path, 
+                                                key=key, priority=priority)
     return size

@@ -7,7 +7,9 @@
 # Description: Binance pair conversion table retrieval and basic pair filtering.
 
 # Library imports.
-from cryptocurrency.conversion import convert_price, get_base_asset_from_pair, get_quote_asset_from_pair
+from cryptocurrency.conversion import convert_price, convert_price_from_shortest_path
+from cryptocurrency.conversion import get_base_asset_from_pair, get_quote_asset_from_pair
+from cryptocurrency.conversion import get_shortest_pair_path_between_assets
 import datetime
 import pandas as pd
 
@@ -123,30 +125,48 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
         conversion_table['rolling_quote_volume'] / conversion_table['close']
 
     if convert_to_USDT:
+        conversion_table['shortest_path'] = \
+            conversion_table.apply(lambda x: get_shortest_pair_path_between_assets(
+                from_asset=x['base_asset'], to_asset='USDT', exchange_info=exchange_info, 
+                priority='accuracy'), axis='columns')
         if not minimal:
             conversion_table['USDT_high'] = \
                 conversion_table.apply(
-                    lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
-                                            conversion_table=conversion_table, 
-                                            exchange_info=exchange_info, key='close', 
-                                            priority='accuracy'), axis='columns')
+                    lambda x: convert_price_from_shortest_path(
+                        size=(((x['high'] - x['close']) / x['close']) + 1), 
+                        from_asset=x['base_asset'], to_asset='USDT', 
+                        conversion_table=conversion_table, 
+                        exchange_info=exchange_info, 
+                        shortest_path=x['shortest_path'], 
+                        key='close', priority='accuracy'), axis='columns')
             conversion_table['USDT_low'] = \
                 conversion_table.apply(
-                    lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
-                                            conversion_table=conversion_table, 
-                                            exchange_info=exchange_info, key='close', 
-                                            priority='accuracy'), axis='columns')
+                    lambda x: convert_price_from_shortest_path(
+                        size=(((x['low'] - x['close']) / x['close']) + 1), 
+                        from_asset=x['base_asset'], to_asset='USDT', 
+                        conversion_table=conversion_table, 
+                        exchange_info=exchange_info, 
+                        shortest_path=x['shortest_path'], 
+                        key='close', priority='accuracy'), axis='columns')
         if not super_extra_minimal:
             conversion_table['USDT_open'] = \
-                conversion_table.apply(lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
-                                                               conversion_table=conversion_table, 
-                                                               exchange_info=exchange_info, key='open', 
-                                                               priority='accuracy'), axis='columns')
+                conversion_table.apply(
+                    lambda x: convert_price_from_shortest_path(
+                        size=1, from_asset=x['base_asset'], 
+                        to_asset='USDT', 
+                        conversion_table=conversion_table, 
+                        exchange_info=exchange_info, 
+                        shortest_path=x['shortest_path'], 
+                        key='open', priority='accuracy'), axis='columns')
         conversion_table['USDT_price'] = \
-            conversion_table.apply(lambda x: convert_price(size=1, from_asset=x['base_asset'], to_asset='USDT', 
-                                                           conversion_table=conversion_table, 
-                                                           exchange_info=exchange_info, key='close', 
-                                                           priority='accuracy'), axis='columns')
+            conversion_table.apply(
+                lambda x: convert_price_from_shortest_path(
+                    size=1, from_asset=x['base_asset'], 
+                    to_asset='USDT', 
+                    conversion_table=conversion_table, 
+                    exchange_info=exchange_info, 
+                    shortest_path=x['shortest_path'], 
+                    key='close', priority='accuracy'), axis='columns')
         conversion_table['rolling_USDT_base_volume'] = \
             conversion_table['rolling_base_volume'] * conversion_table['USDT_price'].astype(float)
         conversion_table['rolling_USDT_quote_volume'] = \
@@ -155,15 +175,23 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
 
         if not extra_minimal:
             conversion_table['USDT_bid_price'] = \
-                conversion_table.apply(lambda x: convert_price(size=x['bid_price'], from_asset=x['base_asset'], 
-                                                               to_asset='USDT', conversion_table=conversion_table, 
-                                                               exchange_info=exchange_info, key='close', 
-                                                               priority='accuracy'), axis='columns')
+                conversion_table.apply(
+                    lambda x: convert_price_from_shortest_path(
+                        shortest_path=x['shortest_path'], 
+                        size=(((x['bid_price'] - x['close']) / x['close']) + 1), 
+                        from_asset=x['base_asset'], to_asset='USDT', 
+                        conversion_table=conversion_table, 
+                        exchange_info=exchange_info, key='close', 
+                        priority='accuracy'), axis='columns')
             conversion_table['USDT_ask_price'] = \
-                conversion_table.apply(lambda x: convert_price(size=x['ask_price'], from_asset=x['base_asset'], 
-                                                               to_asset='USDT', conversion_table=conversion_table, 
-                                                               exchange_info=exchange_info, key='close', 
-                                                               priority='accuracy'), axis='columns')
+                conversion_table.apply(
+                    lambda x: convert_price_from_shortest_path(
+                        shortest_path=x['shortest_path'], 
+                        size=(((x['ask_price'] - x['close']) / x['close']) + 1), 
+                        from_asset=x['base_asset'], to_asset='USDT', 
+                        conversion_table=conversion_table, 
+                        exchange_info=exchange_info, key='close', 
+                        priority='accuracy'), axis='columns')
             conversion_table['USDT_bid_volume'] = \
                 conversion_table['bid_volume'] * conversion_table['USDT_bid_price'].astype(float)
             conversion_table['USDT_ask_volume'] = \

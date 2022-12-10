@@ -20,21 +20,16 @@ def resample(df, interval='1min'):
     frequency_1min = pd.tseries.frequencies.to_offset('1min')
     frequency_1d = pd.tseries.frequencies.to_offset('1d')
     volume_operation = 'sum' if frequency_interval >= frequency_1min else 'last'
-    values = ['open', 'high', 'low', 'close', 'base_volume', 'quote_volume']
+    rolling_volume_operation = 'sum' if frequency_interval >= frequency_1d else 'last'
+    values = ['open', 'high', 'low', 'close', 'base_volume', 'quote_volume', 
+              'rolling_base_volume', 'rolling_quote_volume']
     aggfunc = {'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 
-               'base_volume': volume_operation, 'quote_volume': volume_operation}
-    values += ['rolling_base_volume', 'rolling_quote_volume']
-    if frequency_interval >= frequency_1d:
-        aggfunc['rolling_base_volume'] = 'sum'
-        aggfunc['rolling_quote_volume'] = 'sum'
-    else:
-        aggfunc['rolling_base_volume'] = 'last'
-        aggfunc['rolling_quote_volume'] = 'last'
+               'base_volume': volume_operation, 'quote_volume': volume_operation, 
+               'rolling_base_volume': rolling_volume_operation, 
+               'rolling_quote_volume': rolling_volume_operation}
     df = df.pivot_table(index=['date'], columns=['symbol'], values=values, aggfunc=aggfunc)
     df['base_volume'] = df['base_volume'].fillna(0)
     df['quote_volume'] = df['quote_volume'].fillna(0)
-    df['rolling_base_volume'] = df['rolling_base_volume'].fillna(method='pad').fillna(method='backfill')
-    df['rolling_quote_volume'] = df['rolling_quote_volume'].fillna(method='pad').fillna(method='backfill')
     df = df.fillna(method='pad').fillna(method='backfill') # Last resort.
     df.columns = df.columns.swaplevel(0, 1)
     df = df.sort_index(axis='index')

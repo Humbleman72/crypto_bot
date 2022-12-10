@@ -40,8 +40,7 @@ class Crypto_logger_output(Crypto_logger_base):
                 input_filter = set(dataset_screened['symbol'].tolist())
                 old_columns = set(dataset.columns.get_level_values(0).tolist())
                 new_columns = list(input_filter & old_columns)
-                dataset = dataset[new_columns]
-                assets = filter_in_market(screen_one, dataset)
+                assets = filter_in_market(screen_one, dataset[new_columns])
                 dataset_screened = dataset_screened[dataset_screened['symbol'].isin(assets)]
         return dataset_screened
 
@@ -49,30 +48,19 @@ class Crypto_logger_output(Crypto_logger_base):
         df = df[['symbol', 'close', 'rolling_base_volume', 'rolling_quote_volume']]
         df['base_volume'] = df['rolling_base_volume'].copy()
         df['quote_volume'] = df['rolling_quote_volume'].copy()
-        df = df.pivot_table(index=['date'], columns=['symbol'], 
-                            values=['close', 'rolling_base_volume', 
-                                    'rolling_quote_volume', 
-                                    'base_volume', 'quote_volume'], 
-                            aggfunc={'close': ['first', 'max', 'min', 'last'], 
-                                     'base_volume': 'max', 'quote_volume': 'max', 
-                                     'rolling_base_volume': 'max', 
-                                     'rolling_quote_volume': 'max'})
-        df.columns = pd.MultiIndex.from_tuples([('_'.join(col[:2]), col[2]) 
-                                                for col in df.columns.values], 
-                                               names=('pair', 'symbol'))
-        df = df.rename(columns={'close_first': 'open', 'close_max': 'high', 
-                                'close_min': 'low', 'close_last': 'close', 
-                                'base_volume_max': 'base_volume', 
-                                'quote_volume_max': 'quote_volume', 
-                                'rolling_base_volume_max': 'rolling_base_volume', 
-                                'rolling_quote_volume_max': 'rolling_quote_volume'}, 
-                       level=0)
+        values = ['close', 'rolling_base_volume', 'rolling_quote_volume', 'base_volume', 'quote_volume']
+        aggfunc = {'close': [('open', 'first'), ('high', 'max'), ('low', 'min'), ('close', 'last')], 
+                   'base_volume': [('base_volume', 'max')], 'quote_volume': [('quote_volume', 'max')], 
+                   'rolling_base_volume': [('rolling_base_volume', 'max')], 
+                   'rolling_quote_volume': [('rolling_quote_volume', 'max')]}
+        df = df.pivot_table(index=['date'], columns=['symbol'], values=values, aggfunc=aggfunc)
+        df = df.sort_index(axis='index').iloc[1:]
+        df.columns = df.columns.droplevel(0)
+        df.columns.names = ['pair', 'symbol']
         df['base_volume'] = df['base_volume'].fillna(0)
         df['quote_volume'] = df['quote_volume'].fillna(0)
-        df['rolling_base_volume'] = df['rolling_base_volume'].fillna(method='pad').fillna(method='backfill')
-        df['rolling_quote_volume'] = df['rolling_quote_volume'].fillna(method='pad').fillna(method='backfill')
-        df = df.sort_index().iloc[1:]
-        df.columns = df.columns.swaplevel(0, 1)
+        df = df.fillna(method='pad').fillna(method='backfill') # Last resort.
+        df.columns = df.columns.swaplevel('pair', 'symbol')
         return df
 
     def get(self, dataset=None):

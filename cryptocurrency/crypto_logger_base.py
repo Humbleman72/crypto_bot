@@ -93,15 +93,12 @@ class Crypto_logger_base(ABC):
             else:
                 dataset = dataset.drop_duplicates(keep='last', ignore_index=True)
 
-            if 'date' in dataset.columns:
-                min_index_int = dataset[dataset['date'] == self.min_index].index[0]
-                dataset = dataset.set_index('date')
+            #min_index_int = dataset[dataset['date'] == self.min_index].index[0]
+            dataset = dataset.set_index('date')
             if not self.raw:
                 dataset = resample(dataset, self.interval)
-            if 'date' in dataset.columns:
-                dataset = dataset.iloc[min_index_int:]
-
-            dataset = dataset.sort_index(axis='index')
+            #dataset = dataset.iloc[min_index_int:]
+            #dataset = dataset.sort_index(axis='index')
             dataset = dataset.tail(self.buffer_size)
             self.min_index = dataset.index[0]
             dataset.to_csv(self.log_name)
@@ -138,33 +135,3 @@ class Crypto_logger_base(ABC):
             else:
                 dataset_screened.to_csv(self.log_screened_name)
         return dataset_screened
-
-    def loop(self):
-        """Main logger loop."""
-        print('Starting crypto logger.')
-        dataset = dataset_screened = None
-        try:
-            t2 = time.time()
-            while True:
-                t1 = t2
-                t2 = time.time()
-                print('Time spent for one loop:', t2 - t1)
-                dataset = self.concat_next(dataset)
-                dataset = self.process_next(dataset)
-                dataset_screened = self.screen_next(dataset=dataset, dataset_screened=None)
-                #time.sleep(self.delay)
-        except (KeyboardInterrupt, SystemExit):
-            print('Saving latest complete dataset...')
-            dataset = self.process_next(dataset)
-            dataset_screened = self.screen_next(dataset=dataset, dataset_screened=None)
-            print('User terminated crypto logger process.')
-        except Exception as e:
-            print(e)
-        finally:
-            # Release resources.
-            print('crypto_logger process done.')
-
-    def start(self):
-        """Main logger initialization and loop."""
-        self.init()
-        self.loop()

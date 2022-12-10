@@ -91,5 +91,4 @@ class Crypto_logger_input(Crypto_logger_base):
                                        minimal=True, extra_minimal=True, super_extra_minimal=False, 
                                        convert_to_USDT=not self.as_pair)
         dataset.index = dataset.index.round(self.interval)
-        dataset.index.name = 'date'
         return dataset

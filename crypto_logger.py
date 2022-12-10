@@ -89,11 +89,8 @@ def loop_loggers(crypto_loggers):
                 dataset_screened = \
                     crypto_loggers[i].screen_next(dataset=dataset, 
                                                   dataset_screened=dataset_screened)
-                #time.sleep(crypto_loggers[i].delay)
     except (KeyboardInterrupt, SystemExit):
         print('Saving latest complete dataset...')
-        crypto_loggers[i].process_next(dataset)
-        crypto_loggers[i].screen_next()
         dataset = crypto_loggers[i].process_next(dataset)
         dataset_screened = \
             crypto_loggers[i].screen_next(dataset=dataset, 

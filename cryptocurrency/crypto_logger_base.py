@@ -100,30 +100,25 @@ class Crypto_logger_base(ABC):
 
     def concat_next(self, dataset=None):
         """Concatenate old dataset with new dataset in main logger loop."""
-        return pd.concat([self.dataset, self.get(dataset)], axis='index', join='outer')
+        self.dataset = pd.concat([self.dataset, self.get(dataset)], axis='index', join='outer')
 
-    def process_next(self, dataset):
+    def process_next(self):
         """Process dataset in main logger loop."""
-        self.dataset = self.put(dataset)
+        self.dataset = self.put(self.dataset)
         return self.dataset
 
-    def screen_next(self, dataset=None, dataset_screened=None):
-        """Log dataset in main logger loop."""
-        if dataset is None:
-            dataset = self.dataset
+    def screen_next(self, dataset_screened=None):
+        """Screen dataset in main logger loop."""
         if dataset_screened is None:
-            dataset_screened_old = self.get_from_file(log_name=self.log_screened_name, from_raw=True)
-        else:
-            dataset_screened_old = dataset_screened
-        dataset_screened = self.screen(dataset, dataset_screened=dataset_screened_old)
-        if dataset_screened is not None:
-            dataset_screened = dataset_screened.sort_index(axis='index')
-            if self.append and dataset_screened_old is not None:
-                dataset_screened = pd.concat([dataset_screened_old, dataset_screened], axis='index')
-                dataset_screened = dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
+            dataset_screened = self.get_from_file(log_name=self.log_screened_name, from_raw=True)
+        self.dataset_screened = self.screen(self.dataset, dataset_screened=dataset_screened)
+        if self.dataset_screened is not None:
+            self.dataset_screened = self.dataset_screened.sort_index(axis='index')
+            if self.append and self.dataset_screened is not None:
+                self.dataset_screened = pd.concat([dataset_screened, self.dataset_screened], axis='index')
+                self.dataset_screened = self.dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
             if self.roll != 0:
-                dataset_screened = dataset_screened.tail(self.roll)
-            self.dataset_screened = dataset_screened
+                self.dataset_screened = self.dataset_screened.tail(self.roll)
         return dataset_screened
 
     def log_next(self):

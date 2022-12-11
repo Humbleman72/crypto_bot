@@ -54,8 +54,8 @@ class Crypto_logger_output(Crypto_logger_base):
                    'rolling_base_volume': [('rolling_base_volume', 'max')], 
                    'rolling_quote_volume': [('rolling_quote_volume', 'max')]}
         df = df.pivot_table(index=['date'], columns=['symbol'], values=values, aggfunc=aggfunc)
-        df = df.sort_index(axis='index').iloc[1:]
         df.columns = df.columns.droplevel(0)
+        df = df.sort_index(axis='index').iloc[1:]
         df.columns.names = ['pair', 'symbol']
         df['base_volume'] = df['base_volume'].fillna(0)
         df['quote_volume'] = df['quote_volume'].fillna(0)

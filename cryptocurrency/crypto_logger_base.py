@@ -73,7 +73,6 @@ class Crypto_logger_base(ABC):
         else:
             self.dataset = self.get()
         self.dataset = self.dataset.tail(self.buffer_size)
-        self.min_index = self.dataset.index[-1]
         self.dataset = self.put(self.dataset)
 
     @abstractmethod
@@ -92,15 +91,10 @@ class Crypto_logger_base(ABC):
                                                   keep='first', ignore_index=True)
             else:
                 dataset = dataset.drop_duplicates(keep='last', ignore_index=True)
-
-            #min_index_int = dataset[dataset['date'] == self.min_index].index[0]
             dataset = dataset.set_index('date')
             if not self.raw:
                 dataset = resample(dataset, self.interval)
-            #dataset = dataset.iloc[min_index_int:]
-            #dataset = dataset.sort_index(axis='index')
             dataset = dataset.tail(self.buffer_size)
-            self.min_index = dataset.index[0]
             dataset.to_csv(self.log_name)
         return dataset
 
@@ -124,14 +118,18 @@ class Crypto_logger_base(ABC):
         dataset_screened = self.screen(dataset, dataset_screened=dataset_screened_old)
         if dataset_screened is not None:
             dataset_screened = dataset_screened.sort_index(axis='index')
+            if self.append and dataset_screened_old is not None:
+                dataset_screened = pd.concat([dataset_screened_old, dataset_screened], axis='index')
+                dataset_screened = dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
             if self.roll != 0:
-                if self.append and dataset_screened_old is not None:
-                    dataset_screened = pd.concat([dataset_screened_old, dataset_screened], axis='index')
-                    dataset_screened = dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
                 dataset_screened = dataset_screened.tail(self.roll)
-                dataset_screened.to_csv(self.log_screened_name)
-            elif self.append:
-                dataset_screened.to_csv(self.log_screened_name, mode='a')
-            else:
-                dataset_screened.to_csv(self.log_screened_name)
+            self.dataset_screened = dataset_screened
         return dataset_screened
+
+    def log_next(self):
+        """Log dataset in main logger loop."""
+        if self.log:
+            #if self.dataset is not None:
+            #    self.dataset.to_csv(self.log_name)
+            if self.dataset_screened is not None:
+                self.dataset_screened.to_csv(self.log_screened_name)

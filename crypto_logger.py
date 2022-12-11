@@ -89,12 +89,16 @@ def loop_loggers(crypto_loggers):
                 dataset_screened = \
                     crypto_loggers[i].screen_next(dataset=dataset, 
                                                   dataset_screened=dataset_screened)
+            for i in list(crypto_loggers.keys()):
+                crypto_loggers[i].log_next()
     except (KeyboardInterrupt, SystemExit):
         print('Saving latest complete dataset...')
         dataset = crypto_loggers[i].process_next(dataset)
         dataset_screened = \
             crypto_loggers[i].screen_next(dataset=dataset, 
                                           dataset_screened=dataset_screened)
+        for i in list(crypto_loggers.keys()):
+            crypto_loggers[i].log_next()
         print('User terminated crypto logger processes.')
     except Exception as e:
         print(e)

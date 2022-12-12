@@ -19,23 +19,23 @@ read -s -p "Enter your Contabo server's new user: " NEW_USER && \
 echo "" && \
 read -s -p "Enter your Contabo server's initial password: " SERVER_INITIAL_PASSWORD && \
 echo "" && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get update && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get install -y mosh supervisor && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} scp conf.d/*.conf root@${SERVER_IP}:/etc/supervisor/conf.d && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "adduser --disabled-login --gecos \"\" \"${NEW_USER}\"" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "echo \"${NEW_USER}:${NEW_PASSWORD}\" | chpasswd" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "usermod -aG sudo ${NEW_USER}" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "sed -i 's/IPV6=no/IPV6=yes/g' /etc/default/ufw" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw default deny incoming" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw default allow outgoing" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw allow OpenSSH" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw allow 60000:61000/udp" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "yes | ufw enable" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo -e "echo \"AllowUsers\t${NEW_USER}\" >> /etc/ssh/sshd_config" ) && \
-#sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "systemctl restart sshd" ) && \
-#sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "echo ${NEW_PASSWORD} | sudo -S supervisorctl reread" ) && \
-#sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "sed -i 's/HISTSIZE=1000/HISTSIZE=100000/g' /home/${NEW_USER}/.bashrc" ) && \
-#sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "sed -i 's/HISTFILESIZE=2000/HISTFILESIZE=200000/g' /home/${NEW_USER}/.bashrc" ) && \
-#sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "mkdir -p ~/workspace" ) && \
-#sshpass -p ${NEW_PASSWORD} ssh < ./install/install_conda.sh ${NEW_USER}@${SERVER_IP} "bash -s -- '${NEW_PASSWORD}'" && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get update && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get install -y mosh supervisor && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} scp conf.d/*.conf root@${SERVER_IP}:/etc/supervisor/conf.d && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "adduser --disabled-login --gecos \"\" \"${NEW_USER}\"" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "echo \"${NEW_USER}:${NEW_PASSWORD}\" | chpasswd" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "usermod -aG sudo ${NEW_USER}" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "sed -i 's/IPV6=no/IPV6=yes/g' /etc/default/ufw" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw default deny incoming" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw default allow outgoing" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw allow OpenSSH" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw allow 60000:61000/udp" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "yes | ufw enable" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo -e "echo \"AllowUsers\t${NEW_USER}\" >> /etc/ssh/sshd_config" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "systemctl restart sshd" ) && \
+sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "echo ${NEW_PASSWORD} | sudo -S supervisorctl reread" ) && \
+sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "sed -i 's/HISTSIZE=1000/HISTSIZE=100000/g' /home/${NEW_USER}/.bashrc" ) && \
+sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "sed -i 's/HISTFILESIZE=2000/HISTFILESIZE=200000/g' /home/${NEW_USER}/.bashrc" ) && \
+sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "mkdir -p ~/workspace" ) && \
+sshpass -p ${NEW_PASSWORD} ssh < ./install/install_conda.sh ${NEW_USER}@${SERVER_IP} "bash -s -- '${NEW_PASSWORD}'" && \
 sshpass -p ${NEW_PASSWORD} ssh < ./install/install_conda_crypto_logger_environment.sh ${NEW_USER}@${SERVER_IP} "bash -s"

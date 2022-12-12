@@ -78,7 +78,7 @@ class Crypto_logger_input(Crypto_logger_base):
 
     def screen(self, dataset, dataset_screened=None):
         if dataset is not None:
-            dataset = get_tradable_tickers_info(dataset, as_pair=self.as_pair)
+            dataset = get_tradable_tickers_info(dataset)
             dataset_screened = self.filter_movers(dataset, count=1000, 
                                                   price_percent=self.price_percent, 
                                                   volume_percent=self.volume_percent)

@@ -5,9 +5,21 @@
 # For            Myself
 # Description:   Install conda.
 # Usage:         cd ~/workspace/crypto_logger && bash install/install_conda.sh
+# Usage:         bash install/install_conda.sh <PASSWORD>
+# Example 1:     bash install/install_conda.sh password123
+# Example 2:     bash install/install_conda.sh
+# Arguments:     <PASSWORD>: optional sudo password    (default is "")
+
+# Parse and set optional password argument from command-line.
+PASSWORD=$(echo "${1:-}")
+
+# Take password from command-line if set, else ask live.
+if [[ "$(echo ${PASSWORD})" == "" ]]
+then
+    read -s -p "Enter your password: " PASSWORD
+fi
 
 # Automagic.
-read -s -p "Enter your password: " PASSWORD && \
 echo ${PASSWORD} | sudo -S apt-get update && \
 echo ${PASSWORD} | sudo -S apt-get install -y avrdude bzip2 ca-certificates git libglib2.0-0 libxext6 libsm6 libxrender1 mercurial subversion wget && \
 echo ${PASSWORD} | sudo -S apt clean && \

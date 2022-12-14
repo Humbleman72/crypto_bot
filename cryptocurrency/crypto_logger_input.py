@@ -18,12 +18,10 @@ pd.options.mode.chained_assignment = None
 
 # Class definition.
 class Crypto_logger_input(Crypto_logger_base):
-    def __init__(self, delay=4.7, interval='15s', buffer_size=3000, 
-                 price_percent=5.0, volume_percent=0.0, as_pair=False, 
-                 append=False, roll=1000, log=True):
+    def __init__(self, interval='15s', buffer_size=3000, price_percent=5.0, 
+                 volume_percent=0.0, as_pair=False, append=False, roll=1000):
         """
         :param interval: OHLCV interval to log. Default is 15 seconds.
-        :param delay: delay between Binance API requests. Minimum calculated was 4.7 seconds.
         :param buffer_size: buffer size to avoid crashing on memory accesses.
         :param price_percent: price move percent.
         :param volume_percent: volume move percent.
@@ -31,10 +29,9 @@ class Crypto_logger_input(Crypto_logger_base):
         self.price_percent = price_percent
         self.volume_percent = volume_percent
         self.as_pair = as_pair
-        super().__init__(delay=delay, interval=interval, interval_input='', 
-                         buffer_size=buffer_size, directory='crypto_logs', 
-                         log_name='crypto_input_log_' + interval, input_log_name='', 
-                         raw=True, append=append, roll=roll, log=log)
+        super().__init__(interval=interval, interval_input='', buffer_size=buffer_size, 
+                         directory='crypto_logs', log_name='crypto_input_log_' + interval, 
+                         input_log_name='', raw=True, append=append, roll=roll)
 
         authenticator = Cryptocurrency_authenticator(use_keys=False, testnet=False)
         self.client = authenticator.spot_client
@@ -76,13 +73,15 @@ class Crypto_logger_input(Crypto_logger_base):
         dataset = dataset.set_index('date')
         return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
 
-    def screen(self, dataset, dataset_screened=None):
-        if dataset is not None:
-            dataset = get_tradable_tickers_info(dataset)
+    def screen(self, dataset, dataset_screened=None, live_filtered=None):
+        if dataset is None:
+            live_filtered = []
+        else:
+            dataset, live_filtered = get_tradable_tickers_info(dataset)
             dataset_screened = self.filter_movers(dataset, count=1000, 
                                                   price_percent=self.price_percent, 
                                                   volume_percent=self.volume_percent)
-        return dataset_screened
+        return dataset_screened, live_filtered
 
     def get(self, dataset=None):
         """Get all pairs data from Binance API."""

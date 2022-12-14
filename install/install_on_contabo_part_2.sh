@@ -34,6 +34,7 @@ sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "yes | ufw e
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo -e "echo \"AllowUsers\t${NEW_USER}\" >> /etc/ssh/sshd_config" ) && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "systemctl restart sshd" ) && \
 sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "echo ${NEW_PASSWORD} | sudo -S supervisorctl reread" ) && \
+sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "echo ${NEW_PASSWORD} | sudo -S supervisorctl reload" ) && \
 sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "sed -i 's/HISTSIZE=1000/HISTSIZE=100000/g' /home/${NEW_USER}/.bashrc" ) && \
 sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "sed -i 's/HISTFILESIZE=2000/HISTFILESIZE=200000/g' /home/${NEW_USER}/.bashrc" ) && \
 sshpass -p ${NEW_PASSWORD} ssh ${NEW_USER}@${SERVER_IP} $( echo "mkdir -p ~/workspace" ) && \

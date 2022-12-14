@@ -34,8 +34,6 @@ class Crypto_logger_output(Crypto_logger_base):
 
     def screen(self, dataset, dataset_screened=None):
         if dataset is not None:
-            if dataset_screened is None:
-                dataset_screened = self.get_from_file(log_name=self.input_log_screened_name, from_raw=True)
             if dataset_screened is not None:
                 input_filter = set(dataset_screened['symbol'].tolist())
                 old_columns = set(dataset.columns.get_level_values(0).tolist())
@@ -64,9 +62,8 @@ class Crypto_logger_output(Crypto_logger_base):
         return df
 
     def get(self, dataset=None):
-        if dataset is None:
-            dataset = self.get_from_file(log_name=self.input_log_name, 
-                                         from_raw=not self.load_from_ohlcv)
-        if not self.load_from_ohlcv:
-            dataset = self.resample_from_raw(dataset)
-        return dataset.tail(2)
+        if dataset is not None:
+            if self.connected_to_raw:
+                dataset = self.resample_from_raw(dataset)
+            dataset = dataset.tail(2)
+        return dataset

@@ -495,11 +495,8 @@ def get_tradable_tickers_info(conversion_table):
                                          'ask_price', 'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
                                          'bid_ask_volume_percent_change', 'rolling_base_volume', 
                                          'rolling_quote_volume', 'count']]
-    conversion_table = conversion_table.copy()
-    conversion_table[['price_change_percent', 'close', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
-                      'rolling_base_volume', 'rolling_quote_volume', 'count']] = \
-        conversion_table[['price_change_percent', 'close', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
-                          'rolling_base_volume', 'rolling_quote_volume', 'count']].astype(float)
+    conversion_table.iloc[:,conversion_table.columns != 'symbol'] = \
+        conversion_table.iloc[:,conversion_table.columns != 'symbol'].astype(float)
     #conversion_table = conversion_table[conversion_table['bid_ask_percent_change'] < 0.8]
     #conversion_table = conversion_table[conversion_table['bid_ask_volume_percent_change'] > 0.0]
     return conversion_table.sort_index(axis='index')

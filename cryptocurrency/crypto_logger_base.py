@@ -11,6 +11,8 @@ from cryptocurrency.resample import resample
 from abc import abstractmethod, ABC
 from os.path import exists, join
 from os import mkdir
+import errno
+import os
 import time
 import pandas as pd
 
@@ -34,8 +36,6 @@ class Crypto_logger_base(ABC):
         """
         input_log_name = 'crypto_' + input_log_name + '_log_' + interval_input
 
-        self.load_from_ohlcv = not raw and interval_input != interval
-
         self.delay = delay
         self.interval = interval
         self.interval_input = interval_input
@@ -46,6 +46,7 @@ class Crypto_logger_base(ABC):
         self.roll = roll
         self.log = log
 
+        self.connected_to_raw = self.interval_input == self.interval
         self.input_log_name = join(directory, input_log_name + '.txt')
         self.input_log_screened_name = join(directory, input_log_name + '_screened.txt')
 
@@ -55,25 +56,40 @@ class Crypto_logger_base(ABC):
         if not exists(directory):
             mkdir(directory)
 
-    #self.get_from_file(log_name=self.log_name, from_raw=False)
-    #self.get_from_file(log_name=self.input_log_name, from_raw=not self.load_from_ohlcv)
-    def get_from_file(self, log_name, from_raw=False):
-        if exists(log_name):
-            header = 0 if from_raw else [0, 1]
-            dataset = pd.read_csv(log_name, header=header, index_col=0)
-            dataset.index = pd.DatetimeIndex(dataset.index)
-            return dataset
-        else:
-            return None
-
-    def init(self):
-        """Initialization of the main logger loop."""
-        if 'output' in self.log_name:
-            self.dataset = self.get_from_file(log_name=self.log_name, from_raw=False)
-        else:
-            self.dataset = self.get()
-        self.dataset = self.dataset.tail(self.buffer_size)
-        self.dataset = self.put(self.dataset)
+    def maybe_get_from_file(self, dataset=None, inputs=False, screened=False):
+        if dataset is None:
+            if screened:
+                header = 0
+                if inputs:
+                    if self.raw:
+                        dataset = None
+                    else:
+                        dataset = self.input_log_screened_name
+                else:
+                    dataset = self.log_screened_name
+            else:
+                if inputs:
+                    if self.raw:
+                        dataset = None
+                    else:
+                        dataset = self.input_log_name
+                        if self.interval_input == self.interval:
+                            header = 0
+                        else:
+                            header = [0, 1]
+                else:
+                    dataset = self.log_name
+                    if self.raw:
+                        header = 0
+                    else:
+                        header = [0, 1]
+            if dataset is not None:
+                if exists(dataset):
+                    dataset = pd.read_csv(dataset, header=header, index_col=0)
+                    dataset.index = pd.DatetimeIndex(dataset.index)
+                else:
+                    dataset = None
+        return dataset
 
     @abstractmethod
     def get(self, **kwargs):
@@ -83,48 +99,53 @@ class Crypto_logger_base(ABC):
     def screen(self, **kwargs):
         raise NotImplementedError()
 
-    def put(self, dataset):
-        if dataset is not None:
+    def get_and_put_next(self, old_dataset=None, dataset=None):
+        """Concatenate old dataset with new dataset in main logger loop and process."""
+        dataset = self.maybe_get_from_file(dataset=dataset, inputs=self.raw, screened=False)
+        if self.raw:
+            dataset = self.get()
+            if old_dataset is not None:
+                dataset = pd.concat([old_dataset, dataset], axis='index', join='outer')
             dataset = dataset.copy().reset_index()
-            if self.raw:
-                dataset = dataset.drop_duplicates(subset=['symbol', 'count'], 
-                                                  keep='first', ignore_index=True)
-            else:
-                dataset = dataset.drop_duplicates(keep='last', ignore_index=True)
+            dataset = dataset.drop_duplicates(subset=['symbol', 'count'], 
+                                              keep='first', ignore_index=True)
             dataset = dataset.set_index('date')
             if not self.raw:
                 dataset = resample(dataset, self.interval)
             dataset = dataset.tail(self.buffer_size)
-            dataset.to_csv(self.log_name)
+        else:
+            if dataset is None:
+                if old_dataset is not None:
+                    dataset = old_dataset
+            else:
+                dataset = self.get(dataset)
+                if old_dataset is not None:
+                    dataset = pd.concat([old_dataset, dataset], axis='index', join='outer')
+                dataset = dataset.copy().reset_index()
+                dataset = dataset.drop_duplicates(keep='last', ignore_index=True)
+                dataset = dataset.set_index('date')
+                dataset = resample(dataset, self.interval)
+                dataset = dataset.tail(self.buffer_size)
         return dataset
 
-    def concat_next(self, dataset=None):
-        """Concatenate old dataset with new dataset in main logger loop."""
-        self.dataset = pd.concat([self.dataset, self.get(dataset)], axis='index', join='outer')
-
-    def process_next(self):
-        """Process dataset in main logger loop."""
-        self.dataset = self.put(self.dataset)
-        return self.dataset
-
-    def screen_next(self, dataset_screened=None):
+    def screen_next(self, old_dataset_screened=None, dataset_screened=None, dataset=None):
         """Screen dataset in main logger loop."""
-        if dataset_screened is None:
-            dataset_screened = self.get_from_file(log_name=self.log_screened_name, from_raw=True)
-        self.dataset_screened = self.screen(self.dataset, dataset_screened=dataset_screened)
-        if self.dataset_screened is not None:
-            self.dataset_screened = self.dataset_screened.sort_index(axis='index')
-            if self.append and self.dataset_screened is not None:
-                self.dataset_screened = pd.concat([dataset_screened, self.dataset_screened], axis='index')
-                self.dataset_screened = self.dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
-            if self.roll != 0:
-                self.dataset_screened = self.dataset_screened.tail(self.roll)
+        if not self.raw:
+            dataset_screened = self.maybe_get_from_file(dataset=dataset_screened, inputs=True, screened=True)
+        dataset_screened = self.screen(dataset, dataset_screened=dataset_screened)
+        if dataset_screened is not None:
+            dataset_screened = dataset_screened.sort_index(axis='index')
+            if self.append and dataset_screened is not None:
+                dataset_screened = pd.concat([old_dataset_screened, dataset_screened], axis='index')
+                dataset_screened = dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
+            if self.roll > 0:
+                dataset_screened = dataset_screened.tail(self.roll)
         return dataset_screened
 
-    def log_next(self):
+    def log_next(self, dataset=None, dataset_screened=None):
         """Log dataset in main logger loop."""
         if self.log:
-            #if self.dataset is not None:
-            #    self.dataset.to_csv(self.log_name)
-            if self.dataset_screened is not None:
-                self.dataset_screened.to_csv(self.log_screened_name)
+            if dataset is not None:
+                dataset.to_csv(self.log_name)
+            if dataset_screened is not None:
+                dataset_screened.to_csv(self.log_screened_name)

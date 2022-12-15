@@ -281,11 +281,11 @@ def screen_one(pair):
             if get_rising_volume_trigger(pair):
                 if frequency == frequency_1min:
                     if get_not_square_wave_triggers(pair, multiplier_schedule=[3, 5, 15]):
-                        if get_bullish_price_trigger(pair):
-                            if get_minute_daily_volume_minimum_trigger(pair):
-                                #if get_minute_daily_volume_change_trigger(pair, threshold=5):
-                                #if get_heikin_ashi_trigger(pair):
-                                return True
+                        #if get_bullish_price_trigger(pair):
+                        if get_minute_daily_volume_minimum_trigger(pair):
+                            #if get_minute_daily_volume_change_trigger(pair, threshold=5):
+                            #if get_heikin_ashi_trigger(pair):
+                            return True
                 #elif frequency == frequency_30min:
                 #    if get_renko_trigger(pair, compress=False, 
                 #                         direction_type='long', 

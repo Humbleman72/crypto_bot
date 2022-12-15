@@ -7,7 +7,7 @@
 # Description: Binance pair conversion table retrieval and basic pair filtering.
 
 # Library imports.
-from cryptocurrency.conversion import convert_price, convert_price_from_shortest_path
+from cryptocurrency.conversion import convert_price
 from cryptocurrency.conversion import get_base_asset_from_pair, get_quote_asset_from_pair
 from cryptocurrency.conversion import get_shortest_pair_path_between_assets
 import datetime
@@ -117,9 +117,9 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
 
     if minimal:
         conversion_table = \
-            conversion_table[['symbol', 'base_asset', 'quote_asset', 'open', 'close', 'rolling_base_volume', 
-                              'rolling_quote_volume', 'count', 'bid_price', 'ask_price', 'bid_volume', 
-                              'ask_volume', 'date', 'price_change_percent']]
+            conversion_table[['symbol', 'base_asset', 'quote_asset', 'open', 'high', 'low', 'close', 
+                              'rolling_base_volume', 'rolling_quote_volume', 'count', 'bid_price', 
+                              'ask_price', 'bid_volume', 'ask_volume', 'date', 'price_change_percent']]
 
     conversion_table['rolling_base_quote_volume'] = \
         conversion_table['rolling_quote_volume'] / conversion_table['close']
@@ -129,29 +129,18 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table.apply(lambda x: get_shortest_pair_path_between_assets(
                 from_asset=x['base_asset'], to_asset='USDT', exchange_info=exchange_info, 
                 priority='accuracy'), axis='columns')
-        if not minimal:
-            conversion_table['USDT_high'] = \
-                conversion_table.apply(
-                    lambda x: convert_price_from_shortest_path(
-                        size=(((x['high'] - x['close']) / x['close']) + 1), 
-                        from_asset=x['base_asset'], to_asset='USDT', 
-                        conversion_table=conversion_table, 
-                        exchange_info=exchange_info, 
-                        shortest_path=x['shortest_path'], 
-                        key='close', priority='accuracy'), axis='columns')
-            conversion_table['USDT_low'] = \
-                conversion_table.apply(
-                    lambda x: convert_price_from_shortest_path(
-                        size=(((x['low'] - x['close']) / x['close']) + 1), 
-                        from_asset=x['base_asset'], to_asset='USDT', 
-                        conversion_table=conversion_table, 
-                        exchange_info=exchange_info, 
-                        shortest_path=x['shortest_path'], 
-                        key='close', priority='accuracy'), axis='columns')
         if not super_extra_minimal:
+            conversion_table['high_pre_conversion'] = \
+                (((conversion_table['high'] - conversion_table['close']) / conversion_table['close']) + 1)
+            conversion_table['low_pre_conversion'] = \
+                (((conversion_table['low'] - conversion_table['close']) / conversion_table['close']) + 1)
+            conversion_table['bid_pre_conversion'] = \
+                (((conversion_table['bid_price'] - conversion_table['close']) / conversion_table['close']) + 1)
+            conversion_table['ask_pre_conversion'] = \
+                (((conversion_table['ask_price'] - conversion_table['close']) / conversion_table['close']) + 1)
             conversion_table['USDT_open'] = \
                 conversion_table.apply(
-                    lambda x: convert_price_from_shortest_path(
+                    lambda x: convert_price(
                         size=1, from_asset=x['base_asset'], 
                         to_asset='USDT', 
                         conversion_table=conversion_table, 
@@ -160,42 +149,32 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
                         key='open', priority='accuracy'), axis='columns')
         conversion_table['USDT_price'] = \
             conversion_table.apply(
-                lambda x: convert_price_from_shortest_path(
+                lambda x: convert_price(
                     size=1, from_asset=x['base_asset'], 
                     to_asset='USDT', 
                     conversion_table=conversion_table, 
                     exchange_info=exchange_info, 
                     shortest_path=x['shortest_path'], 
                     key='close', priority='accuracy'), axis='columns')
+        if not super_extra_minimal:
+            conversion_table['USDT_high'] = \
+                conversion_table['USDT_price'].astype(float) * conversion_table['high_pre_conversion']
+            conversion_table['USDT_low'] = \
+                conversion_table['USDT_price'].astype(float) * conversion_table['low_pre_conversion']
+            conversion_table['USDT_bid_price'] = \
+                conversion_table['USDT_price'].astype(float) * conversion_table['bid_pre_conversion']
+            conversion_table['USDT_ask_price'] = \
+                conversion_table['USDT_price'].astype(float) * conversion_table['ask_pre_conversion']
+            conversion_table['USDT_bid_volume'] = \
+                conversion_table['bid_volume'] * conversion_table['USDT_bid_price'].astype(float)
+            conversion_table['USDT_ask_volume'] = \
+                conversion_table['ask_volume'] * conversion_table['USDT_ask_price'].astype(float)
+
         conversion_table['rolling_USDT_base_volume'] = \
             conversion_table['rolling_base_volume'] * conversion_table['USDT_price'].astype(float)
         conversion_table['rolling_USDT_quote_volume'] = \
             conversion_table['rolling_base_quote_volume'] * conversion_table['USDT_price'].astype(float)
         conversion_table = conversion_table.drop(columns=['rolling_base_quote_volume'])
-
-        if not extra_minimal:
-            conversion_table['USDT_bid_price'] = \
-                conversion_table.apply(
-                    lambda x: convert_price_from_shortest_path(
-                        shortest_path=x['shortest_path'], 
-                        size=(((x['bid_price'] - x['close']) / x['close']) + 1), 
-                        from_asset=x['base_asset'], to_asset='USDT', 
-                        conversion_table=conversion_table, 
-                        exchange_info=exchange_info, key='close', 
-                        priority='accuracy'), axis='columns')
-            conversion_table['USDT_ask_price'] = \
-                conversion_table.apply(
-                    lambda x: convert_price_from_shortest_path(
-                        shortest_path=x['shortest_path'], 
-                        size=(((x['ask_price'] - x['close']) / x['close']) + 1), 
-                        from_asset=x['base_asset'], to_asset='USDT', 
-                        conversion_table=conversion_table, 
-                        exchange_info=exchange_info, key='close', 
-                        priority='accuracy'), axis='columns')
-            conversion_table['USDT_bid_volume'] = \
-                conversion_table['bid_volume'] * conversion_table['USDT_bid_price'].astype(float)
-            conversion_table['USDT_ask_volume'] = \
-                conversion_table['ask_volume'] * conversion_table['USDT_ask_price'].astype(float)
 
         if super_extra_minimal:
             price_change_percent = conversion_table[['base_asset', 'price_change_percent']]
@@ -234,15 +213,17 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
                                                      'rolling_quote_volume', 'rolling_base_volume', 'date', 
                                                      'count', 'quote_asset', 'base_asset', 'USDT_open', 
                                                      'USDT_price', 'rolling_USDT_quote_volume', 
-                                                     'rolling_USDT_base_volume', 'USDT_price_change_percent', 
-                                                     'is_shorted']] = \
+                                                     'rolling_USDT_base_volume', 'USDT_ask_price', 
+                                                     'USDT_bid_price', 'USDT_ask_volume', 'USDT_bid_volume', 
+                                                     'USDT_price_change_percent', 'is_shorted']] = \
                         conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'bid_price', 
                                                          'bid_volume', 'ask_price', 'ask_volume', 'open', 
-                                                         'rolling_base_volume', 'rolling_quote_volume', 
-                                                         'date', 'count', 'base_asset', 'quote_asset', 
-                                                         'USDT_open', 'USDT_price', 'rolling_USDT_base_volume', 
-                                                         'rolling_USDT_quote_volume', 'USDT_price_change_percent', 
-                                                         'is_shorted']].values
+                                                         'rolling_base_volume', 'rolling_quote_volume', 'date', 
+                                                         'count', 'base_asset', 'quote_asset', 'USDT_open', 
+                                                         'USDT_price', 'rolling_USDT_base_volume', 
+                                                         'rolling_USDT_quote_volume', 'USDT_bid_price', 
+                                                         'USDT_ask_price', 'USDT_bid_volume', 'USDT_ask_volume', 
+                                                         'USDT_price_change_percent', 'is_shorted']].values
             else:
                 conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'ask_price', 
                                                  'ask_volume', 'bid_price', 'bid_volume', 'open', 
@@ -412,18 +393,11 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
         if convert_to_USDT:
             if minimal:
                 if extra_minimal:
-                    if super_extra_minimal:
-                        conversion_table = \
-                            conversion_table[['base_asset', 'price_change_percent', 'date', 
-                                              'bid_volume', 'ask_volume', 'bid_price', 'close', 'ask_price', 
-                                              'count', 'rolling_traded_volume', 'bid_ask_percent_change', 
-                                              'bid_ask_volume_percent_change', 'traded_price']]
-                    else:
-                        conversion_table = \
-                            conversion_table[['base_asset', 'USDT_price_change_percent', 'date', 
-                                              'bid_volume', 'ask_volume', 'bid_price', 'close', 'ask_price', 
-                                              'count', 'rolling_traded_volume', 'bid_ask_percent_change', 
-                                              'bid_ask_volume_percent_change', 'traded_price']]
+                    conversion_table = \
+                        conversion_table[['base_asset', 'price_change_percent', 'date', 
+                                          'bid_volume', 'ask_volume', 'bid_price', 'close', 'ask_price', 
+                                          'count', 'rolling_traded_volume', 'bid_ask_percent_change', 
+                                          'bid_ask_volume_percent_change', 'traded_price']]
                 else:
                     conversion_table = \
                         conversion_table[['base_asset', 'USDT_price_change_percent', 'date', 'count', 
@@ -445,7 +419,7 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
                 conversion_table = \
                     conversion_table.rename(columns={'rolling_traded_volume': 'rolling_base_volume', 
                                                      'traded_price': 'close'})
-                if not super_extra_minimal:
+                if super_extra_minimal:
                     conversion_table = \
                         conversion_table.rename(columns={'USDT_price_change_percent': 'price_change_percent'})
             else:

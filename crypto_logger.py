@@ -113,6 +113,9 @@ def loop_loggers(crypto_loggers):
                                                         dataset=output_1d, live_filtered=None)
             crypto_loggers['input_15s'].log_next(dataset=None, dataset_screened=input_15s_screened)
             crypto_loggers['output_15s'].log_next(dataset=None, dataset_screened=output_15s_screened)
+            crypto_loggers['output_1min'].log_next(dataset=None, dataset_screened=output_1min_screened)
+            crypto_loggers['output_30min'].log_next(dataset=None, dataset_screened=output_30min_screened)
+            crypto_loggers['output_1h'].log_next(dataset=None, dataset_screened=output_1h_screened)
             crypto_loggers['output_1d'].log_next(dataset=None, dataset_screened=output_1d_screened)
     except (KeyboardInterrupt, SystemExit):
         print('Saving latest complete dataset...')

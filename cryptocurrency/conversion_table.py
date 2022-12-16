@@ -421,10 +421,8 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             if extra_minimal:
                 conversion_table = \
                     conversion_table.rename(columns={'rolling_traded_volume': 'rolling_base_volume', 
-                                                     'traded_price': 'close'})
-                if super_extra_minimal:
-                    conversion_table = \
-                        conversion_table.rename(columns={'USDT_price_change_percent': 'price_change_percent'})
+                                                     'traded_price': 'close', 
+                                                     'USDT_price_change_percent': 'price_change_percent'})
             else:
                 conversion_table = \
                     conversion_table.rename(columns={'USDT_price_change_percent': 'price_change_percent', 
@@ -441,18 +439,16 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table['symbol'] = conversion_table['base_asset'].copy()
             conversion_table['quote_asset'] = conversion_table['base_asset'].copy()
             if minimal:
-                df = conversion_table.groupby(by=['base_asset']).agg({'date': 'max', 'count': 'sum'})
+                df = conversion_table.groupby(by=['base_asset']).agg({'date': 'max', 'count': 'mean'})
                 conversion_table.loc[:, ['date', 'count']] = \
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
-                if extra_minimal:
+                if super_extra_minimal:
                     df = conversion_table.groupby(by=['base_asset']).agg({'bid_ask_percent_change': 'min', 
                                                                           'bid_ask_volume_percent_change': 'max'})
                     conversion_table.loc[:, ['bid_ask_percent_change', 'bid_ask_volume_percent_change']] = \
                         conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             else:
-                df = conversion_table.groupby(by=['base_asset']).agg({'date': 'max', 
-                                                                      'last_ID': 'sum', 
-                                                                      'count': 'sum'})
+                df = conversion_table.groupby(by=['base_asset']).agg({'date': 'max', 'last_ID': 'sum', 'count': 'sum'})
                 conversion_table.loc[:, ['date', 'last_ID', 'count']] = \
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             conversion_table = conversion_table.drop_duplicates(subset=['base_asset'], keep='first')
@@ -479,9 +475,13 @@ def get_tradable_tickers_info(conversion_table):
     conversion_table.iloc[:,conversion_table.columns != 'symbol'] = \
         conversion_table.iloc[:,conversion_table.columns != 'symbol'].astype(float)
     conversion_table = conversion_table.sort_index(axis='index')
-    conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.8]
+    conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.3]
     #conversion_table_live_filtered = \
     #    conversion_table_live_filtered[conversion_table_live_filtered['bid_ask_volume_percent_change'] > 0.0]
+    conversion_table_live_filtered = \
+        conversion_table_live_filtered[conversion_table_live_filtered['rolling_quote_volume'] > 1000000]
+    conversion_table_live_filtered = \
+        conversion_table_live_filtered[conversion_table_live_filtered['count'] > 2000]
     return conversion_table, get_new_tickers(conversion_table_live_filtered)
 
 def get_new_filtered_tickers(conversion_table):

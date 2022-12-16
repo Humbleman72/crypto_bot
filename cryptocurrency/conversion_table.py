@@ -129,11 +129,12 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table.apply(lambda x: get_shortest_pair_path_between_assets(
                 from_asset=x['base_asset'], to_asset='USDT', exchange_info=exchange_info, 
                 priority='accuracy'), axis='columns')
-        if not super_extra_minimal:
+        if not extra_minimal:
             conversion_table['high_pre_conversion'] = \
                 (((conversion_table['high'] - conversion_table['close']) / conversion_table['close']) + 1)
             conversion_table['low_pre_conversion'] = \
                 (((conversion_table['low'] - conversion_table['close']) / conversion_table['close']) + 1)
+        if not super_extra_minimal:
             conversion_table['bid_pre_conversion'] = \
                 (((conversion_table['bid_price'] - conversion_table['close']) / conversion_table['close']) + 1)
             conversion_table['ask_pre_conversion'] = \
@@ -156,11 +157,12 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
                     exchange_info=exchange_info, 
                     shortest_path=x['shortest_path'], 
                     key='close', priority='accuracy'), axis='columns')
-        if not super_extra_minimal:
+        if not extra_minimal:
             conversion_table['USDT_high'] = \
                 conversion_table['USDT_price'].astype(float) * conversion_table['high_pre_conversion']
             conversion_table['USDT_low'] = \
                 conversion_table['USDT_price'].astype(float) * conversion_table['low_pre_conversion']
+        if not super_extra_minimal:
             conversion_table['USDT_bid_price'] = \
                 conversion_table['USDT_price'].astype(float) * conversion_table['bid_pre_conversion']
             conversion_table['USDT_ask_price'] = \

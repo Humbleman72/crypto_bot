@@ -19,8 +19,8 @@ LOGLEVEL = logging.getLogger().getEffectiveLevel()
 def init_loggers():
     """Main logger initialization."""
     crypto_logger_input_15s = Crypto_logger_input(interval='15s', buffer_size=3000, 
-                                                  price_percent=1.0, volume_percent=0.0, 
-                                                  as_pair=False, append=True, roll=60)
+                                                  price_percent=5.0, volume_percent=0.0, 
+                                                  as_pair=False, append=True, roll=20)
     crypto_logger_output_15s = Crypto_logger_output(interval_input='15s', 
                                                     interval='15s', 
                                                     buffer_size=60, 
@@ -119,6 +119,35 @@ def loop_loggers(crypto_loggers):
             crypto_loggers['output_1d'].log_next(dataset=None, dataset_screened=output_1d_screened)
     except (KeyboardInterrupt, SystemExit):
         print('Saving latest complete dataset...')
+        input_15s = crypto_loggers['input_15s'].get_and_put_next(old_dataset=input_15s, dataset=None)
+        output_15s = crypto_loggers['output_15s'].get_and_put_next(old_dataset=output_15s, dataset=input_15s)
+        output_1min = crypto_loggers['output_1min'].get_and_put_next(old_dataset=output_1min, dataset=output_15s)
+        output_30min = crypto_loggers['output_30min'].get_and_put_next(old_dataset=output_30min, dataset=output_1min)
+        output_1h = crypto_loggers['output_1h'].get_and_put_next(old_dataset=output_1h, dataset=output_30min)
+        output_1d = crypto_loggers['output_1d'].get_and_put_next(old_dataset=output_1d, dataset=output_1h)
+        input_15s_screened, live_filtered = \
+            crypto_loggers['input_15s'].screen_next(old_dataset_screened=input_15s_screened, dataset_screened=None, 
+                                                    dataset=input_15s, live_filtered=None)
+        output_15s_screened, _ = \
+            crypto_loggers['output_15s'].screen_next(old_dataset_screened=output_15s_screened, 
+                                                     dataset_screened=input_15s_screened, 
+                                                     dataset=output_15s, live_filtered=live_filtered)
+        output_1min_screened, _ = \
+            crypto_loggers['output_1min'].screen_next(old_dataset_screened=output_1min_screened, 
+                                                      dataset_screened=output_15s_screened, 
+                                                      dataset=output_1min, live_filtered=None)
+        output_30min_screened, _ = \
+            crypto_loggers['output_30min'].screen_next(old_dataset_screened=output_30min_screened, 
+                                                       dataset_screened=output_1min_screened, 
+                                                       dataset=output_30min, live_filtered=None)
+        output_1h_screened, _ = \
+            crypto_loggers['output_1h'].screen_next(old_dataset_screened=output_1h_screened, 
+                                                    dataset_screened=output_30min_screened, 
+                                                    dataset=output_1h, live_filtered=None)
+        output_1d_screened, _ = \
+            crypto_loggers['output_1d'].screen_next(old_dataset_screened=output_1d_screened, 
+                                                    dataset_screened=output_1h_screened, 
+                                                    dataset=output_1d, live_filtered=None)
         crypto_loggers['input_15s'].log_next(dataset=input_15s, dataset_screened=input_15s_screened)
         crypto_loggers['output_15s'].log_next(dataset=output_15s, dataset_screened=output_15s_screened)
         crypto_loggers['output_1min'].log_next(dataset=output_1min, dataset_screened=output_1min_screened)

@@ -292,9 +292,9 @@ def screen_one(pair):
                 #                         trigger_type='simple', 
                 #                         method='auto_atr', plot=False):
                 #        return True
-                #elif frequency == frequency_1h:
-                #    if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
-                #        return True
+                elif frequency == frequency_1h:
+                    if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
+                        return True
                 else:
                     return True
         elif frequency == frequency_1d:

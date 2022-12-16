@@ -88,6 +88,6 @@ class Crypto_logger_input(Crypto_logger_base):
         dataset = get_conversion_table(client=self.client, exchange_info=self.exchange_info, 
                                        offset_s=self.offset_s, dump_raw=False, as_pair=self.as_pair, 
                                        minimal=True, extra_minimal=True, super_extra_minimal=False, 
-                                       convert_to_USDT=not self.as_pair)
+                                       convert_to_USDT=False)
         dataset.index = dataset.index.round(self.interval)
         return dataset

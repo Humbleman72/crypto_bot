@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# File:          install/install_on_contabo_part_2.sh
+# File:          install/install_on_remote_server_part_2.sh
 # By:            Samuel Duclos
 # For:           Myself
-# Usage:         cd ~/workspace/crypto_logger && bash install/install_on_contabo.sh
+# Usage:         bash install/install_on_remote_server_part_2.sh
 # Description:   Installs all packages required for the crypto_logger.
 # Documentation: https://contabo.com/blog/first-steps-with-contabo/
 #                https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-18-04
@@ -11,13 +11,13 @@
 #                https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-18-04
 
 # Initial configuration.
-echo "This will guide you through the initial Contabo server configuration (part 2)." && \
-NEW_PASSWORD=$(cat contabo_keys.txt) && \
-read -s -p "Enter your Contabo server's IP address: " SERVER_IP && \
+echo "This will guide you through the initial server configuration (part 2)." && \
+NEW_PASSWORD=$(cat server_keys.txt) && \
+read -s -p "Enter your server's IP address: " SERVER_IP && \
 echo "" && \
-read -s -p "Enter your Contabo server's new user: " NEW_USER && \
+read -s -p "Enter your server's new user: " NEW_USER && \
 echo "" && \
-read -s -p "Enter your Contabo server's initial password: " SERVER_INITIAL_PASSWORD && \
+read -s -p "Enter your server's initial root password: " SERVER_INITIAL_PASSWORD && \
 echo "" && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get update && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get install -y mosh supervisor && \

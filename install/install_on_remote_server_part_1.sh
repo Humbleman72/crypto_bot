@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# File:          install/install_on_contabo_part_1.sh
+# File:          install/install_on_remote_server_part_1.sh
 # By:            Samuel Duclos
 # For:           Myself
-# Usage:         cd ~/workspace/crypto_logger && bash install/install_on_contabo.sh
+# Usage:         bash install/install_on_remote_server_part_1.sh
 # Description:   Installs all packages required for the crypto_logger.
 # Documentation: https://contabo.com/blog/first-steps-with-contabo/
 #                https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-18-04
@@ -21,9 +21,12 @@ echo "Please navigate to \"VPS control\" and click \"Manage\", then \"Password r
 read && \
 echo "Please navigate to \"VPS control\" and click \"Manage\", then \"Disable VNC\"." && \
 read && \
+echo "Please add a file \"server_keys.txt\" in the repository base directory with just a single line " && \
+echo "with your desired non-root user password, then press <ENTER>" && \
+read && \
 read -s -p "Enter your local sudo password: " LOCAL_PASSWORD && \
 echo "" && \
-read -s -p "Enter your Contabo server's IP address: " SERVER_IP && \
+read -s -p "Enter your server's IP address: " SERVER_IP && \
 echo "" && \
 echo ${LOCAL_PASSWORD} | sudo -S apt-get update && \
 echo ${LOCAL_PASSWORD} | sudo -S apt-get install -y sshpass && \

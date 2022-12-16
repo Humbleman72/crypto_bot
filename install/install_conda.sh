@@ -4,7 +4,6 @@
 # By:            Samuel Duclos
 # For            Myself
 # Description:   Install conda.
-# Usage:         cd ~/workspace/crypto_logger && bash install/install_conda.sh
 # Usage:         bash install/install_conda.sh <PASSWORD>
 # Example 1:     bash install/install_conda.sh password123
 # Example 2:     bash install/install_conda.sh

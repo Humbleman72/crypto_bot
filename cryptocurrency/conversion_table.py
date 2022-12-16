@@ -121,6 +121,7 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
                               'rolling_base_volume', 'rolling_quote_volume', 'count', 'bid_price', 
                               'ask_price', 'bid_volume', 'ask_volume', 'date', 'price_change_percent']]
 
+    conversion_table = conversion_table.copy()
     conversion_table['rolling_base_quote_volume'] = \
         conversion_table['rolling_quote_volume'] / conversion_table['close']
 
@@ -466,22 +467,22 @@ def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False, as_p
                                     as_pair=as_pair, minimal=minimal, extra_minimal=extra_minimal, 
                                     super_extra_minimal=super_extra_minimal, convert_to_USDT=convert_to_USDT)
 
+def get_new_tickers(conversion_table):
+    return conversion_table['symbol'].unique().tolist()
+
 def get_tradable_tickers_info(conversion_table):
     conversion_table = conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 
                                          'ask_price', 'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
                                          'bid_ask_volume_percent_change', 'rolling_base_volume', 
                                          'rolling_quote_volume', 'count']]
+    conversion_table = conversion_table.copy()
     conversion_table.iloc[:,conversion_table.columns != 'symbol'] = \
         conversion_table.iloc[:,conversion_table.columns != 'symbol'].astype(float)
     conversion_table = conversion_table.sort_index(axis='index')
     conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.8]
     #conversion_table_live_filtered = \
     #    conversion_table_live_filtered[conversion_table_live_filtered['bid_ask_volume_percent_change'] > 0.0]
-    live_filtered = conversion_table_live_filtered['symbol'].unique().tolist()
-    return conversion_table, live_filtered
-
-def get_new_tickers(conversion_table):
-    return conversion_table['symbol'].unique().tolist()
+    return conversion_table, get_new_tickers(conversion_table_live_filtered)
 
 def get_new_filtered_tickers(conversion_table):
-    return get_tradable_tickers_info(conversion_table=conversion_table)['symbol'].unique().tolist()
+    return get_tradable_tickers_info(conversion_table=conversion_table)[0]['symbol'].unique().tolist()

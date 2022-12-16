@@ -4,8 +4,6 @@
 # By:          Samuel Duclos
 # For:         Myself
 # Description: Uninstall conda if needed.
-# Usage:       bash install/uninstall_conda.sh
-# Usage:       cd ~/workspace/crypto_logger && bash install/uninstall_conda.sh
 # Usage:       bash install/uninstall_conda.sh <PASSWORD>
 # Example 1:   bash install/uninstall_conda.sh password123
 # Example 2:   bash install/uninstall_conda.sh

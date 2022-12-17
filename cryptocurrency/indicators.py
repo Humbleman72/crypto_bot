@@ -301,7 +301,7 @@ def screen_one(pair):
             #if get_daily_volume_minimum_trigger(pair):
             #if get_daily_volume_change_trigger(pair, threshold=50):
             #if get_relative_volume_levels_trigger(pair, average=10, threshold=0.1):
-            if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.1):
+            if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.2):
                 return True
         else:
             return True

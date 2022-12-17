@@ -301,16 +301,16 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
 
         conversion_table = pd.concat([conversion_table, conversion_table_swapped], join='outer', axis='index')
 
-        traded_volume = conversion_table.groupby(by='base_asset').agg('sum')
+        traded_volume = conversion_table[['base_asset', 'rolling_USDT_base_volume']].groupby(by='base_asset').agg('sum')
         traded_volume = traded_volume['rolling_USDT_base_volume']
         conversion_table['rolling_traded_volume'] = \
             conversion_table.apply(lambda x: traded_volume.loc[x['base_asset']], axis='columns')
         if not extra_minimal:
-            traded_bid_volume = conversion_table.groupby(by='base_asset').agg('sum')
+            traded_bid_volume = conversion_table[['base_asset', 'USDT_bid_volume']].groupby(by='base_asset').agg('sum')
             traded_bid_volume = traded_bid_volume['USDT_bid_volume']
             conversion_table['traded_bid_volume'] = \
                 conversion_table.apply(lambda x: traded_bid_volume.loc[x['base_asset']], axis='columns')
-            traded_ask_volume = conversion_table.groupby(by='base_asset').agg('sum')
+            traded_ask_volume = conversion_table[['base_asset', 'USDT_ask_volume']].groupby(by='base_asset').agg('sum')
             traded_ask_volume = traded_ask_volume['USDT_ask_volume']
             conversion_table['traded_ask_volume'] = \
                 conversion_table.apply(lambda x: traded_ask_volume.loc[x['base_asset']], axis='columns')
@@ -326,17 +326,20 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table['importance_weighted_ask_price'] = \
                 conversion_table['USDT_ask_price'].astype(float) * conversion_table['importance']
 
-        importance_weighted_price = conversion_table.groupby(by='base_asset').agg('sum')
+        importance_weighted_price = \
+            conversion_table[['base_asset', 'importance_weighted_price']].groupby(by='base_asset').agg('sum')
         importance_weighted_price = importance_weighted_price['importance_weighted_price']
         conversion_table['traded_price'] = \
             conversion_table.apply(lambda x: importance_weighted_price.loc[x['base_asset']], axis='columns')
 
         if not extra_minimal:
-            importance_weighted_bid_price = conversion_table.groupby(by='base_asset').agg('sum')
+            importance_weighted_bid_price = \
+                conversion_table[['base_asset', 'importance_weighted_bid_price']].groupby(by='base_asset').agg('sum')
             importance_weighted_bid_price = importance_weighted_bid_price['importance_weighted_bid_price']
             conversion_table['traded_bid_price'] = \
                 conversion_table.apply(lambda x: importance_weighted_bid_price.loc[x['base_asset']], axis='columns')
-            importance_weighted_ask_price = conversion_table.groupby(by='base_asset').agg('sum')
+            importance_weighted_ask_price = \
+                conversion_table[['base_asset', 'importance_weighted_ask_price']].groupby(by='base_asset').agg('sum')
             importance_weighted_ask_price = importance_weighted_ask_price['importance_weighted_ask_price']
             conversion_table['traded_ask_price'] = \
                 conversion_table.apply(lambda x: importance_weighted_ask_price.loc[x['base_asset']], axis='columns')
@@ -439,16 +442,19 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table['symbol'] = conversion_table['base_asset'].copy()
             conversion_table['quote_asset'] = conversion_table['base_asset'].copy()
             if minimal:
-                df = conversion_table.groupby(by=['base_asset']).agg({'date': 'max', 'count': 'mean'})
+                df = conversion_table[['base_asset', 'date', 'count']].groupby(by=['base_asset']).agg({'date': 'max', 'count': 'mean'})
                 conversion_table.loc[:, ['date', 'count']] = \
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
                 if super_extra_minimal:
-                    df = conversion_table.groupby(by=['base_asset']).agg({'bid_ask_percent_change': 'min', 
-                                                                          'bid_ask_volume_percent_change': 'max'})
+                    df = conversion_table[['base_asset', 
+                                           'bid_ask_percent_change', 
+                                           'bid_ask_volume_percent_change']].groupby(by=['base_asset']).agg({'bid_ask_percent_change': 'min', 
+                                                                                                             'bid_ask_volume_percent_change': 'max'})
                     conversion_table.loc[:, ['bid_ask_percent_change', 'bid_ask_volume_percent_change']] = \
                         conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             else:
-                df = conversion_table.groupby(by=['base_asset']).agg({'date': 'max', 'last_ID': 'sum', 'count': 'sum'})
+                df = conversion_table[['base_asset', 'date', 'last_ID', 
+                                       'count']].groupby(by=['base_asset']).agg({'date': 'max', 'last_ID': 'sum', 'count': 'sum'})
                 conversion_table.loc[:, ['date', 'last_ID', 'count']] = \
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             conversion_table = conversion_table.drop_duplicates(subset=['base_asset'], keep='first')

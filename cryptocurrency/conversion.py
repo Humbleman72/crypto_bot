@@ -68,6 +68,13 @@ def get_connected_assets(asset, exchange_info, priority='accuracy'):
     prioritized = reorder(connected_assets, priority)
     return prioritized
 
+def select_pair_with_highest_quote_volume_from_base_asset(base_asset, conversion_table, exchange_info):
+    connected_assets = get_connected_assets(base_asset, exchange_info, priority='accuracy')
+    connected_pairs = conversion_table[conversion_table['base_asset'] == base_asset]
+    connected_pairs = connected_pairs[connected_pairs['quote_asset'].isin(connected_assets)]
+    connected_pairs = connected_pairs.sort_values(by='rolling_base_volume', ascending=False)
+    return connected_pairs['symbol'].iat[0]
+
 def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info, 
                                           priority='accuracy'):
     def get_shortest_path_between_assets(priority):

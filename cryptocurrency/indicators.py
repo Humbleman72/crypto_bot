@@ -286,23 +286,23 @@ def screen_one(pair):
                         #if get_minute_daily_volume_change_trigger(pair, threshold=5):
                         #if get_heikin_ashi_trigger(pair):
                         return True
-                if frequency == frequency_30min:
-                    if get_renko_trigger(pair, compress=False, 
-                                         direction_type='long', 
-                                         trigger_type='simple', 
-                                         method='auto_atr', plot=False):
-                        return True
+                #if frequency == frequency_30min:
+                #    if get_renko_trigger(pair, compress=False, 
+                #                         direction_type='long', 
+                #                         trigger_type='simple', 
+                #                         method='auto_atr', plot=False):
+                #        return True
                 elif frequency == frequency_1h:
                     if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
                         return True
                 else:
                     return True
-        elif frequency == frequency_1d:
-            #if get_daily_volume_minimum_trigger(pair):
-            #if get_daily_volume_change_trigger(pair, threshold=50):
-            #if get_relative_volume_levels_trigger(pair, average=10, threshold=0.1):
-            if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.2):
-                return True
+        #elif frequency == frequency_1d:
+        #    #if get_daily_volume_minimum_trigger(pair):
+        #    #if get_daily_volume_change_trigger(pair, threshold=50):
+        #    #if get_relative_volume_levels_trigger(pair, average=10, threshold=0.1):
+        #    if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.2):
+        #        return True
         else:
             return True
     return False

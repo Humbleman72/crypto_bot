@@ -481,13 +481,13 @@ def get_tradable_tickers_info(conversion_table):
     conversion_table.iloc[:,conversion_table.columns != 'symbol'] = \
         conversion_table.iloc[:,conversion_table.columns != 'symbol'].astype(float)
     conversion_table = conversion_table.sort_index(axis='index')
-    conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.3]
+    conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.1]
     #conversion_table_live_filtered = \
     #    conversion_table_live_filtered[conversion_table_live_filtered['bid_ask_volume_percent_change'] > 0.0]
     conversion_table_live_filtered = \
-        conversion_table_live_filtered[conversion_table_live_filtered['rolling_quote_volume'] > 1000000]
+        conversion_table_live_filtered[conversion_table_live_filtered['rolling_quote_volume'] > 10000000]
     conversion_table_live_filtered = \
-        conversion_table_live_filtered[conversion_table_live_filtered['count'] > 2000]
+        conversion_table_live_filtered[conversion_table_live_filtered['count'] > 2500]
     return conversion_table, get_new_tickers(conversion_table_live_filtered)
 
 def get_new_filtered_tickers(conversion_table):

@@ -271,38 +271,38 @@ def screen_one(pair):
         frequency_1min = pd.tseries.frequencies.to_offset('1min')
         #frequency_30min = pd.tseries.frequencies.to_offset('30min')
         #frequency_1h = pd.tseries.frequencies.to_offset('1h')
-        #frequency_1d = pd.tseries.frequencies.to_offset('1d')
+        frequency_1d = pd.tseries.frequencies.to_offset('1d')
         pair['volume'] = pair['rolling_base_volume'].copy() \
             if frequency == frequency_1min else pair['base_volume'].copy()
         if frequency < frequency_1min: # 15s.
             if get_not_square_wave_triggers(pair, multiplier_schedule=[2]):
                 return True
-        #elif frequency < frequency_1d:
-        if get_rising_volume_trigger(pair):
-            #if frequency == frequency_1min:
-            #    if get_not_square_wave_triggers(pair, multiplier_schedule=[3, 5, 15, 30]):
-            #        #if get_bullish_price_trigger(pair):
-            #        #if get_minute_daily_volume_minimum_trigger(pair):
-            #        #if get_minute_daily_volume_change_trigger(pair, threshold=5):
-            #        #if get_heikin_ashi_trigger(pair):
-            #        return True
-            #if frequency == frequency_30min:
-            #    if get_renko_trigger(pair, compress=False, 
-            #                         direction_type='long', 
-            #                         trigger_type='simple', 
-            #                         method='auto_atr', plot=False):
-            #        return True
-            #elif frequency == frequency_1h:
-            #    if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
-            #        return True
-            #else:
-            return True
+        elif frequency < frequency_1d:
+            if get_rising_volume_trigger(pair):
+                #if frequency == frequency_1min:
+                #    if get_not_square_wave_triggers(pair, multiplier_schedule=[3, 5, 15, 30]):
+                #        #if get_bullish_price_trigger(pair):
+                #        #if get_minute_daily_volume_minimum_trigger(pair):
+                #        #if get_minute_daily_volume_change_trigger(pair, threshold=5):
+                #        #if get_heikin_ashi_trigger(pair):
+                #        return True
+                #if frequency == frequency_30min:
+                #    if get_renko_trigger(pair, compress=False, 
+                #                         direction_type='long', 
+                #                         trigger_type='simple', 
+                #                         method='auto_atr', plot=False):
+                #        return True
+                #elif frequency == frequency_1h:
+                #    if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
+                #        return True
+                #else:
+                return True
         #elif frequency == frequency_1d:
         #    #if get_daily_volume_minimum_trigger(pair):
         #    #if get_daily_volume_change_trigger(pair, threshold=50):
         #    #if get_relative_volume_levels_trigger(pair, average=10, threshold=0.1):
         #    if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.2):
         #        return True
-        #else:
-        #    return True
+        else:
+            return True
     return False

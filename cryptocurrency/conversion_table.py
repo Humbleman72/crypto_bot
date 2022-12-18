@@ -9,7 +9,6 @@
 # Library imports.
 from cryptocurrency.conversion import convert_price
 from cryptocurrency.conversion import get_base_asset_from_pair, get_quote_asset_from_pair
-from cryptocurrency.conversion import get_shortest_pair_path_between_assets
 import datetime
 import pandas as pd
 
@@ -126,10 +125,15 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
         conversion_table['rolling_quote_volume'] / conversion_table['close']
 
     if convert_to_USDT:
+        #conversion_table['shortest_path'] = \
+        #    conversion_table.apply(lambda x: get_shortest_pair_path_between_assets(
+        #        from_asset=x['base_asset'], to_asset='USDT', exchange_info=exchange_info, 
+        #        priority='accuracy'), axis='columns')
+        temp_exchange_info = exchange_info[['base_asset', 'USDT']]
+        temp_exchange_info = temp_exchange_info.drop_duplicates(subset=['base_asset'], keep='first')
+        temp_exchange_info = temp_exchange_info.set_index('base_asset')
         conversion_table['shortest_path'] = \
-            conversion_table.apply(lambda x: get_shortest_pair_path_between_assets(
-                from_asset=x['base_asset'], to_asset='USDT', exchange_info=exchange_info, 
-                priority='accuracy'), axis='columns')
+            conversion_table.apply(lambda x: temp_exchange_info.loc[x['base_asset']], axis='columns')
         if not extra_minimal:
             conversion_table['high_pre_conversion'] = \
                 (((conversion_table['high'] - conversion_table['close']) / conversion_table['close']) + 1)
@@ -459,6 +463,7 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             conversion_table = conversion_table.drop_duplicates(subset=['base_asset'], keep='first')
         conversion_table = conversion_table.reset_index(drop=True)
+    #conversion_table = conversion_table.drop(columns=['base_asset', 'quote_asset'])
     return conversion_table.set_index('date').sort_index(axis='index')
 
 def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False, as_pair=True, minimal=False, 

@@ -22,7 +22,7 @@ def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as
         return balances.sort_values(by=['free'], ascending=False).T
     balances = get_account_balances()
     ls = []
-    for (asset, quantity) in balances.iteritems():
+    for (asset, quantity) in balances.items():
         quantity = quantity.iat[0]
         converted_quantity = convert_price(size=quantity, from_asset=asset, to_asset='USDT', 
                                            conversion_table=conversion_table, 

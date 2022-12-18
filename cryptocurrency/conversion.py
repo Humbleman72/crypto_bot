@@ -53,26 +53,25 @@ def get_connected_assets(asset, exchange_info, priority='accuracy'):
         connected_assets_iter = iter(connected_assets_items)
         return [next(connected_assets_iter) if asset in order 
                 else asset for asset in connected_assets]
-    priorities = {}
-    priorities['accuracy'] = ['USDT', 'BTC', 'BUSD', 'ETH', 'BNB', 'AUD']
-    priorities['fees'] = ['BUSD', 'BTC', 'BNB', 'ETH', 'USDT', 'AUD']
-    priorities['wallet'] = ['BTC', 'ETH', 'BUSD', 'BNB', 'USDT', 'AUD']
-    priority = priorities[priority]
-    connected_base_assets = exchange_info['base_asset'] == asset
+    if priority == 'accuracy':
+        priority = ['USDT', 'BTC', 'BUSD', 'ETH', 'BNB', 'AUD']
+    elif priority == 'fees':
+        priority = ['BUSD', 'BTC', 'BNB', 'ETH', 'USDT', 'AUD']
+    elif priority == 'wallet':
+        priority = ['BTC', 'ETH', 'BUSD', 'BNB', 'USDT', 'AUD']
+    connected_base_assets = exchange_info['quote_asset'] == asset
     connected_base_assets = exchange_info[connected_base_assets]
-    connected_base_assets = connected_base_assets['quote_asset'].tolist()
-    connected_quote_assets = exchange_info['quote_asset'] == asset
+    connected_base_assets = connected_base_assets['base_asset'].tolist()
+    connected_quote_assets = exchange_info['base_asset'] == asset
     connected_quote_assets = exchange_info[connected_quote_assets]
-    connected_quote_assets = connected_quote_assets['base_asset'].tolist()
-    connected_assets = sorted(list(set(connected_base_assets + connected_quote_assets)))
-    prioritized = reorder(connected_assets, priority)
-    return prioritized
+    connected_quote_assets = connected_quote_assets['quote_asset'].tolist()
+    connected_assets = list(set(connected_base_assets + connected_quote_assets))
+    return reorder(connected_assets, priority)
 
 def select_pair_with_highest_quote_volume_from_base_asset(base_asset, conversion_table, exchange_info):
-    connected_assets = get_connected_assets(base_asset, exchange_info, priority='accuracy')
-    connected_pairs = conversion_table[conversion_table['base_asset'] == base_asset]
-    connected_pairs = connected_pairs[connected_pairs['quote_asset'].isin(connected_assets)]
-    connected_pairs = connected_pairs.sort_values(by='rolling_base_volume', ascending=False)
+    connected_pairs = exchange_info[exchange_info['base_asset'] == base_asset]['symbol']
+    connected_pairs = conversion_table[conversion_table['symbol'].isin(connected_pairs)]
+    connected_pairs = connected_pairs.sort_values(by='rolling_quote_volume', ascending=False)
     return connected_pairs['symbol'].iat[0]
 
 def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info, 

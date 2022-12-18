@@ -10,6 +10,7 @@
 from cryptocurrency.crypto_logger_base import Crypto_logger_base
 from cryptocurrency.authentication import Cryptocurrency_authenticator
 from cryptocurrency.exchange import Cryptocurrency_exchange
+from cryptocurrency.conversion import get_shortest_pair_path_between_assets
 from cryptocurrency.conversion import get_timezone_offset_in_seconds
 from cryptocurrency.conversion_table import get_conversion_table, get_tradable_tickers_info
 
@@ -38,6 +39,11 @@ class Crypto_logger_input(Crypto_logger_base):
 
         exchange = Cryptocurrency_exchange(client=self.client, directory=self.directory)
         self.exchange_info = exchange.info
+
+        self.exchange_info['USDT'] = \
+            self.exchange_info.apply(lambda x: get_shortest_pair_path_between_assets(
+                from_asset=x['base_asset'], to_asset='USDT', exchange_info=self.exchange_info, 
+                priority='accuracy'), axis='columns')
 
         self.offset_s = get_timezone_offset_in_seconds()
 
@@ -87,7 +93,7 @@ class Crypto_logger_input(Crypto_logger_base):
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(client=self.client, exchange_info=self.exchange_info, 
                                        offset_s=self.offset_s, dump_raw=False, as_pair=self.as_pair, 
-                                       minimal=True, extra_minimal=True, super_extra_minimal=False, 
+                                       minimal=False, extra_minimal=True, super_extra_minimal=False, 
                                        convert_to_USDT=False)
         dataset.index = dataset.index.round(self.interval)
         return dataset

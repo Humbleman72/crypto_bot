@@ -138,6 +138,12 @@ def loop_loggers(crypto_loggers):
         #output_1h = crypto_loggers['output_1h'].get_and_put_next(old_dataset=output_1h, dataset=output_30min)
         output_1h = crypto_loggers['output_1h'].get_and_put_next(old_dataset=output_1h, dataset=output_1min)
         output_1d = crypto_loggers['output_1d'].get_and_put_next(old_dataset=output_1d, dataset=output_1h)
+        crypto_loggers['input_15s'].log_next(dataset=input_15s, dataset_screened=None)
+        crypto_loggers['output_15s'].log_next(dataset=output_15s, dataset_screened=None)
+        crypto_loggers['output_1min'].log_next(dataset=output_1min, dataset_screened=None)
+        #crypto_loggers['output_30min'].log_next(dataset=output_30min, dataset_screened=None)
+        crypto_loggers['output_1h'].log_next(dataset=output_1h, dataset_screened=None)
+        crypto_loggers['output_1d'].log_next(dataset=output_1d, dataset_screened=None)
         input_15s_screened, live_filtered = \
             crypto_loggers['input_15s'].screen_next(old_dataset_screened=input_15s_screened, dataset_screened=None, 
                                                     dataset=input_15s, live_filtered=None)
@@ -165,12 +171,6 @@ def loop_loggers(crypto_loggers):
             crypto_loggers['output_1d'].screen_next(old_dataset_screened=output_1d_screened, 
                                                     dataset_screened=output_1h_screened, 
                                                     dataset=output_1d, live_filtered=None)
-        crypto_loggers['input_15s'].log_next(dataset=input_15s, dataset_screened=None)
-        crypto_loggers['output_15s'].log_next(dataset=output_15s, dataset_screened=None)
-        crypto_loggers['output_1min'].log_next(dataset=output_1min, dataset_screened=None)
-        #crypto_loggers['output_30min'].log_next(dataset=output_30min, dataset_screened=None)
-        crypto_loggers['output_1h'].log_next(dataset=output_1h, dataset_screened=None)
-        crypto_loggers['output_1d'].log_next(dataset=output_1d, dataset_screened=None)
         crypto_loggers['input_15s'].log_next(dataset=None, dataset_screened=input_15s_screened)
         crypto_loggers['output_15s'].log_next(dataset=None, dataset_screened=output_15s_screened)
         crypto_loggers['output_1min'].log_next(dataset=None, dataset_screened=output_1min_screened)

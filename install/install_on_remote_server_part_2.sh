@@ -12,11 +12,9 @@
 
 # Initial configuration.
 echo "This will guide you through the initial server configuration (part 2)." && \
-NEW_PASSWORD=$(cat server_keys.txt) && \
-read -s -p "Enter your server's IP address: " SERVER_IP && \
-echo "" && \
-read -s -p "Enter your server's new user: " NEW_USER && \
-echo "" && \
+NEW_PASSWORD=$(cat server_keys.txt | cut -d':' -f1) && \
+SERVER_IP=$(cat server_keys.txt | cut -d':' -f2-) && \
+read "Enter your server's new user: " NEW_USER && \
 read -s -p "Enter your server's initial root password: " SERVER_INITIAL_PASSWORD && \
 echo "" && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} apt-get update && \

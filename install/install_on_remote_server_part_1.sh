@@ -22,18 +22,15 @@ read && \
 echo "Please navigate to \"VPS control\" and click \"Manage\", then \"Disable VNC\"." && \
 read && \
 echo "Please add a file \"server_keys.txt\" in the repository base directory with just a single line " && \
-echo "with your desired non-root user password, then press <ENTER>" && \
+echo "with your server IP and your desired non-root user password separated by a colon (:), then press <ENTER>" && \
 read && \
 read -s -p "Enter your local sudo password: " LOCAL_PASSWORD && \
 echo "" && \
-read -s -p "Enter your server's IP address: " SERVER_IP && \
-echo "" && \
 echo ${LOCAL_PASSWORD} | sudo -S apt-get update && \
 echo ${LOCAL_PASSWORD} | sudo -S apt-get install -y sshpass && \
-read -s -p "Press the <ENTER> key, type yes then <ENTER> again, then type the password and <ENTER> again." DUMMY && \
-echo "" && \
+read "Press the <ENTER> key, type yes then <ENTER> again, then type the password and <ENTER> again." DUMMY && \
 echo "Press the <ENTER> key, type the root password and <ENTER> again." && \
-read -s -p "Then on the server, type \"exit\" then <ENTER>..." DUMMY && \
-echo "" && \
+read "Then on the server, type \"exit\" then <ENTER>..." DUMMY && \
+SERVER_IP=$(cat server_keys.txt | cut -d':' -f2-) && \
 ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${SERVER_IP}" && \
 ssh root@${SERVER_IP}

@@ -449,7 +449,7 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table['symbol'] = conversion_table['base_asset'].copy()
             conversion_table['quote_asset'] = conversion_table['base_asset'].copy()
             if minimal:
-                df = conversion_table[['base_asset', 'date', 'count']].groupby(by=['base_asset']).agg({'date': 'max', 'count': 'mean'})
+                df = conversion_table[['base_asset', 'date', 'count']].groupby(by=['base_asset']).agg({'date': 'max', 'count': 'max'})
                 conversion_table.loc[:, ['date', 'count']] = \
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
                 if super_extra_minimal:
@@ -489,13 +489,13 @@ def get_tradable_tickers_info(conversion_table):
     conversion_table.iloc[:,conversion_table.columns != 'symbol'] = \
         conversion_table.iloc[:,conversion_table.columns != 'symbol'].astype(float)
     conversion_table = conversion_table.sort_index(axis='index')
-    conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.3]
+    conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.8]
     #conversion_table_live_filtered = \
     #    conversion_table_live_filtered[conversion_table_live_filtered['bid_ask_volume_percent_change'] > 0.0]
     conversion_table_live_filtered = \
-        conversion_table_live_filtered[conversion_table_live_filtered['rolling_quote_volume'] > 5000000]
+        conversion_table_live_filtered[conversion_table_live_filtered['rolling_quote_volume'] > 1000000]
     conversion_table_live_filtered = \
-        conversion_table_live_filtered[conversion_table_live_filtered['count'] > 2000]
+        conversion_table_live_filtered[conversion_table_live_filtered['count'] > 1000]
     return conversion_table, get_new_tickers(conversion_table_live_filtered)
 
 def get_new_filtered_tickers(conversion_table):

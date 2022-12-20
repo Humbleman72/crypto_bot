@@ -123,7 +123,7 @@ def loop_loggers(crypto_loggers):
                 crypto_loggers['output_1d'].screen_next(old_dataset_screened=output_1d_screened, 
                                                         dataset_screened=output_1h_screened, 
                                                         dataset=output_1d, live_filtered=None)
-            crypto_loggers['input_15s'].log_next(dataset=None, dataset_screened=input_15s_screened)
+            crypto_loggers['input_15s'].log_next(dataset=input_15s, dataset_screened=input_15s_screened)
             crypto_loggers['output_15s'].log_next(dataset=None, dataset_screened=output_15s_screened)
             crypto_loggers['output_1min'].log_next(dataset=None, dataset_screened=output_1min_screened)
             #crypto_loggers['output_30min'].log_next(dataset=None, dataset_screened=output_30min_screened)

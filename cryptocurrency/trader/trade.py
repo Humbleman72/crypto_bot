@@ -9,7 +9,7 @@
 # Library imports.
 from cryptocurrency.conversion import make_tradable_quantity, convert_price
 from cryptocurrency.conversion import get_shortest_pair_path_between_assets
-from cryptocurrency.wallet import select_asset_with_biggest_wallet
+from cryptocurrency.trader.wallet import select_asset_with_biggest_wallet
 from binance.exceptions import BinanceAPIException
 from time import sleep
 import pandas as pd

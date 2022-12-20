@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/order_book.py
+# File:        cryptocurrency/trader/order_book.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Populate OHLCV DataFrames from the Binance API.

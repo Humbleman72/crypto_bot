@@ -493,7 +493,7 @@ def get_tradable_tickers_info(conversion_table):
     #conversion_table_live_filtered = \
     #    conversion_table_live_filtered[conversion_table_live_filtered['bid_ask_volume_percent_change'] > 0.0]
     conversion_table_live_filtered = \
-        conversion_table_live_filtered[conversion_table_live_filtered['rolling_quote_volume'] > 1000000]
+        conversion_table_live_filtered[conversion_table_live_filtered['rolling_quote_volume'] > 5000000]
     conversion_table_live_filtered = \
         conversion_table_live_filtered[conversion_table_live_filtered['count'] > 2000]
     return conversion_table, get_new_tickers(conversion_table_live_filtered)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/trade.py
+# File:        cryptocurrency/trader/trade.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Binance asset trading.
@@ -9,28 +9,12 @@
 # Library imports.
 from cryptocurrency.conversion import make_tradable_quantity, convert_price
 from cryptocurrency.conversion import get_shortest_pair_path_between_assets
+from cryptocurrency.wallet import select_asset_with_biggest_wallet
 from binance.exceptions import BinanceAPIException
 from time import sleep
 import pandas as pd
 
 # Function definitions.
-def select_asset_with_biggest_wallet(client, conversion_table, exchange_info, as_pair=True):
-    def get_account_balances():
-        balances = pd.DataFrame(client.get_account()['balances'])[['asset', 'free']]
-        balances = balances.set_index('asset').drop(index=['XPR']).astype(float)
-        balances = balances[balances['free'] > 0]
-        return balances.sort_values(by=['free'], ascending=False).T
-    balances = get_account_balances()
-    ls = []
-    for (asset, quantity) in balances.items():
-        quantity = quantity.iat[0]
-        converted_quantity = convert_price(size=quantity, from_asset=asset, to_asset='USDT', 
-                                           conversion_table=conversion_table, 
-                                           exchange_info=exchange_info, key='close', 
-                                           priority='accuracy')
-        ls.append((asset, converted_quantity, quantity))
-    return sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]
-
 def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset, 
                  conversion_table, exchange_info, priority='accuracy', verbose=False):
     pair = base_asset + quote_asset

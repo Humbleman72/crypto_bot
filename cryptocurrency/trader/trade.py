@@ -53,7 +53,7 @@ def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset
     return request
 
 def trade(client, to_asset, conversion_table, exchange_info, priority='accuracy', verbose=True):
-    from_asset, converted_quantity, quantity = \
+    from_asset, converted_quantity, quantity, priority = \
         select_asset_with_biggest_wallet(client=client, conversion_table=conversion_table, 
                                          exchange_info=exchange_info)
     shortest_path = \

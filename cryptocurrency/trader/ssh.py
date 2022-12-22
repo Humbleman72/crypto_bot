@@ -54,6 +54,8 @@ class Ssh:
         df = StringIO(str(ssh_stdout.read().decode('utf-8')))
         try:
             df = pd.read_csv(df)
+            if df.shape[0] < 1:
+                df = None
         except (IndexError, pd.errors.EmptyDataError):
             df = None
             time.sleep(0.5)

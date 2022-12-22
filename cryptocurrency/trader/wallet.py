@@ -26,4 +26,7 @@ def select_asset_with_biggest_wallet(client, conversion_table, exchange_info):
                                            exchange_info=exchange_info, key='close', 
                                            priority='accuracy')
         ls.append((asset, converted_quantity, quantity))
-    return sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]
+    from_asset, converted_quantity, quantity = \
+        sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]
+    priority = 'fees' if float(converted_quantity) > 10.0 else 'wallet'
+    return from_asset, converted_quantity, quantity, priority

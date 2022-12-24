@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Standard Meta -->
+    <meta charset="utf-8"/>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
+    <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <!-- Site Properties -->
+    <title>Crypto Viewer</title>
+    <link href="{{ url_for('static', filename='css/base.css') }}" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery-3.1.1.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.css"/>
+
+    
+    <style type="text/css">
+        body {
+            margin: 2em;
+        }
+    </style>
+
+</head>
+<body>
+
+<div id="main">
+    <div id="data_table">
+        Info:
+    </div>
+    <h1 class="ui header">Realtime Graph</h1>
+    <div style="width:500px;margin:10px;">
+        <canvas id="testChart"></canvas>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+<script>
+        const ctx = document.getElementById('testChart');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+              data: {
+                labels: [1,2,3,4,5],
+                datasets: [{
+                    data: [86,114,106,107,100],
+                    label: "Crypto Test",
+                    borderColor: "#3e95cd",
+                    fill: false
+                }]
+              },
+              options: {
+                responsive: true,
+                title: {
+                  display: true,
+                  text: 'Chart.js Draw Line On Chart'
+                },
+                tooltips: {
+                  mode: 'index',
+                  intersect: true
+                },
+                annotation: {
+                  annotations: [{
+                    type: 'line',
+                    mode: 'horizontal',
+                    scaleID: 'y-axis-0',
+                    value: 10000,
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 4,
+                    label: {
+                      enabled: false,
+                      content: 'Test label'
+                    }
+                  }]
+                }
+              }
+
+        });
+        myChart.update('none');
+
+        var socket = io.connect('ws://' + document.domain + ':' + location.port);
+
+        socket.on('update_chart', function(data) {
+            var chart_data = data[0];
+            var label = data[1];
+            //myChart.data.datasets[0].data = chart_data;
+            myChart.data.labels.push(label);
+            myChart.data.datasets[0].data.push(chart_data);
+            myChart.update();
+            console.log(chart_data)
+        });
+
+        socket.on('update_records', function(data) {
+             data_table = document.getElementById('data_table')
+             new_html_data = "";
+             //console.log(data);
+             for (const crypto_data of data) {
+                 console.log(crypto_data);
+                 console.log(crypto_data['symbol']);
+                 console.log(crypto_data['buy_price']);
+                 new_html_data += "<h1 class=\"ui header\">" + crypto_data['symbol'] + "</h1>\n";
+                 new_html_data += "<table style=\"max-width:300px;\" class=\"ui celled table\">\n";
+                 new_html_data += "<thead><tr>" +
+                                      "<th>Price</th>" +
+                                      "<th>Buy price</th>" +
+                                      "<th>Percent change</th>" +
+                                      "<th>Date added</th>" +
+                                      "</tr></thead><tbody>";
+                 new_html_data += "<tr>";
+                 new_html_data += "<td data-label=\"Price\">" + crypto_data['price'].toFixed(5) + "</td>";
+                 new_html_data += "<td data-label=\"Buy price\">" + crypto_data['buy_price'].toFixed(5) + "</td>";
+                 new_html_data += "<td data-label=\"Percent change\">" + crypto_data['percent_change'].toFixed(2) + "</td>";
+                 new_html_data += "<td data-label=\"Date added\">" + crypto_data['date_added'] + "</td>";
+                 new_html_data += "</tr></tbody></table>";
+                 new_html_data += "<table style=\"max-width:300px;\" class=\"ui celled table\">\n";
+                 new_html_data += "<thead><tr>" +
+                                      "<th>Min percent</th>" +
+                                      "<th>Min percent time</th>" +
+                                      "<th>Max percent</th>" +
+                                      "<th>Max percent time</th>" +
+                                      "</tr></thead><tbody>";
+                 new_html_data += "<tr>";
+                 var min_percent = crypto_data['min_percent'].toFixed(2);
+                 if (min_percent <= -0.05)
+                 {
+                    new_html_data += "<td style=\"background:red;\" data-label=\"Min percent\">" + min_percent + "</td>";
+                 }
+                 else
+                 {
+                    new_html_data += "<td style=\"background:white;\" data-label=\"Min percent\">" + min_percent + "</td>";
+                 }
+                 new_html_data += "<td data-label=\"Min percent time\">" + crypto_data['min_percent_time'] + "</td>";
+                 var max_percent = crypto_data['max_percent'].toFixed(2);
+                 if (max_percent >= 0.10)
+                 {
+                    new_html_data += "<td style=\"background:green;\" data-label=\"Max percent\">" + max_percent + "</td>";
+                 }
+                 else
+                 {
+                    new_html_data += "<td style=\"background:white;\" data-label=\"Max percent\">" + max_percent + "</td>";
+                 }
+                 new_html_data += "<td data-label=\"Max percent time\">" + crypto_data['max_percent_time'] + "</td>";
+                 new_html_data += "</tr></tbody></table>";
+             }
+             data_table.innerHTML = new_html_data;
+
+        });
+
+
+</script>

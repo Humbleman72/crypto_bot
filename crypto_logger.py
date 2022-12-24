@@ -11,11 +11,6 @@ from cryptocurrency.crypto_logger_input import Crypto_logger_input
 from cryptocurrency.crypto_logger_output import Crypto_logger_output
 import time
 
-# Setup basic logging.
-import logging
-logging.basicConfig()
-LOGLEVEL = logging.getLogger().getEffectiveLevel()
-
 def init_loggers():
     """Main logger initialization."""
     crypto_logger_input_15s = Crypto_logger_input(interval='15s', buffer_size=10000, 

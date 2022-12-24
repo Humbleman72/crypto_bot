@@ -7,8 +7,6 @@
 # Description: Installs all packages required for the crypto_logger.
 
 MICROMAMBA_ENV_NAME="crypto_logger"
-
-# Automagic.
 micromamba create --yes --name ${MICROMAMBA_ENV_NAME} gcc \
                                                       gxx_linux-64 \
                                                       cython \

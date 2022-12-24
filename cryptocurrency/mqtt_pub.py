@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        mqtt_pub.py
+# File:        cryptocurrency/mqtt_pub.py
 # By:          Jonathan Fournier
 # For:         Myself
 # Description: This file implements an MQTT publisher.

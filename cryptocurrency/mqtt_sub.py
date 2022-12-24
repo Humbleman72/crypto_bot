@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        mqtt_sub.py
+# File:        cryptocurrency/mqtt_sub.py
 # By:          Jonathan Fournier
 # For:         Myself
 # Description: This file implements an MQTT subscriber.

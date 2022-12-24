@@ -172,7 +172,7 @@ def loop_loggers(crypto_loggers):
         #crypto_loggers['output_30min'].log_next(dataset=None, dataset_screened=output_30min_screened)
         crypto_loggers['output_1h'].log_next(dataset=None, dataset_screened=output_1h_screened)
         crypto_loggers['output_1d'].log_next(dataset=None, dataset_screened=output_1d_screened)
-        print('User terminated crypto logger processes.')
+        print('User terminated crypto logger process.')
     except Exception as e:
         print(e)
     finally:

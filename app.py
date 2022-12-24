@@ -3,18 +3,20 @@
 
 # File:        app.py
 # By:          Jonathan Fournier
+# Modified by: Samuel Duclos
 # For:         Myself
 # Description: This file implements the main flask application.
 
 # Library imports.
-from users import iterate_users, DummyLock, User
-from urllib.parse import urljoin
-from crypto_monitor import CryptoMonitor
-from crypto_logger import init_loggers, loop_loggers
+from cryptocurrency.mqtt_sub import MQTTSub
+from website.users import iterate_users, DummyLock, User
+from website.crypto_monitor import CryptoMonitor
+from crypto_logger_mqtt import init_loggers, loop_loggers
 from datetime import datetime
-from mqtt_sub import MQTTSub
+from urllib.parse import urljoin
 
 import time
+import os
 import queue
 import json
 import requests
@@ -24,7 +26,11 @@ import pandas as pd
 import eventlet
 eventlet.monkey_patch()
 
-app = flask.Flask(__name__)
+
+template_dir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+template_dir = os.path.join(template_dir, 'website')
+template_dir = os.path.join(template_dir, 'templates')
+app = flask.Flask(__name__, template_folder=template_dir)
 socketio = flask_socketio.SocketIO(app)
 
 users = {}

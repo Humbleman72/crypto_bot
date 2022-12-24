@@ -3,7 +3,7 @@
 # File:          install/install_micromamba.sh
 # By:            Samuel Duclos
 # For            Myself
-# Description:   Install conda.
+# Description:   Install micromamba.
 # Usage:         bash install/install_micromamba.sh <PASSWORD>
 # Example 1:     bash install/install_micromamba.sh password123
 # Example 2:     bash install/install_micromamba.sh
@@ -55,8 +55,11 @@ echo ${PASSWORD} | sudo -S mkdir -p /opt/micromamba/bin && \
 WHOAMI=$(env | grep "USER=" | sed 's/USER=//') && \
 echo ${PASSWORD} | sudo -S chown -R ${WHOAMI} /opt/micromamba && \
 curl -Ls https://micro.mamba.pm/api/micromamba/$PLATFORM-$ARCH/latest | tar -xvj -C /opt/micromamba/bin/ --strip-components=1 bin/micromamba && \
-/opt/micromamba/bin/micromamba shell init -p /opt/micromamba && \
+/opt/micromamba/bin/micromamba shell init --prefix /opt/micromamba && \
+eval "$(/opt/micromamba/bin/micromamba shell hook --shell=bash)" && \
+micromamba config prepend channels conda-forge && \
 /opt/micromamba/bin/micromamba clean -tiply --trash && \
 /opt/micromamba/bin/micromamba clean -afy && \
 source ~/.bashrc && \
-echo "conda install done. Please exit the terminal and open another one..."
+micromamba self-update
+echo "micromamba install done."

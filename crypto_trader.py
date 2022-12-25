@@ -29,11 +29,11 @@ from cryptocurrency.trader.ssh import Ssh
 from cryptocurrency.trader.wallet import select_asset_with_biggest_wallet
 from cryptocurrency.trader.trade import trade
 from cryptocurrency.trader.trade import add_entry_to_blacklist
+from cryptocurrency.trader.trade import make_empty_blacklist
 from cryptocurrency.trader.trade import check_if_asset_from_pair_is_buyable
 from cryptocurrency.trader.trade import check_take_profit_and_stop_loss
 from cryptocurrency.trader.trade import remove_older_entries_in_blacklist
 from cryptocurrency.trader.trade import choose_to_asset, trade_conditionally
-import pandas as pd
 
 # Manage API keys.
 authenticator = Cryptocurrency_authenticator(use_keys=False, testnet=False)
@@ -64,7 +64,7 @@ from_asset, converted_quantity, quantity, priority = \
                                      exchange_info=exchange_info)
 
 # Initialize an empty blacklist.
-blacklist = pd.DataFrame(columns=['symbol', 'base_asset', 'close', 'take_profit_count', 'stop_loss_count'])
+blacklist = make_empty_blacklist()
 
 # Connect to the server through SSH.
 ssh = Ssh(input_log=input_log, output_log_screened=output_log_screened, keys_file=keys_file)

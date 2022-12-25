@@ -88,6 +88,9 @@ def trade(client, to_asset, conversion_table, exchange_info, priority='accuracy'
             sleep(0.01)
         return request
 
+def make_empty_blacklist():
+    return pd.DataFrame(columns=['symbol', 'base_asset', 'close', 'take_profit_count', 'stop_loss_count'])
+
 def add_entry_to_blacklist(blacklist, pair, conversion_table, exchange_info, reason='stop_loss'):
     base_asset_from_pair = exchange_info[exchange_info['symbol'] == pair]['base_asset'].iat[0]
     if base_asset_from_pair not in blacklist['base_asset'].tolist():

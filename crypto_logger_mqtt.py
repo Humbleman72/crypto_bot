@@ -10,8 +10,8 @@
 # Library imports.
 from cryptocurrency.crypto_logger_input import Crypto_logger_input
 from cryptocurrency.crypto_logger_output import Crypto_logger_output
+from cryptocurrency.trader.mqtt_pub import MQTTPublisher
 from crypto_monitor import CryptoMonitor
-from mqtt_pub import MQTTPublisher
 from datetime import datetime
 import time
 

@@ -10,7 +10,7 @@
 # Library imports.
 from cryptocurrency.mqtt_sub import MQTTSub
 from website.users import iterate_users, DummyLock, User
-from website.crypto_monitor import CryptoMonitor
+from crypto_monitor import CryptoMonitor
 from crypto_logger_mqtt import init_loggers, loop_loggers
 from datetime import datetime
 from urllib.parse import urljoin

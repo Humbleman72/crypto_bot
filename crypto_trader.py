@@ -8,18 +8,19 @@
 
 # Variable definitions.
 sell_asset = 'BUSD'
-take_profit = 5.0
-stop_loss = 2.0
+frequency = '15min'
+take_profit = 6
+stop_loss = 2
 profit = None
-loss = 0
-take_profit_count = 2
+loss = 0.0
+take_profit_count = 1
 stop_loss_count = 1
 profit_count = 20
-loss_count = 3
+loss_count = 1
 keys_file = 'server_keys.txt'
 input_log = '~/workspace/crypto_logs/crypto_input_log_15s.txt'
 output_log_screened = \
-    '~/workspace/crypto_logs/crypto_output_log_1d_screened.txt'
+    '~/workspace/crypto_logs/crypto_output_log_1min_screened.txt'
 
 # Time prelude for optimization purposes.
 import time
@@ -85,10 +86,10 @@ latest_asset = from_asset
 try:
     while True:
         latest_asset, to_asset = choose_to_asset(
-            ssh, blacklist, sell_asset, from_asset, to_asset, latest_asset, 
-            take_profit, stop_loss, profit, loss, take_profit_count, 
-            stop_loss_count, profit_count, loss_count, conversion_table, 
-            exchange_info, output_log_screened)
+            ssh, blacklist, sell_asset, from_asset, to_asset, 
+            latest_asset, take_profit, stop_loss, profit, loss, 
+            take_profit_count, stop_loss_count, profit_count, loss_count, 
+            conversion_table, exchange_info, output_log_screened)
         if from_asset != to_asset:
             blacklist, from_asset, to_asset = trade_conditionally(
                 ssh=ssh, blacklist=blacklist, client=client, 
@@ -99,18 +100,19 @@ try:
             #conversion_table = ssh.get_logs_from_server(
             #    server_log=ssh.input_log)
             conversion_table = get_conversion_table(
-                client=client, exchange_info=exchange_info, offset_s=offset_s, 
-                dump_raw=False, as_pair=True, minimal=False, 
-                extra_minimal=False, super_extra_minimal=False, 
-                convert_to_USDT=False)
+                client=client, exchange_info=exchange_info, 
+                offset_s=offset_s, dump_raw=False, as_pair=True, 
+                minimal=False, extra_minimal=False, 
+                super_extra_minimal=False, convert_to_USDT=False)
             blacklist, to_asset = check_take_profit_and_stop_loss(
                 blacklist, from_asset, to_asset, conversion_table, 
                 exchange_info, latest_asset, take_profit=take_profit, 
                 stop_loss=stop_loss)
-        blacklist = remove_older_entries_in_blacklist(blacklist, 
-                                                      frequency='15min')
+        blacklist = remove_older_entries_in_blacklist(
+            blacklist, frequency=frequency)
+        time.sleep(1)
 except (KeyboardInterrupt, SystemExit):
-    ssh.close()
+    ssh.ssh.close()
     print('Closed SSH connection to server.')
 except Exception as e:
     print(e)

@@ -7,9 +7,9 @@
 # Description: Binance asset conversion.
 
 # Library imports.
-from cryptocurrency.conversion import get_assets_from_pair, get_base_asset_from_pair
-from cryptocurrency.conversion import get_quote_asset_from_pair, get_shortest_pair_path_between_assets
-from cryptocurrency.ohlcvs import named_pairs_to_df
+from .conversion import get_assets_from_pair, get_base_asset_from_pair
+from .conversion import get_quote_asset_from_pair, get_shortest_pair_path_between_assets
+from .ohlcvs import named_pairs_to_df
 from tqdm import tqdm
 import pandas as pd
 

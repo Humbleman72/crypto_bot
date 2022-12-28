@@ -175,3 +175,4 @@ def convert_price(size, from_asset, to_asset, conversion_table, exchange_info,
         size = make_tradable_quantity(pair, float(size), subtract=0, 
                                       exchange_info=exchange_info)
     return size
+

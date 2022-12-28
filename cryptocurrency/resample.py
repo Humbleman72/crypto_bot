@@ -7,7 +7,7 @@
 # Description: Provides whole market downsampling.
 
 # Library imports.
-from cryptocurrency.volume_conversion import recalculate_volumes
+from .volume_conversion import recalculate_volumes
 import pandas as pd
 
 # Function definitions.

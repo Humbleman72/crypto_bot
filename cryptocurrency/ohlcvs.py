@@ -7,7 +7,7 @@
 # Description: Populate OHLCV DataFrames from the Binance API.
 
 # Library imports.
-from cryptocurrency.ohlcv import download_pair
+from .ohlcv import download_pair
 from tqdm import tqdm
 import time
 import pandas as pd

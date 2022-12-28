@@ -6,10 +6,12 @@
 # For          Myself
 # Description: Binance pair conversion table retrieval and basic pair filtering.
 
+# Optimize this code.
+
 # Library imports.
-from cryptocurrency.conversion import convert_price
-from cryptocurrency.conversion import get_base_asset_from_pair, get_quote_asset_from_pair
-from cryptocurrency.conversion import get_shortest_pair_path_between_assets
+from .conversion import convert_price
+from .conversion import get_base_asset_from_pair, get_quote_asset_from_pair
+from .conversion import get_shortest_pair_path_between_assets
 import datetime
 import pandas as pd
 
@@ -18,29 +20,32 @@ def get_conversion_table_from_binance(client, exchange_info, offset_s=0, dump_ra
     conversion_table = pd.DataFrame(client.get_ticker())
     conversion_table = conversion_table[conversion_table['symbol'].isin(exchange_info['symbol'])]
 
-    conversion_table['base_asset'] = \
-        conversion_table['symbol'].apply(lambda x: get_base_asset_from_pair(x, exchange_info=exchange_info))
-    conversion_table['quote_asset'] = \
-        conversion_table['symbol'].apply(lambda x: get_quote_asset_from_pair(x, exchange_info=exchange_info))
+    conversion_table['base_asset'] = conversion_table['symbol'].apply(
+        lambda x: get_base_asset_from_pair(x, exchange_info=exchange_info))
+    conversion_table['quote_asset'] = conversion_table['symbol'].apply(
+        lambda x: get_quote_asset_from_pair(x, exchange_info=exchange_info))
 
-    conversion_table = \
-        conversion_table.rename(
-            columns={'openPrice': 'open', 'highPrice': 'high', 'lowPrice': 'low', 'lastPrice': 'close', 
-                     'lastQty': 'last_volume', 'volume': 'rolling_base_volume', 'quoteVolume': 'rolling_quote_volume', 
-                     'bidPrice': 'bid_price', 'askPrice': 'ask_price', 'bidQty': 'bid_volume', 'askQty': 'ask_volume', 
-                     'firstId': 'first_ID', 'lastId': 'last_ID', 'openTime': 'open_time', 'closeTime': 'date', 
-                     'prevClosePrice': 'close_shifted', 'weightedAvgPrice': 'weighted_average_price', 
-                     'priceChange': 'price_change', 'priceChangePercent': 'price_change_percent'})
+    conversion_table = conversion_table.rename(columns={
+        'openPrice': 'open', 'highPrice': 'high', 'lowPrice': 'low', 
+        'lastPrice': 'close', 'lastQty': 'last_volume', 
+        'volume': 'rolling_base_volume', 'quoteVolume': 'rolling_quote_volume', 
+        'bidPrice': 'bid_price', 'askPrice': 'ask_price', 'bidQty': 'bid_volume', 
+        'askQty': 'ask_volume', 'firstId': 'first_ID', 'lastId': 'last_ID', 
+        'openTime': 'open_time', 'closeTime': 'date', 'prevClosePrice': 'close_shifted', 
+        'weightedAvgPrice': 'weighted_average_price', 'priceChange': 'price_change', 
+        'priceChangePercent': 'price_change_percent'})
 
     if dump_raw:
         conversion_table.to_csv('crypto_logs/conversion_table.txt')
 
-    conversion_table[['open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
-                      'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
-                      'price_change_percent']] = \
-        conversion_table[['open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
-                          'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
-                          'price_change_percent']].astype(float)
+    conversion_table[[
+        'open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
+        'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 
+        'ask_volume', 'price_change_percent']] = \
+        conversion_table[[
+            'open', 'high', 'low', 'close', 'close_shifted', 'rolling_base_volume', 
+            'rolling_quote_volume', 'bid_price', 'ask_price', 'bid_volume', 'ask_volume', 
+            'price_change_percent']].astype(float)
 
     conversion_table[['date', 'count']] = \
         conversion_table[['date', 'count']].astype(int)
@@ -205,73 +210,97 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
         if minimal:
             if extra_minimal:
                 if super_extra_minimal:
-                    conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'ask_price', 
-                                                     'ask_volume', 'bid_price', 'bid_volume', 'open', 
-                                                     'rolling_quote_volume', 'rolling_base_volume', 'date', 
-                                                     'count', 'quote_asset', 'base_asset', 'USDT_price', 
-                                                     'rolling_USDT_quote_volume', 'rolling_USDT_base_volume', 
-                                                     'is_shorted']] = \
-                        conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'bid_price', 
-                                                         'bid_volume', 'ask_price', 'ask_volume', 'open', 
-                                                         'rolling_base_volume', 'rolling_quote_volume', 
-                                                         'date', 'count', 'base_asset', 'quote_asset', 
-                                                         'USDT_price', 'rolling_USDT_base_volume', 
-                                                         'rolling_USDT_quote_volume', 'is_shorted']].values
+                    conversion_table_swapped = conversion_table_swapped.rename(columns={
+                        'ask_price': 'bid_price', 'bid_price': 'ask_price', 
+                        'ask_volume': 'bid_volume', 'bid_volume': 'ask_volume', 
+                        'rolling_base_volume': 'rolling_quote_volume', 
+                        'rolling_quote_volume': 'rolling_base_volume', 
+                        'base_asset': 'quote_asset', 'quote_asset': 'base_asset', 
+                        'rolling_USDT_base_volume': 'rolling_USDT_quote_volume', 
+                        'rolling_USDT_quote_volume': 'rolling_USDT_base_volume', 
+                        'base_asset': 'quote_asset', 'quote_asset': 'base_asset'})
+                    conversion_table_swapped = conversion_table_swapped[[
+                        'symbol', 'price_change_percent', 'close', 'ask_price', 
+                        'ask_volume', 'bid_price', 'bid_volume', 'open', 
+                        'rolling_quote_volume', 'rolling_base_volume', 'date', 
+                        'count', 'quote_asset', 'base_asset', 'USDT_price', 
+                        'rolling_USDT_quote_volume', 'rolling_USDT_base_volume', 
+                        'is_shorted']]
                 else:
-                    conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'ask_price', 
-                                                     'ask_volume', 'bid_price', 'bid_volume', 'open', 
-                                                     'rolling_quote_volume', 'rolling_base_volume', 'date', 
-                                                     'count', 'quote_asset', 'base_asset', 'USDT_open', 
-                                                     'USDT_price', 'rolling_USDT_quote_volume', 
-                                                     'rolling_USDT_base_volume', 'USDT_ask_price', 
-                                                     'USDT_bid_price', 'USDT_ask_volume', 'USDT_bid_volume', 
-                                                     'USDT_price_change_percent', 'is_shorted']] = \
-                        conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'bid_price', 
-                                                         'bid_volume', 'ask_price', 'ask_volume', 'open', 
-                                                         'rolling_base_volume', 'rolling_quote_volume', 'date', 
-                                                         'count', 'base_asset', 'quote_asset', 'USDT_open', 
-                                                         'USDT_price', 'rolling_USDT_base_volume', 
-                                                         'rolling_USDT_quote_volume', 'USDT_bid_price', 
-                                                         'USDT_ask_price', 'USDT_bid_volume', 'USDT_ask_volume', 
-                                                         'USDT_price_change_percent', 'is_shorted']].values
+                    conversion_table_swapped = \
+                        conversion_table_swapped.rename(columns={
+                            'ask_price': 'bid_price', 
+                            'bid_price': 'ask_price', 
+                            'ask_volume': 'bid_volume', 
+                            'bid_volume': 'ask_volume', 
+                            'rolling_base_volume': 'rolling_quote_volume', 
+                            'rolling_quote_volume': 'rolling_base_volume', 
+                            'base_asset': 'quote_asset', 
+                            'quote_asset': 'base_asset', 
+                            'rolling_USDT_base_volume': 'rolling_USDT_quote_volume', 
+                            'rolling_USDT_quote_volume': 'rolling_USDT_base_volume', 
+                            'USDT_ask_price': 'USDT_bid_price', 
+                            'USDT_bid_price': 'USDT_ask_price', 
+                            'USDT_ask_volume': 'USDT_bid_volume', 
+                            'USDT_bid_volume': 'USDT_ask_volume'})
+                    conversion_table_swapped = conversion_table_swapped[[
+                        'symbol', 'price_change_percent', 'close', 
+                        'ask_price', 'ask_volume', 'bid_price', 'bid_volume', 
+                        'open', 'rolling_quote_volume', 'rolling_base_volume', 
+                        'date', 'count', 'quote_asset', 'base_asset', 
+                        'USDT_open', 'USDT_price', 
+                        'rolling_USDT_quote_volume', 
+                        'rolling_USDT_base_volume', 'USDT_ask_price', 
+                        'USDT_bid_price', 'USDT_ask_volume', 
+                        'USDT_bid_volume', 'USDT_price_change_percent', 
+                        'is_shorted']]
             else:
-                conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'ask_price', 
-                                                 'ask_volume', 'bid_price', 'bid_volume', 'open', 
-                                                 'rolling_quote_volume', 'rolling_base_volume', 'date', 
-                                                 'count', 'quote_asset', 'base_asset', 'USDT_open', 'USDT_price', 
-                                                 'rolling_USDT_quote_volume', 'rolling_USDT_base_volume', 
-                                                 'USDT_ask_price', 'USDT_bid_price', 'USDT_ask_volume', 
-                                                 'USDT_bid_volume', 'USDT_price_change_percent', 'is_shorted']] = \
-                    conversion_table_swapped.loc[:, ['symbol', 'price_change_percent', 'close', 'bid_price', 
-                                                     'bid_volume', 'ask_price', 'ask_volume', 'open', 
-                                                     'rolling_base_volume', 'rolling_quote_volume', 'date', 
-                                                     'count', 'base_asset', 'quote_asset', 'USDT_open', 'USDT_price', 
-                                                     'rolling_USDT_base_volume', 'rolling_USDT_quote_volume', 
-                                                     'USDT_bid_price', 'USDT_ask_price', 'USDT_bid_volume', 
-                                                     'USDT_ask_volume', 'USDT_price_change_percent', 
-                                                     'is_shorted']].values
+                conversion_table_swapped = conversion_table_swapped.rename(columns={
+                    'ask_price': 'bid_price', 'bid_price': 'ask_price', 
+                    'ask_volume': 'bid_volume', 'bid_volume': 'ask_volume', 
+                    'rolling_base_volume': 'rolling_quote_volume', 
+                    'rolling_quote_volume': 'rolling_base_volume', 
+                    'base_asset': 'quote_asset', 'quote_asset': 'base_asset', 
+                    'rolling_USDT_base_volume': 'rolling_USDT_quote_volume', 
+                    'rolling_USDT_quote_volume': 'rolling_USDT_base_volume', 
+                    'USDT_ask_price': 'USDT_bid_price', 
+                    'USDT_bid_price': 'USDT_ask_price', 
+                    'USDT_ask_volume': 'USDT_bid_volume', 
+                    'USDT_bid_volume': 'USDT_ask_volume'})
+                conversion_table_swapped = conversion_table_swapped[[
+                    'symbol', 'price_change_percent', 'close', 'ask_price', 
+                    'ask_volume', 'bid_price', 'bid_volume', 'open', 
+                    'rolling_quote_volume', 'rolling_base_volume', 'date', 
+                    'count', 'quote_asset', 'base_asset', 'USDT_open', 
+                    'USDT_price', 'rolling_USDT_quote_volume', 
+                    'rolling_USDT_base_volume', 'USDT_ask_price', 
+                    'USDT_bid_price', 'USDT_ask_volume', 'USDT_bid_volume', 
+                    'USDT_price_change_percent', 'is_shorted']]
         else:
-            conversion_table_swapped.loc[:, ['symbol', 'price_change', 'price_change_percent', 
-                                             'weighted_average_price', 'close_shifted', 'close', 
-                                             'last_volume', 'ask_price', 'ask_volume', 'bid_price', 
-                                             'bid_volume', 'open', 'high', 'low', 'rolling_quote_volume', 
-                                             'rolling_base_volume', 'open_time', 'date', 'first_ID', 
-                                             'last_ID', 'count', 'quote_asset', 'base_asset', 'USDT_open', 
-                                             'USDT_high', 'USDT_low', 'USDT_price', 'rolling_USDT_quote_volume', 
-                                             'rolling_USDT_base_volume', 'USDT_ask_price', 'USDT_bid_price', 
-                                             'USDT_ask_volume', 'USDT_bid_volume', 'USDT_price_change', 
-                                             'USDT_price_change_percent', 'is_shorted']] = \
-                conversion_table_swapped.loc[:, ['symbol', 'price_change', 'price_change_percent', 
-                                                 'weighted_average_price', 'close_shifted', 'close', 
-                                                 'last_volume', 'bid_price', 'bid_volume', 'ask_price', 
-                                                 'ask_volume', 'open', 'high', 'low', 'rolling_base_volume', 
-                                                 'rolling_quote_volume', 'open_time', 'date', 'first_ID', 
-                                                 'last_ID', 'count', 'base_asset', 'quote_asset', 
-                                                 'USDT_open', 'USDT_high', 'USDT_low', 'USDT_price', 
-                                                 'rolling_USDT_base_volume', 'rolling_USDT_quote_volume', 
-                                                 'USDT_bid_price', 'USDT_ask_price', 'USDT_bid_volume', 
-                                                 'USDT_ask_volume', 'USDT_price_change', 
-                                                 'USDT_price_change_percent', 'is_shorted']].values
+            conversion_table_swapped = conversion_table_swapped.rename(columns={
+                'ask_price': 'bid_price', 'bid_price': 'ask_price', 
+                'ask_volume': 'bid_volume', 'bid_volume': 'ask_volume', 
+                'rolling_base_volume': 'rolling_quote_volume', 
+                'rolling_quote_volume': 'rolling_base_volume', 
+                'base_asset': 'quote_asset', 'quote_asset': 'base_asset', 
+                'rolling_USDT_base_volume': 'rolling_USDT_quote_volume', 
+                'rolling_USDT_quote_volume': 'rolling_USDT_base_volume', 
+                'USDT_ask_price': 'USDT_bid_price', 
+                'USDT_bid_price': 'USDT_ask_price', 
+                'USDT_ask_volume': 'USDT_bid_volume', 
+                'USDT_bid_volume': 'USDT_ask_volume'})
+            conversion_table_swapped = conversion_table_swapped[[
+                'symbol', 'price_change', 'price_change_percent', 
+                'weighted_average_price', 'close_shifted', 'close', 
+                'last_volume', 'ask_price', 'ask_volume', 'bid_price', 
+                'bid_volume', 'open', 'high', 'low', 'rolling_quote_volume', 
+                'rolling_base_volume', 'open_time', 'date', 'first_ID', 
+                'last_ID', 'count', 'quote_asset', 'base_asset', 'USDT_open', 
+                'USDT_high', 'USDT_low', 'USDT_price', 
+                'rolling_USDT_quote_volume', 'rolling_USDT_base_volume', 
+                'USDT_ask_price', 'USDT_bid_price', 'USDT_ask_volume', 
+                'USDT_bid_volume', 'USDT_price_change', 
+                'USDT_price_change_percent', 'is_shorted']]
 
         conversion_table_swapped['symbol'] = \
             conversion_table_swapped['base_asset'] + conversion_table_swapped['quote_asset']
@@ -279,45 +308,47 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
         if minimal:
             if extra_minimal:
                 if super_extra_minimal:
-                    conversion_table_swapped.loc[:, ['open', 'close', 'bid_price', 'ask_price', 'USDT_price']] = \
-                        1 / conversion_table_swapped.loc[:, ['open', 'close', 'bid_price', 'ask_price', 
-                                                             'USDT_price']].astype(float)
+                    conversion_table_swapped[['open', 'close', 'bid_price', 'ask_price', 'USDT_price']] = \
+                        1 / conversion_table_swapped[['open', 'close', 'bid_price', 'ask_price', 'USDT_price']].astype(float)
                 else:
-                    conversion_table_swapped.loc[:, ['open', 'close', 'bid_price', 'ask_price', 'USDT_open', 
-                                                     'USDT_price', 'USDT_price_change_percent']] = \
-                        1 / conversion_table_swapped.loc[:, ['open', 'close', 'bid_price', 'ask_price', 
-                                                             'USDT_open', 'USDT_price', 
-                                                             'USDT_price_change_percent']].astype(float)
+                    conversion_table_swapped[['open', 'close', 'bid_price', 'ask_price', 'USDT_open', 
+                                              'USDT_price', 'USDT_price_change_percent']] = \
+                        1 / conversion_table_swapped[['open', 'close', 'bid_price', 'ask_price', 
+                                                      'USDT_open', 'USDT_price', 'USDT_price_change_percent']].astype(float)
             else:
-                conversion_table_swapped.loc[:, ['open', 'close', 'bid_price', 'ask_price', 'USDT_open', 
-                                                 'USDT_price', 'USDT_bid_price', 'USDT_ask_price', 
-                                                 'USDT_price_change_percent']] = \
-                    1 / conversion_table_swapped.loc[:, ['open', 'close', 'bid_price', 'ask_price', 'USDT_open', 
-                                                         'USDT_price', 'USDT_bid_price', 'USDT_ask_price', 
-                                                         'USDT_price_change_percent']].astype(float)
+                conversion_table_swapped[['open', 'close', 'bid_price', 'ask_price', 'USDT_open', 
+                                          'USDT_price', 'USDT_bid_price', 'USDT_ask_price', 
+                                          'USDT_price_change_percent']] = \
+                    1 / conversion_table_swapped[['open', 'close', 'bid_price', 'ask_price', 'USDT_open', 
+                                                  'USDT_price', 'USDT_bid_price', 'USDT_ask_price', 
+                                                  'USDT_price_change_percent']].astype(float)
         else:
-            conversion_table_swapped.loc[:, ['open', 'high', 'low', 'close', 'close_shifted', 'bid_price', 
-                                             'ask_price', 'USDT_open', 'USDT_high', 'USDT_low', 'USDT_price', 
-                                             'USDT_bid_price', 'USDT_ask_price', 'USDT_price_change', 
-                                             'USDT_price_change_percent']] = \
-                1 / conversion_table_swapped.loc[:, ['open', 'high', 'low', 'close', 'close_shifted', 
-                                                     'bid_price', 'ask_price', 'USDT_open', 'USDT_high', 
-                                                     'USDT_low', 'USDT_price', 'USDT_bid_price', 'USDT_ask_price', 
-                                                     'USDT_price_change', 'USDT_price_change_percent']].astype(float)
+            conversion_table_swapped[['open', 'high', 'low', 'close', 'close_shifted', 'bid_price', 
+                                      'ask_price', 'USDT_open', 'USDT_high', 'USDT_low', 'USDT_price', 
+                                      'USDT_bid_price', 'USDT_ask_price', 'USDT_price_change', 
+                                      'USDT_price_change_percent']] = \
+                1 / conversion_table_swapped[['open', 'high', 'low', 'close', 'close_shifted', 
+                                              'bid_price', 'ask_price', 'USDT_open', 'USDT_high', 
+                                              'USDT_low', 'USDT_price', 'USDT_bid_price', 
+                                              'USDT_ask_price', 'USDT_price_change', 
+                                              'USDT_price_change_percent']].astype(float)
         conversion_table_swapped['is_shorted'] = True
 
         conversion_table = pd.concat([conversion_table, conversion_table_swapped], join='outer', axis='index')
 
-        traded_volume = conversion_table[['base_asset', 'rolling_USDT_base_volume']].groupby(by='base_asset').agg('sum')
+        traded_volume = conversion_table[[
+            'base_asset', 'rolling_USDT_base_volume']].groupby(by='base_asset').agg('sum')
         traded_volume = traded_volume['rolling_USDT_base_volume']
         conversion_table['rolling_traded_volume'] = \
             conversion_table.apply(lambda x: traded_volume.loc[x['base_asset']], axis='columns')
         if not extra_minimal:
-            traded_bid_volume = conversion_table[['base_asset', 'USDT_bid_volume']].groupby(by='base_asset').agg('sum')
+            traded_bid_volume = conversion_table[[
+                'base_asset', 'USDT_bid_volume']].groupby(by='base_asset').agg('sum')
             traded_bid_volume = traded_bid_volume['USDT_bid_volume']
             conversion_table['traded_bid_volume'] = \
                 conversion_table.apply(lambda x: traded_bid_volume.loc[x['base_asset']], axis='columns')
-            traded_ask_volume = conversion_table[['base_asset', 'USDT_ask_volume']].groupby(by='base_asset').agg('sum')
+            traded_ask_volume = conversion_table[[
+                'base_asset', 'USDT_ask_volume']].groupby(by='base_asset').agg('sum')
             traded_ask_volume = traded_ask_volume['USDT_ask_volume']
             conversion_table['traded_ask_volume'] = \
                 conversion_table.apply(lambda x: traded_ask_volume.loc[x['base_asset']], axis='columns')
@@ -340,16 +371,16 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
             conversion_table.apply(lambda x: importance_weighted_price.loc[x['base_asset']], axis='columns')
 
         if not extra_minimal:
-            importance_weighted_bid_price = \
-                conversion_table[['base_asset', 'importance_weighted_bid_price']].groupby(by='base_asset').agg('sum')
+            importance_weighted_bid_price = conversion_table[[
+                'base_asset', 'importance_weighted_bid_price']].groupby(by='base_asset').agg('sum')
             importance_weighted_bid_price = importance_weighted_bid_price['importance_weighted_bid_price']
-            conversion_table['traded_bid_price'] = \
-                conversion_table.apply(lambda x: importance_weighted_bid_price.loc[x['base_asset']], axis='columns')
-            importance_weighted_ask_price = \
-                conversion_table[['base_asset', 'importance_weighted_ask_price']].groupby(by='base_asset').agg('sum')
+            conversion_table['traded_bid_price'] = conversion_table.apply(
+                lambda x: importance_weighted_bid_price.loc[x['base_asset']], axis='columns')
+            importance_weighted_ask_price = conversion_table[[
+                'base_asset', 'importance_weighted_ask_price']].groupby(by='base_asset').agg('sum')
             importance_weighted_ask_price = importance_weighted_ask_price['importance_weighted_ask_price']
-            conversion_table['traded_ask_price'] = \
-                conversion_table.apply(lambda x: importance_weighted_ask_price.loc[x['base_asset']], axis='columns')
+            conversion_table['traded_ask_price'] = conversion_table.apply(
+                lambda x: importance_weighted_ask_price.loc[x['base_asset']], axis='columns')
 
             conversion_table['traded_bid_ask_percent_change'] = \
                 ((conversion_table['traded_ask_price'] - conversion_table['traded_bid_price']) / \
@@ -369,99 +400,102 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
     if as_pair and convert_to_USDT:
         if minimal:
             if extra_minimal:
-                conversion_table = \
-                    conversion_table[['symbol', 'base_asset', 'quote_asset', 'price_change_percent', 'close', 
-                                      'bid_price', 'bid_volume', 'ask_price', 'ask_volume', 'date', 
-                                      'count', 'rolling_base_volume', 'rolling_quote_volume', 
-                                      'USDT_price_change_percent', 'USDT_price', 'rolling_USDT_base_volume', 
-                                      'rolling_USDT_quote_volume', 'rolling_traded_volume', 'traded_price', 
-                                      'bid_ask_percent_change', 'bid_ask_volume_percent_change']]
+                conversion_table = conversion_table[[
+                    'symbol', 'base_asset', 'quote_asset', 
+                    'price_change_percent', 'close', 'bid_price', 
+                    'bid_volume', 'ask_price', 'ask_volume', 'date', 'count', 
+                    'rolling_base_volume', 'rolling_quote_volume', 
+                    'USDT_price_change_percent', 'USDT_price', 
+                    'rolling_USDT_base_volume', 'rolling_USDT_quote_volume', 
+                    'rolling_traded_volume', 'traded_price', 
+                    'bid_ask_percent_change', 'bid_ask_volume_percent_change']]
             else:
-                conversion_table = \
-                    conversion_table[['symbol', 'base_asset', 'quote_asset', 'price_change_percent', 'close', 
-                                      'bid_price', 'bid_volume', 'ask_price', 'ask_volume', 'date', 
-                                      'count', 'rolling_base_volume', 'rolling_quote_volume', 
-                                      'USDT_price_change_percent', 'USDT_price', 'rolling_USDT_base_volume', 
-                                      'rolling_USDT_quote_volume', 'USDT_bid_price', 'USDT_ask_price', 
-                                      'USDT_bid_volume', 'USDT_ask_volume', 'rolling_traded_volume', 
-                                      'traded_bid_volume', 'traded_ask_volume', 'traded_price', 
-                                      'traded_bid_price', 'traded_ask_price', 'bid_ask_percent_change', 
-                                      'bid_ask_volume_percent_change', 'traded_bid_ask_percent_change', 
-                                      'traded_bid_ask_volume_percent_change']]
+                conversion_table = conversion_table[[
+                    'symbol', 'base_asset', 'quote_asset', 
+                    'price_change_percent', 'close', 'bid_price', 
+                    'bid_volume', 'ask_price', 'ask_volume', 'date', 'count', 
+                    'rolling_base_volume', 'rolling_quote_volume', 
+                    'USDT_price_change_percent', 'USDT_price', 
+                    'rolling_USDT_base_volume', 'rolling_USDT_quote_volume', 
+                    'USDT_bid_price', 'USDT_ask_price', 'USDT_bid_volume', 
+                    'USDT_ask_volume', 'rolling_traded_volume', 
+                    'traded_bid_volume', 'traded_ask_volume', 'traded_price', 
+                    'traded_bid_price', 'traded_ask_price', 
+                    'bid_ask_percent_change', 'bid_ask_volume_percent_change', 
+                    'traded_bid_ask_percent_change', 
+                    'traded_bid_ask_volume_percent_change']]
         else:
-            conversion_table = \
-                conversion_table[['symbol', 'base_asset', 'quote_asset', 'is_shorted', 'price_change_percent', 
-                                  'weighted_average_price', 'open', 'high', 'low', 'close', 'close_shifted', 
-                                  'last_volume', 'bid_price', 'bid_volume', 'ask_price', 'ask_volume', 
-                                  'date', 'last_ID', 'count', 'rolling_base_volume', 'rolling_quote_volume', 
-                                  'importance', 'USDT_price_change_percent', 'USDT_open', 
-                                  'USDT_high', 'USDT_low', 'USDT_price', 'rolling_USDT_base_volume', 
-                                  'rolling_USDT_quote_volume', 'USDT_bid_price', 'USDT_ask_price', 
-                                  'USDT_bid_volume', 'USDT_ask_volume', 'rolling_traded_volume', 
-                                  'traded_bid_volume', 'traded_ask_volume', 'traded_price', 
-                                  'traded_bid_price', 'traded_ask_price', 'bid_ask_percent_change', 
-                                  'bid_ask_volume_percent_change', 'traded_bid_ask_percent_change', 
-                                  'traded_bid_ask_volume_percent_change']]
+            conversion_table = conversion_table[[
+                'symbol', 'base_asset', 'quote_asset', 'is_shorted', 
+                'price_change_percent', 'weighted_average_price', 'open', 
+                'high', 'low', 'close', 'close_shifted', 'last_volume', 
+                'bid_price', 'bid_volume', 'ask_price', 'ask_volume', 'date', 
+                'last_ID', 'count', 'rolling_base_volume', 
+                'rolling_quote_volume', 'importance', 
+                'USDT_price_change_percent', 'USDT_open', 'USDT_high', 
+                'USDT_low', 'USDT_price', 'rolling_USDT_base_volume', 
+                'rolling_USDT_quote_volume', 'USDT_bid_price', 
+                'USDT_ask_price', 'USDT_bid_volume', 'USDT_ask_volume', 
+                'rolling_traded_volume', 'traded_bid_volume', 
+                'traded_ask_volume', 'traded_price', 'traded_bid_price', 
+                'traded_ask_price', 'bid_ask_percent_change', 
+                'bid_ask_volume_percent_change', 
+                'traded_bid_ask_percent_change', 
+                'traded_bid_ask_volume_percent_change']]
     else:
         if convert_to_USDT:
             if minimal:
                 if extra_minimal:
-                    conversion_table = \
-                        conversion_table[['base_asset', 'price_change_percent', 'date', 
-                                          'bid_volume', 'ask_volume', 'bid_price', 'close', 'ask_price', 
-                                          'count', 'rolling_traded_volume', 'bid_ask_percent_change', 
-                                          'bid_ask_volume_percent_change', 'traded_price']]
+                    conversion_table = conversion_table[[
+                        'base_asset', 'price_change_percent', 'date', 'bid_volume', 'ask_volume', 
+                        'bid_price', 'close', 'ask_price', 'count', 'rolling_traded_volume', 
+                        'bid_ask_percent_change', 'bid_ask_volume_percent_change', 'traded_price']]
                 else:
-                    conversion_table = \
-                        conversion_table[['base_asset', 'USDT_price_change_percent', 'date', 'count', 
-                                          'rolling_traded_volume', 'traded_bid_volume', 
-                                          'traded_ask_volume', 'traded_price', 'traded_bid_price', 
-                                          'traded_ask_price', 'traded_bid_ask_percent_change', 
-                                          'traded_bid_ask_volume_percent_change']]
+                    conversion_table = conversion_table[[
+                        'base_asset', 'USDT_price_change_percent', 'date', 'count', 
+                        'rolling_traded_volume', 'traded_bid_volume', 'traded_ask_volume', 
+                        'traded_price', 'traded_bid_price', 'traded_ask_price', 
+                        'traded_bid_ask_percent_change', 'traded_bid_ask_volume_percent_change']]
             else:
-                conversion_table = \
-                    conversion_table[['base_asset', 'USDT_price_change_percent', 'date', 'last_ID', 
-                                      'count', 'rolling_traded_volume', 'traded_bid_volume', 
-                                      'traded_ask_volume', 'traded_price', 'traded_bid_price', 
-                                      'traded_ask_price', 'traded_bid_ask_percent_change', 
-                                      'traded_bid_ask_volume_percent_change']]
+                conversion_table = conversion_table[[
+                    'base_asset', 'USDT_price_change_percent', 'date', 'last_ID', 'count', 
+                    'rolling_traded_volume', 'traded_bid_volume', 'traded_ask_volume', 
+                    'traded_price', 'traded_bid_price', 'traded_ask_price', 
+                    'traded_bid_ask_percent_change', 'traded_bid_ask_volume_percent_change']]
             conversion_table['rolling_quote_volume'] = conversion_table['rolling_traded_volume'].copy()
             if 'close' in conversion_table.columns:
                 conversion_table = conversion_table.drop(columns=['close'])
             if extra_minimal:
-                conversion_table = \
-                    conversion_table.rename(columns={'rolling_traded_volume': 'rolling_base_volume', 
-                                                     'traded_price': 'close', 
-                                                     'USDT_price_change_percent': 'price_change_percent'})
+                conversion_table = conversion_table.rename(columns={
+                    'rolling_traded_volume': 'rolling_base_volume', 'traded_price': 'close', 
+                    'USDT_price_change_percent': 'price_change_percent'})
             else:
-                conversion_table = \
-                    conversion_table.rename(columns={'USDT_price_change_percent': 'price_change_percent', 
-                                                     'rolling_traded_volume': 'rolling_base_volume', 
-                                                     'traded_bid_volume': 'bid_volume', 
-                                                     'traded_ask_volume': 'ask_volume', 
-                                                     'traded_price': 'close', 
-                                                     'traded_bid_price': 'bid_price', 
-                                                     'traded_ask_price': 'ask_price', 
-                                                     'traded_bid_ask_percent_change': 'bid_ask_percent_change', 
-                                                     'traded_bid_ask_volume_percent_change': 
-                                                             'bid_ask_volume_percent_change'})
+                conversion_table = conversion_table.rename(columns={
+                    'USDT_price_change_percent': 'price_change_percent', 
+                    'rolling_traded_volume': 'rolling_base_volume', 'traded_bid_volume': 'bid_volume', 
+                    'traded_ask_volume': 'ask_volume', 'traded_price': 'close', 
+                    'traded_bid_price': 'bid_price', 'traded_ask_price': 'ask_price', 
+                    'traded_bid_ask_percent_change': 'bid_ask_percent_change', 
+                    'traded_bid_ask_volume_percent_change': 'bid_ask_volume_percent_change'})
         if not as_pair:
             conversion_table['symbol'] = conversion_table['base_asset'].copy()
             conversion_table['quote_asset'] = conversion_table['base_asset'].copy()
             if minimal:
-                df = conversion_table[['base_asset', 'date', 'count']].groupby(by=['base_asset']).agg({'date': 'max', 'count': 'max'})
-                conversion_table.loc[:, ['date', 'count']] = \
+                df = conversion_table[['base_asset', 'date', 'count']].groupby(by=['base_asset']).agg({
+                    'date': 'max', 'count': 'max'})
+                conversion_table[['date', 'count']] = \
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
                 if super_extra_minimal:
-                    df = conversion_table[['base_asset', 
-                                           'bid_ask_percent_change', 
-                                           'bid_ask_volume_percent_change']].groupby(by=['base_asset']).agg({'bid_ask_percent_change': 'min', 
-                                                                                                             'bid_ask_volume_percent_change': 'max'})
+                    df = conversion_table[[
+                        'base_asset', 'bid_ask_percent_change', 'bid_ask_volume_percent_change']].groupby(
+                            by=['base_asset']).agg({
+                                'bid_ask_percent_change': 'min', 'bid_ask_volume_percent_change': 'max'})
                     conversion_table.loc[:, ['bid_ask_percent_change', 'bid_ask_volume_percent_change']] = \
                         conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             else:
-                df = conversion_table[['base_asset', 'date', 'last_ID', 
-                                       'count']].groupby(by=['base_asset']).agg({'date': 'max', 'last_ID': 'sum', 'count': 'sum'})
+                df = conversion_table[[
+                    'base_asset', 'date', 'last_ID', 'count']].groupby(
+                        by=['base_asset']).agg({'date': 'max', 'last_ID': 'sum', 'count': 'sum'})
                 conversion_table.loc[:, ['date', 'last_ID', 'count']] = \
                     conversion_table.apply(lambda x: df.loc[x['base_asset']], axis='columns')
             conversion_table = conversion_table.drop_duplicates(subset=['base_asset'], keep='first')
@@ -469,25 +503,37 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False, min
     #conversion_table = conversion_table.drop(columns=['base_asset', 'quote_asset'])
     return conversion_table.set_index('date').sort_index(axis='index')
 
-def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False, as_pair=True, minimal=False, 
-                         extra_minimal=False, super_extra_minimal=False, convert_to_USDT=False):
-    conversion_table = get_conversion_table_from_binance(client=client, exchange_info=exchange_info, 
-                                                         offset_s=offset_s, dump_raw=dump_raw)
-    return process_conversion_table(conversion_table=conversion_table, exchange_info=exchange_info, 
-                                    as_pair=as_pair, minimal=minimal, extra_minimal=extra_minimal, 
-                                    super_extra_minimal=super_extra_minimal, convert_to_USDT=convert_to_USDT)
+def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False, 
+                         as_pair=True, minimal=False, extra_minimal=False, 
+                         super_extra_minimal=False, convert_to_USDT=False):
+    conversion_table = get_conversion_table_from_binance(
+        client=client, exchange_info=exchange_info, offset_s=offset_s, 
+        dump_raw=dump_raw)
+    return process_conversion_table(
+        conversion_table=conversion_table, exchange_info=exchange_info, 
+        as_pair=as_pair, minimal=minimal, extra_minimal=extra_minimal, 
+        super_extra_minimal=super_extra_minimal, 
+        convert_to_USDT=convert_to_USDT)
 
 def get_new_tickers(conversion_table):
     return conversion_table['symbol'].unique().tolist()
 
 def get_tradable_tickers_info(conversion_table):
-    conversion_table = conversion_table[['symbol', 'close', 'price_change_percent', 'bid_price', 
-                                         'ask_price', 'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
-                                         'bid_ask_volume_percent_change', 'rolling_base_volume', 
-                                         'rolling_quote_volume', 'count']]
-    conversion_table = conversion_table.copy()
-    conversion_table.iloc[:,conversion_table.columns != 'symbol'] = \
-        conversion_table.iloc[:,conversion_table.columns != 'symbol'].astype(float)
+    conversion_table = conversion_table[[
+        'symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 
+        'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
+        'bid_ask_volume_percent_change', 'rolling_base_volume', 
+        'rolling_quote_volume', 'count']]
+    conversion_table[[
+        'close', 'price_change_percent', 'bid_price', 'ask_price', 
+        'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
+        'bid_ask_volume_percent_change', 'rolling_base_volume', 
+        'rolling_quote_volume', 'count']] = \
+        conversion_table[[
+            'close', 'price_change_percent', 'bid_price', 'ask_price', 
+            'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
+            'bid_ask_volume_percent_change', 'rolling_base_volume', 
+            'rolling_quote_volume', 'count']].astype(float)
     conversion_table = conversion_table.sort_index(axis='index')
     conversion_table_live_filtered = conversion_table[conversion_table['bid_ask_percent_change'] < 0.8]
     #conversion_table_live_filtered = \

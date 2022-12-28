@@ -28,7 +28,7 @@ rm ~/miniconda.sh && \
 WHOAMI=$(env | grep "USER=" | sed 's/USER=//') && \
 echo ${PASSWORD} | sudo -S chown -R ${WHOAMI} /opt/conda && \
 /opt/conda/bin/conda init && \
-/opt/conda/bin/conda clean -tipsy && \
+/opt/conda/bin/conda clean -tipy && \
 /opt/conda/bin/conda clean -afy && \
 echo ${PASSWORD} | sudo -S chown -R ${WHOAMI} /home/${WHOAMI} && \
 source ~/.bashrc && \

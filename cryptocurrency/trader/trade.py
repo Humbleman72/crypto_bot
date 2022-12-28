@@ -202,12 +202,14 @@ def choose_to_asset(ssh, blacklist, sell_asset, from_asset, to_asset,
                     take_profit_count, stop_loss_count, profit_count, 
                     loss_count, conversion_table, exchange_info, 
                     output_log_screened):
-    tradable_pairs = ssh.get_logs_from_server(server_log=ssh.output_log_screened)
+    tradable_pairs = ssh.get_logs_from_server(
+        server_log=ssh.output_log_screened)
     if tradable_pairs is None:
         to_asset = sell_asset
     else:
         print('.', end='')
-        tradable_pairs = tradable_pairs.sort_values(by='last_price_move', ascending=False)
+        tradable_pairs = tradable_pairs.sort_values(
+            by='last_price_move', ascending=False)
         tradable_assets = list(set(tradable_pairs['symbol'].tolist()))
         if from_asset in tradable_assets:
             to_asset = latest_asset = from_asset
@@ -219,7 +221,7 @@ def choose_to_asset(ssh, blacklist, sell_asset, from_asset, to_asset,
                         base_asset=test_asset, 
                         conversion_table=conversion_table, 
                         exchange_info=exchange_info)
-                #time.sleep(0.2)
+                sleep(0.1)
                 if check_if_asset_from_pair_is_buyable(
                     blacklist, test_pair, exchange_info, take_profit, 
                     stop_loss, profit, loss, take_profit_count, 

@@ -7,7 +7,7 @@
 # Description: Indicators and triggers for output screeners.
 
 # Library imports.
-from cryptocurrency.renko import get_renko_trigger
+from .renko import get_renko_trigger
 from sys import float_info as sflt
 from numpy import log
 from pandas_ta.utils._core import signed_series, recent_minimum_index
@@ -203,6 +203,10 @@ def get_heikin_ashi_trigger(data):
     def get_positive_trend_strength_trigger(data):
         ADX = data.ta.adx(talib=True)
         return (ADX['ADX_14'] < 0.20).iat[-3] and (ADX['ADX_14'] > 0.20).iat[-2]
+    
+    def get_negative_trend_strength_trigger(data):
+        ADX = data.ta.adx(talib=True)
+        return (ADX['DMP_14'] > ADX['DMN_14']).iloc[-1]
 
     def get_not_negative_trend_strength_trigger(data):
         ADX = data.ta.adx(length=14, lensig=8, talib=True)

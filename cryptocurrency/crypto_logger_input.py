@@ -7,12 +7,12 @@
 # Description: Simple Binance logger circular buffered for N time precision.
 
 # Library imports.
-from cryptocurrency.crypto_logger_base import Crypto_logger_base
-from cryptocurrency.authentication import Cryptocurrency_authenticator
-from cryptocurrency.exchange import Cryptocurrency_exchange
-from cryptocurrency.conversion import get_shortest_pair_path_between_assets
-from cryptocurrency.conversion import get_timezone_offset_in_seconds
-from cryptocurrency.conversion_table import get_conversion_table, get_tradable_tickers_info
+from .crypto_logger_base import Crypto_logger_base
+from .authentication import Cryptocurrency_authenticator
+from .exchange import Cryptocurrency_exchange
+from .conversion import get_shortest_pair_path_between_assets
+from .conversion import get_timezone_offset_in_seconds
+from .conversion_table import get_conversion_table, get_tradable_tickers_info
 
 import pandas as pd
 pd.options.mode.chained_assignment = None

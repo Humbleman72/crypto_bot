@@ -7,8 +7,8 @@
 # Description: Simple Binance logger output for arbitrary intervals.
 
 # Library imports.
-from cryptocurrency.crypto_logger_base import Crypto_logger_base
-from cryptocurrency.indicators import filter_in_market, screen_one
+from .crypto_logger_base import Crypto_logger_base
+from .indicators import filter_in_market, screen_one
 
 import pandas as pd
 pd.options.mode.chained_assignment = None

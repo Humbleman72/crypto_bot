@@ -28,6 +28,7 @@ sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw default
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw default allow outgoing" ) && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw allow OpenSSH" ) && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw allow 60000:61000/udp" ) && \
+sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "ufw allow 8883/tcp" ) && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "yes | ufw enable" ) && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo -e "echo \"AllowUsers\t${NEW_USER}\" >> /etc/ssh/sshd_config" ) && \
 sshpass -p ${SERVER_INITIAL_PASSWORD} ssh root@${SERVER_IP} $( echo "systemctl restart sshd" ) && \

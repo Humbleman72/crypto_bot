@@ -31,12 +31,15 @@ def main():
                                             as_pair=True, minimal=False, 
                                             extra_minimal=False, convert_to_USDT=True)
     assets = get_new_tickers(conversion_table=conversion_table)
-    pairs = bootstrap_loggers(client=client, assets=assets, pairs={}, 
-                              download_interval='1d', exchange_info=exchange_info, as_pair=as_pair)
-    pairs = bootstrap_loggers(client=client, assets=assets, pairs=pairs, 
-                              download_interval='1h', exchange_info=exchange_info, as_pair=as_pair)
+    #pairs = bootstrap_loggers(client=client, assets=assets, pairs={}, 
+    #                          download_interval='1d', exchange_info=exchange_info, as_pair=as_pair)
+    #pairs = bootstrap_loggers(client=client, assets=assets, pairs=pairs, 
+    #                          download_interval='1h', exchange_info=exchange_info, as_pair=as_pair)
+    #pairs = bootstrap_loggers(client=client, assets=assets, additional_intervals=['30min'], 
+    #                          upsampled_intervals=['5s', '15s'], pairs=pairs, 
+    #                          download_interval='1m', exchange_info=exchange_info, as_pair=as_pair)
     pairs = bootstrap_loggers(client=client, assets=assets, additional_intervals=['30min'], 
-                              upsampled_intervals=['5s', '15s'], pairs=pairs, 
+                              upsampled_intervals=['5s', '15s'], pairs={}, 
                               download_interval='1m', exchange_info=exchange_info, as_pair=as_pair)
     print('Bootstrapping done!')
 

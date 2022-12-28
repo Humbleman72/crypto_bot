@@ -7,7 +7,7 @@
 # Description: Simple Binance logger base class.
 
 # Library imports.
-from cryptocurrency.resample import resample
+from .resample import resample
 from abc import abstractmethod, ABC
 from os.path import exists, join
 from os import mkdir

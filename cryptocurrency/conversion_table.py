@@ -126,16 +126,16 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
     :column traded_bid_ask_volume_percent_change: \
         ((traded_bid_volume / (traded_bid_volume + traded_ask_volume)) * 100).
     """
-    if as_pair:
-        super_extra_minimal = False
-    else:
-        convert_to_USDT = True
-
     if super_extra_minimal:
         extra_minimal = True
 
     if extra_minimal:
         minimal = True
+
+    if as_pair:
+        super_extra_minimal = False
+    else:
+        convert_to_USDT = True
 
     if minimal:
         conversion_table = conversion_table[[
@@ -180,8 +180,10 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
               conversion_table['close']) + 1)
 
         if not super_extra_minimal:
+            temp_conversion_table = conversion_table.drop_duplicates(
+                subset=['base_asset'], keep='first')
             conversion_table['USDT_open'] = \
-                conversion_table.apply(
+                temp_conversion_table.apply(
                     lambda x: convert_price(
                         size=1, from_asset=x['base_asset'], 
                         to_asset='USDT', 
@@ -189,9 +191,13 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
                         exchange_info=exchange_info, 
                         shortest_path=x['shortest_path'], 
                         key='open', priority='accuracy'), axis='columns')
+            conversion_table['asset'] = conversion_table['base_asset'].copy()
+            conversion_table = conversion_table.groupby(by=['asset']).fillna(method='pad')
 
+        temp_conversion_table = conversion_table.drop_duplicates(
+            subset=['base_asset'], keep='first')
         conversion_table['USDT_price'] = \
-            conversion_table.apply(
+            temp_conversion_table.apply(
                 lambda x: convert_price(
                     size=1, from_asset=x['base_asset'], 
                     to_asset='USDT', 
@@ -199,6 +205,8 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
                     exchange_info=exchange_info, 
                     shortest_path=x['shortest_path'], 
                     key='close', priority='accuracy'), axis='columns')
+        conversion_table['asset'] = conversion_table['base_asset'].copy()
+        conversion_table = conversion_table.groupby(by=['asset']).fillna(method='pad')
 
         if not extra_minimal:
             conversion_table['USDT_high'] = \
@@ -227,8 +235,6 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
         conversion_table['rolling_USDT_quote_volume'] = \
             conversion_table['rolling_base_quote_volume'] * \
             conversion_table['USDT_price'].astype(float)
-        conversion_table = conversion_table.drop(columns=[
-            'rolling_base_quote_volume'])
 
         if super_extra_minimal:
             price_change_percent = conversion_table[['base_asset', 

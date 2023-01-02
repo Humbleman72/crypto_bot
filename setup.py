@@ -8,7 +8,7 @@
 # Optimize:          python setup.py build_ext --inplace
 # Optimize manually: 
 #                    python -m cython -3 -a crypto_logger.py
-#                    gcc -shared -pthread -fPIC -fwrapv -Wall -O2 -fno-strict-aliasing -I/opt/conda/envs/crypto_bot/include/python3.9/ -o crypto_logger.so crypto_logger.c
+#                    gcc -shared -pthread -fPIC -fwrapv -Wall -O3 -fno-strict-aliasing -mtune=native -I/opt/conda/envs/crypto_bot/include/python3.9/ -o crypto_logger.so crypto_logger.c
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -25,19 +25,19 @@ setup(
             Extension(
                 name="bootstrap", 
                 sources=["bootstrap.pyx"], 
-                extra_compile_args=["-O3"], 
+                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
                 language="c++", 
             ), 
             Extension(
                 name="crypto_logger", 
                 sources=["crypto_logger.pyx"], 
-                extra_compile_args=["-O3"], 
+                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
                 language="c++", 
             ), 
             Extension(
                 name="crypto_trader", 
                 sources=["crypto_trader.pyx"], 
-                extra_compile_args=["-O3"], 
+                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
                 language="c++", 
             ), 
         ], 

@@ -25,7 +25,7 @@ import time
 
 def init_loggers():
     """Main logger initialization."""
-    crypto_logger_input_15s = Crypto_logger_input(interval='15s', buffer_size=10000, 
+    crypto_logger_input_15s = Crypto_logger_input(interval='15s', buffer_size=2000, 
                                                   price_percent=5.0, volume_percent=0.0, 
                                                   as_pair=False, append=True, roll=12)
     crypto_logger_output_15s = Crypto_logger_output(interval_input='15s', 

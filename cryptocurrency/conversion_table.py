@@ -180,7 +180,9 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
               conversion_table['close']) + 1)
 
         if not super_extra_minimal:
-            temp_conversion_table = conversion_table.drop_duplicates(
+            temp_conversion_table = conversion_table[[
+                'base_asset', 'open', 'shortest_path']]
+            temp_conversion_table = temp_conversion_table.drop_duplicates(
                 subset=['base_asset'], keep='first')
             conversion_table['USDT_open'] = \
                 temp_conversion_table.apply(
@@ -191,10 +193,13 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
                         exchange_info=exchange_info, 
                         shortest_path=x['shortest_path'], 
                         key='open', priority='accuracy'), axis='columns')
-            conversion_table['asset'] = conversion_table['base_asset'].copy()
-            conversion_table = conversion_table.groupby(by=['asset']).fillna(method='pad')
+            conversion_table['USDT_open'] = conversion_table[[
+                'base_asset', 'USDT_open']].groupby(
+                    by=['base_asset']).fillna(method='pad')['USDT_open']
 
-        temp_conversion_table = conversion_table.drop_duplicates(
+        temp_conversion_table = conversion_table[[
+            'base_asset', 'close', 'shortest_path']]
+        temp_conversion_table = temp_conversion_table.drop_duplicates(
             subset=['base_asset'], keep='first')
         conversion_table['USDT_price'] = \
             temp_conversion_table.apply(
@@ -205,8 +210,9 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
                     exchange_info=exchange_info, 
                     shortest_path=x['shortest_path'], 
                     key='close', priority='accuracy'), axis='columns')
-        conversion_table['asset'] = conversion_table['base_asset'].copy()
-        conversion_table = conversion_table.groupby(by=['asset']).fillna(method='pad')
+        conversion_table['USDT_price'] = conversion_table[[
+            'base_asset', 'USDT_price']].groupby(
+                by=['base_asset']).fillna(method='pad')['USDT_price']
 
         if not extra_minimal:
             conversion_table['USDT_high'] = \
@@ -237,12 +243,9 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
             conversion_table['USDT_price'].astype(float)
 
         if super_extra_minimal:
-            price_change_percent = conversion_table[['base_asset', 
-                                                     'price_change_percent']]
-            price_change_percent = \
-                price_change_percent.groupby(by='base_asset').agg(
-                    lambda x: x.iloc[x.abs().argmax()])
-            price_change_percent = price_change_percent['price_change_percent']
+            price_change_percent = conversion_table[[
+                'base_asset', 'price_change_percent']].groupby(
+                    by='base_asset').agg(lambda x: x.iloc[x.abs().argmax()])
             conversion_table['price_change_percent'] = \
                 conversion_table.apply(
                     lambda x: price_change_percent.loc[x['base_asset']], 
@@ -363,24 +366,21 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
 
         traded_volume = conversion_table[[
             'base_asset', 'rolling_USDT_base_volume']].groupby(
-                by='base_asset').agg('sum')
-        traded_volume = traded_volume['rolling_USDT_base_volume']
+                by='base_asset').agg('sum')['rolling_USDT_base_volume']
         conversion_table['rolling_traded_volume'] = \
             conversion_table.apply(
                 lambda x: traded_volume.loc[x['base_asset']], axis='columns')
         if not extra_minimal:
             traded_bid_volume = conversion_table[[
                 'base_asset', 'USDT_bid_volume']].groupby(
-                    by='base_asset').agg('sum')
-            traded_bid_volume = traded_bid_volume['USDT_bid_volume']
+                    by='base_asset').agg('sum')['USDT_bid_volume']
             conversion_table['traded_bid_volume'] = \
                 conversion_table.apply(
                     lambda x: traded_bid_volume.loc[x['base_asset']], 
                     axis='columns')
             traded_ask_volume = conversion_table[[
                 'base_asset', 'USDT_ask_volume']].groupby(
-                    by='base_asset').agg('sum')
-            traded_ask_volume = traded_ask_volume['USDT_ask_volume']
+                    by='base_asset').agg('sum')['USDT_ask_volume']
             conversion_table['traded_ask_volume'] = \
                 conversion_table.apply(
                     lambda x: traded_ask_volume.loc[x['base_asset']], 
@@ -403,9 +403,7 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
 
         importance_weighted_price = conversion_table[[
             'base_asset', 'importance_weighted_price']].groupby(
-                by='base_asset').agg('sum')
-        importance_weighted_price = \
-            importance_weighted_price['importance_weighted_price']
+                by='base_asset').agg('sum')['importance_weighted_price']
         conversion_table['traded_price'] = conversion_table.apply(
             lambda x: importance_weighted_price.loc[x['base_asset']], 
             axis='columns')
@@ -413,17 +411,13 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
         if not extra_minimal:
             importance_weighted_bid_price = conversion_table[[
                 'base_asset', 'importance_weighted_bid_price']].groupby(
-                    by='base_asset').agg('sum')
-            importance_weighted_bid_price = \
-                importance_weighted_bid_price['importance_weighted_bid_price']
+                    by='base_asset').agg('sum')['importance_weighted_bid_price']
             conversion_table['traded_bid_price'] = conversion_table.apply(
                 lambda x: importance_weighted_bid_price.loc[x['base_asset']], 
                 axis='columns')
             importance_weighted_ask_price = conversion_table[[
                 'base_asset', 'importance_weighted_ask_price']].groupby(
-                    by='base_asset').agg('sum')
-            importance_weighted_ask_price = \
-                importance_weighted_ask_price['importance_weighted_ask_price']
+                    by='base_asset').agg('sum')['importance_weighted_ask_price']
             conversion_table['traded_ask_price'] = conversion_table.apply(
                 lambda x: importance_weighted_ask_price.loc[x['base_asset']], 
                 axis='columns')

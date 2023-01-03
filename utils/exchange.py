@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File:        cryptocurrency/exchange.py
+# File:        utils/exchange.py
 # By:          Samuel Duclos
 # For:         Myself
 # Description: This file handles python-binance global exchange info.

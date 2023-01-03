@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/trader/wallet.py
+# File:        utils/trader/wallet.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Binance asset trading.
@@ -9,7 +9,7 @@
 # Library imports.
 from typing import Tuple, Union
 from binance.client import Client
-from cryptocurrency.conversion import convert_price
+from utils.conversion import convert_price
 import pandas as pd
 
 # Function definitions.

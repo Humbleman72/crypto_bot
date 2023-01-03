@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/resample.py
+# File:        utils/resample.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Provides whole market downsampling.

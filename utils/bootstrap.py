@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/bootstrap.py
+# File:        utils/bootstrap.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Populate OHLCV DataFrames from the Binance API.

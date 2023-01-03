@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/conversion_table.py
+# File:        utils/conversion_table.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Binance pair conversion table retrieval and preparation.

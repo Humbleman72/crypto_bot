@@ -5,7 +5,7 @@
 # By:          Samuel Duclos
 # For:         Myself
 # Description: This file implements the main for the crypto_logger.
-#              The crypto_logger is a program that logs the cryptocurrency market data
+#              The crypto_logger is a program that logs the utils market data
 #              and outputs the data in different time intervals.
 #              The program is designed to be run in the background.
 #              The program can be stopped and resumed at any time.
@@ -19,11 +19,12 @@
 # $ python -m cProfile -o crypto_logger.prof crypto_logger.py
 
 # Library imports.
-from cryptocurrency.crypto_logger_input import Crypto_logger_input
-from cryptocurrency.crypto_logger_output import Crypto_logger_output
+from typing import Dict, Tuple, Union
+from utils.crypto_logger_input import Crypto_logger_input
+from utils.crypto_logger_output import Crypto_logger_output
 import time
 
-def init_loggers():
+def init_loggers() -> Dict[str, Union[Crypto_logger_input, Crypto_logger_output]]:
     """Main logger initialization."""
     crypto_logger_input_15s = Crypto_logger_input(interval='15s', buffer_size=2000, 
                                                   price_percent=5.0, volume_percent=0.0, 
@@ -74,7 +75,7 @@ def init_loggers():
     }
     return crypto_loggers
 
-def loop_loggers(crypto_loggers):
+def loop_loggers(crypto_loggers: Dict[str, Union[Crypto_logger_input, Crypto_logger_output]]) -> None:
     """Main logger loop."""
     print('Starting crypto loggers.')
     input_15s = crypto_loggers['input_15s'].maybe_get_from_file(dataset=None, inputs=False, screened=False)
@@ -191,7 +192,7 @@ def loop_loggers(crypto_loggers):
         # Release resources.
         print('Crypto logger processes done.')
 
-def main():
+def main() -> None:
     """crypto_logger main."""
     crypto_loggers = init_loggers()
     loop_loggers(crypto_loggers)

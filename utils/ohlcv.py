@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/ohlcv.py
+# File:        utils/ohlcv.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Download OHLCV precomputed DataFrame from the Binance API.

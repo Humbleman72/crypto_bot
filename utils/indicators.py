@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/indicators.py
+# File:        utils/indicators.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Indicators and triggers for output screeners.

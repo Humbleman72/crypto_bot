@@ -8,9 +8,9 @@
 # Description: This file implements the main for the crypto_logger.
 
 # Library imports.
-from cryptocurrency.crypto_logger_input import Crypto_logger_input
-from cryptocurrency.crypto_logger_output import Crypto_logger_output
-from cryptocurrency.trader.mqtt_pub import MQTTPublisher
+from utils.crypto_logger_input import Crypto_logger_input
+from utils.crypto_logger_output import Crypto_logger_output
+from utils.trader.mqtt_pub import MQTTPublisher
 from crypto_monitor import CryptoMonitor
 from datetime import datetime
 import time

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/volume_conversion.py
+# File:        utils/volume_conversion.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Whole market volume to/from 24h rolling volume conversion.

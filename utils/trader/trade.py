@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/trader/trade.py
+# File:        utils/trader/trade.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Binance asset trading.

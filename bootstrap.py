@@ -7,11 +7,11 @@
 # Description: Populate OHLCV DataFrames from the Binance API.
 
 # Library imports.
-from cryptocurrency.authentication import Cryptocurrency_authenticator
-from cryptocurrency.exchange import Cryptocurrency_exchange
-from cryptocurrency.conversion import get_timezone_offset_in_seconds
-from cryptocurrency.conversion_table import get_conversion_table, get_new_tickers
-from cryptocurrency.bootstrap import bootstrap_loggers
+from utils.authentication import Cryptocurrency_authenticator
+from utils.exchange import Cryptocurrency_exchange
+from utils.conversion import get_timezone_offset_in_seconds
+from utils.conversion_table import get_conversion_table, get_new_tickers
+from utils.bootstrap import bootstrap_loggers
 import os
 import shutil
 

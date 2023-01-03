@@ -8,7 +8,7 @@
 # Description: This file implements the main flask application.
 
 # Library imports.
-from cryptocurrency.mqtt_sub import MQTTSub
+from utils.mqtt_sub import MQTTSub
 from website.users import iterate_users, DummyLock, User
 from crypto_monitor import CryptoMonitor
 from crypto_logger_mqtt import init_loggers, loop_loggers

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/renko.py
+# File:        utils/renko.py
 # By:          Samuel Duclos
 # For:         Myself
 # Description: This file handles the Renko technical indicator and trigger.

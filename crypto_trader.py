@@ -27,19 +27,19 @@ import time
 t1 = time.time()
 
 # Import libraries.
-from cryptocurrency.authentication import Cryptocurrency_authenticator
-from cryptocurrency.exchange import Cryptocurrency_exchange
-from cryptocurrency.conversion import get_timezone_offset_in_seconds
-from cryptocurrency.conversion_table import get_conversion_table
-from cryptocurrency.trader.ssh import Ssh
-from cryptocurrency.trader.wallet import select_asset_with_biggest_wallet
-from cryptocurrency.trader.trade import trade
-from cryptocurrency.trader.trade import add_entry_to_blacklist
-from cryptocurrency.trader.trade import make_empty_blacklist
-from cryptocurrency.trader.trade import check_if_asset_from_pair_is_buyable
-from cryptocurrency.trader.trade import check_take_profit_and_stop_loss
-from cryptocurrency.trader.trade import remove_older_entries_in_blacklist
-from cryptocurrency.trader.trade import choose_to_asset, trade_conditionally
+from utils.authentication import Cryptocurrency_authenticator
+from utils.exchange import Cryptocurrency_exchange
+from utils.conversion import get_timezone_offset_in_seconds
+from utils.conversion_table import get_conversion_table
+from utils.trader.ssh import Ssh
+from utils.trader.wallet import select_asset_with_biggest_wallet
+from utils.trader.trade import trade
+from utils.trader.trade import add_entry_to_blacklist
+from utils.trader.trade import make_empty_blacklist
+from utils.trader.trade import check_if_asset_from_pair_is_buyable
+from utils.trader.trade import check_take_profit_and_stop_loss
+from utils.trader.trade import remove_older_entries_in_blacklist
+from utils.trader.trade import choose_to_asset, trade_conditionally
 
 # Manage API keys.
 authenticator = Cryptocurrency_authenticator(use_keys=False, testnet=False)

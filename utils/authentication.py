@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        cryptocurrency/authentication.py
+# File:        utils/authentication.py
 # By:          Samuel Duclos
 # For:         Myself
 # Description: This file handles python-binance authentication.

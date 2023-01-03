@@ -14,7 +14,6 @@ echo $PASSWORD | sudo -S supervisorctl stop all
 echo $PASSWORD | sudo -S rm -rf /tmp/crypto.[err,out]
 echo $PASSWORD | sudo -S rm -rf ~/workspace/build
 echo $PASSWORD | sudo -S rm -rf *.[c,cpp,so]
-echo $PASSWORD | sudo -S rm -rf utils/trader/*.[c,cpp,so]
 echo $PASSWORD | sudo -S supervisorctl status all
 
 source activate ${CONDA_ENV_NAME} && \

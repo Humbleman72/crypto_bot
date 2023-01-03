@@ -19,7 +19,7 @@
 # $ python -m cProfile -o crypto_logger.prof crypto_logger.py
 
 # Library imports.
-from typing import Dict, Tuple, Union
+from typing import Dict, Union
 from utils.crypto_logger_input import Crypto_logger_input
 from utils.crypto_logger_output import Crypto_logger_output
 import time

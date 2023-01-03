@@ -11,7 +11,6 @@ from typing import List, Tuple, Union
 from .crypto_logger_base import Crypto_logger_base
 from .indicators import filter_in_market, screen_one
 import pandas as pd
-#pd.options.mode.chained_assignment = None
 
 # Class definition.
 class Crypto_logger_output(Crypto_logger_base):

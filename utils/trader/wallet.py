@@ -18,7 +18,7 @@ def select_asset_with_biggest_wallet(client: Client,
                                      exchange_info: pd.DataFrame) -> Tuple[str, Union[str, float], Union[str, float], str]:
     def get_account_balances() -> pd.DataFrame:
         balances = pd.DataFrame(client.get_account()['balances'])[['asset', 'free']]
-        balances = balances.set_index('asset').drop(index=['XPR']).astype(float)
+        balances = balances.set_index('asset').astype(float)
         balances = balances[balances['free'] > 0]
         return balances.sort_values(by=['free'], ascending=False).T
     account_balances = get_account_balances()

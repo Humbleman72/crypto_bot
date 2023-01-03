@@ -42,7 +42,7 @@ from utils.trader.trade import remove_older_entries_in_blacklist
 from utils.trader.trade import choose_to_asset, trade_conditionally
 
 # Manage API keys.
-authenticator = Cryptocurrency_authenticator(use_keys=False, testnet=False)
+authenticator = Cryptocurrency_authenticator(use_keys=True, testnet=False)
 client = authenticator.spot_client
 
 # Get all available pair information for trading.

@@ -12,7 +12,7 @@ from binance.client import Client
 import pandas as pd
 
 # Function definitions.
-def get_order_book_depth(client: Client, symbol: str) -> Tuple[Dict[str, pd.DataFrame[float]], pd.DataFrame]:
+def get_order_book_depth(client: Client, symbol: str) -> Tuple[Dict[str, pd.DataFrame], pd.DataFrame]:
     depth = client.get_order_book(symbol=symbol, limit=5000)
     frames = {side: pd.DataFrame(data=depth[side], columns=['price', 'quantity'], dtype=float) 
               for side in ['bids', 'asks']}

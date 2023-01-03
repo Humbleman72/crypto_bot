@@ -15,7 +15,6 @@ from .conversion import get_shortest_pair_path_between_assets
 from .conversion import get_timezone_offset_in_seconds
 from .conversion_table import get_conversion_table, get_tradable_tickers_info
 import pandas as pd
-#pd.options.mode.chained_assignment = None
 
 # Class definition.
 class Crypto_logger_input(Crypto_logger_base):

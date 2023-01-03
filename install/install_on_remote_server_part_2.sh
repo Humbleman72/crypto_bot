@@ -12,8 +12,8 @@
 
 # Initial configuration.
 echo "This will guide you through the initial server configuration (part 2)." && \
-NEW_PASSWORD=$(cat server_keys.txt | cut -d':' -f1) && \
-SERVER_IP=$(cat server_keys.txt | cut -d':' -f2-) && \
+SERVER_IP=$(cat server_keys.txt | cut -d':' -f1) && \
+NEW_PASSWORD=$(cat server_keys.txt | cut -d':' -f2-) && \
 read "Enter your server's new user: " NEW_USER && \
 read -s -p "Enter your server's initial root password: " SERVER_INITIAL_PASSWORD && \
 echo "" && \

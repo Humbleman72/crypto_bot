@@ -262,6 +262,7 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
             conversion_table_mixed.loc[:, (asset, slice(None), 'quote_volume')].sum(axis='columns')
         new_columns.append(symbols[0])
         for symbol in symbols:
+            # Fix this warning (PerformanceWarning: indexing past lexsort depth may impact performance).
             conversion_table_mixed.loc[:, (asset, symbol, 'base_volume')] = trading_base_volume
             conversion_table_mixed.loc[:, (asset, symbol, 'quote_volume')] = trading_quote_volume
     conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 1)

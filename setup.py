@@ -14,7 +14,12 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
+import sys
 import numpy
+
+env = "crypto_bot"
+version_info = sys.version_info
+include_path = ["/opt/conda/envs/{}/include/python{}.{}/".format(env, version_info.major, version_info.minor)]
 
 setup(
     name="crypto_logger", 
@@ -36,20 +41,24 @@ setup(
             ), 
             Extension(
                 name="crypto_trader", 
-                sources=[
-                    "crypto_trader.py", 
-                    "utils/trader/mqtt_pub.py", 
-                    "utils/trader/mqtt_sub.py", 
-                    "utils/trader/order_book.py", 
-                    "utils/trader/ssh.py", 
-                    "utils/trader/trade.py", 
-                    "utils/trader/wallet.py", 
-                ], 
+                sources=["crypto_trader.py"], 
+                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
+                language="c++", 
+            ), 
+            Extension(
+                name="crypto_mqtt_pub", 
+                sources=["crypto_mqtt_pub.py"], 
+                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
+                language="c++", 
+            ), 
+            Extension(
+                name="crypto_mqtt_sub", 
+                sources=["crypto_mqtt_sub.py"], 
                 extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
                 language="c++", 
             ), 
         ], 
-        include_path=["/opt/conda/envs/crypto_bot/include/python3.9/"], 
+        include_path=include_path, 
         language_level=3, 
     ), 
 )

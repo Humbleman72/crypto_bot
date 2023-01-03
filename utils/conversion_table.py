@@ -608,7 +608,7 @@ def get_tradable_tickers_info(conversion_table: pd.DataFrame) -> Tuple[pd.DataFr
         'symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 
         'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
         'bid_ask_volume_percent_change', 'rolling_base_volume', 
-        'rolling_quote_volume', 'count']]
+        'rolling_quote_volume', 'count']].copy()
     conversion_table[[
         'close', 'price_change_percent', 'bid_price', 'ask_price', 
         'bid_volume', 'ask_volume', 'bid_ask_percent_change', 

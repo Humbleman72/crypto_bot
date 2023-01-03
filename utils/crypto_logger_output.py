@@ -50,7 +50,7 @@ class Crypto_logger_output(Crypto_logger_base):
         return dataset_screened, None
 
     def resample_from_raw(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = df[['symbol', 'close', 'rolling_base_volume', 'rolling_quote_volume']]
+        df = df[['symbol', 'close', 'rolling_base_volume', 'rolling_quote_volume']].copy()
         df['base_volume'] = df['rolling_base_volume'].copy()
         df['quote_volume'] = df['rolling_quote_volume'].copy()
         values = ['close', 'rolling_base_volume', 'rolling_quote_volume', 'base_volume', 'quote_volume']

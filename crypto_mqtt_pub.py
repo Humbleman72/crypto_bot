@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        crypto_logger_mqtt.py
+# File:        crypto_mqtt_pub.py
 # By:          Samuel Duclos
 # Modified by: Jonathan Fournier
 # For:         Myself

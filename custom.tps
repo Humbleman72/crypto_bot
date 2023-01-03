@@ -5,7 +5,7 @@
 strategy("Custom strategy for Heikin Ashi bars", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
 max_bars_back = 1000
 
-RenkoATRLength = input(10, title="Renko ATR Length")
+RenkoATRLength = input(9, title="Renko ATR Length")
 CCILength = input(22, title="CCI Length")
 MACDFastLength = input(12, title="MACD Fast Length")
 MACDSlowLength = input(26, title="MACD Slow Length")
@@ -17,20 +17,25 @@ ADXTrigger = input(20, title="ADX Trigger")
 DILength = input(8, title="DI Length")
 BOLLLength = input(11, title="Middle Bollinger Band Length")
 
-
 // Make input options that configure backtest date range.
 startDate = input(title="Start Date", type=integer,
      defval=1, minval=1, maxval=31)
 startMonth = input(title="Start Month", type=integer,
      defval=1, minval=1, maxval=12)
 startYear = input(title="Start Year", type=integer,
-     defval=2021, minval=1800, maxval=2100)
+     defval=2018, minval=1800, maxval=2100)
 
+endDate = input(title="End Date", type=integer,
+     defval=1, minval=1, maxval=31)
+endMonth = input(title="End Month", type=integer,
+     defval=7, minval=1, maxval=12)
+endYear = input(title="End Year", type=integer,
+     defval=2019, minval=1800, maxval=2100)
 
 // Look if the close time of the current bar falls inside the date range.
 inDateRange = (time >= timestamp(syminfo.timezone, startYear,
-         startMonth, startDate, 0, 0))
-
+         startMonth, startDate, 0, 0)) and
+     (time < timestamp(syminfo.timezone, endYear, endMonth, endDate, 0, 0))
 
 open_1min = security(tickerid, '1', open)
 high_1min = security(tickerid, '1', high)
@@ -361,7 +366,7 @@ condShort1d = negative_timed_trigger(ha_open_1d, ha_high_1d, ha_low_1d, ha_close
 //condLong = condLong30min
 //condShort = condShort30min
 //condLong = (condLong1min and condLong5min and condLong30min)
-condLong = (condLong1min)
+condLong = (condLong30min)
 condShort = (not condLong)
 
 

@@ -7,17 +7,19 @@
 # Description: Populate OHLCV DataFrames from the Binance API.
 
 # Library imports.
+from typing import Dict, Tuple
+from binance.client import Client
 import pandas as pd
 
 # Function definitions.
-def get_order_book_depth(client, symbol):
+def get_order_book_depth(client: Client, symbol: str) -> Tuple[Dict[str, pd.DataFrame[float]], pd.DataFrame]:
     depth = client.get_order_book(symbol=symbol, limit=5000)
     frames = {side: pd.DataFrame(data=depth[side], columns=['price', 'quantity'], dtype=float) 
               for side in ['bids', 'asks']}
     frames_list = [frames[side].assign(side=side) for side in frames]
     return frames, pd.concat(frames_list, axis='index', ignore_index=True, sort=True)
 
-def get_order_book_trigger(client, symbol, threshold=10000):
+def get_order_book_trigger(client: Client, symbol: str, threshold: int = 10000) -> bool:
     frames, data = get_order_book_depth(client, symbol)
     min_prices = data.groupby('side').price.min()
     max_prices = data.groupby('side').price.max()

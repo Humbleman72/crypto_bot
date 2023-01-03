@@ -7,12 +7,16 @@
 # Description: Binance asset trading.
 
 # Library imports.
+from typing import Tuple, Union
+from binance.client import Client
 from cryptocurrency.conversion import convert_price
 import pandas as pd
 
 # Function definitions.
-def select_asset_with_biggest_wallet(client, conversion_table, exchange_info):
-    def get_account_balances():
+def select_asset_with_biggest_wallet(client: Client, 
+                                     conversion_table: pd.DataFrame, 
+                                     exchange_info: pd.DataFrame) -> Tuple[str, Union[str, float], Union[str, float], str]:
+    def get_account_balances() -> pd.DataFrame:
         balances = pd.DataFrame(client.get_account()['balances'])[['asset', 'free']]
         balances = balances.set_index('asset').drop(index=['XPR']).astype(float)
         balances = balances[balances['free'] > 0]

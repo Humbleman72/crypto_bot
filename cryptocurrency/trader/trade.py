@@ -7,19 +7,30 @@
 # Description: Binance asset trading.
 
 # Library imports.
-from cryptocurrency.conversion import make_tradable_quantity, convert_price
-from cryptocurrency.conversion import get_shortest_pair_path_between_assets
-from cryptocurrency.conversion import select_pair_with_highest_quote_volume_from_base_asset
-from cryptocurrency.conversion_table import get_conversion_table
-from cryptocurrency.trader.order_book import get_order_book_trigger
-from cryptocurrency.trader.wallet import select_asset_with_biggest_wallet
+from typing import Dict, Optional, Tuple
+from binance.client import Client
+from ..conversion import make_tradable_quantity, convert_price
+from ..conversion import get_shortest_pair_path_between_assets
+from ..conversion import select_pair_with_highest_quote_volume_from_base_asset
+from ..conversion_table import get_conversion_table
+from .order_book import get_order_book_trigger
+from .wallet import select_asset_with_biggest_wallet
 from binance.exceptions import BinanceAPIException
 from time import sleep
+import paramiko
 import pandas as pd
 
 # Function definitions.
-def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset, 
-                 conversion_table, exchange_info, priority='accuracy', verbose=False):
+def trade_assets(client: Client, 
+                 quantity: float, 
+                 from_asset: str, 
+                 to_asset: str, 
+                 base_asset: str, 
+                 quote_asset: str, 
+                 conversion_table: pd.DataFrame, 
+                 exchange_info: pd.DataFrame, 
+                 priority: str = 'accuracy', 
+                 verbose: bool = False) -> Dict[str, float]:
     pair = base_asset + quote_asset
     side = 'BUY' if from_asset != base_asset else 'SELL'
     if side == 'SELL':
@@ -55,7 +66,12 @@ def trade_assets(client, quantity, from_asset, to_asset, base_asset, quote_asset
         print('ticks:', ticks)
     return request
 
-def trade(client, to_asset, conversion_table, exchange_info, priority='accuracy', verbose=True):
+def trade(client: Client, 
+          to_asset: str, 
+          conversion_table: pd.DataFrame, 
+          exchange_info: pd.DataFrame, 
+          priority: str = 'accuracy', 
+          verbose: bool = True) -> Dict[str, float]:
     from_asset, converted_quantity, quantity, priority = \
         select_asset_with_biggest_wallet(client=client, conversion_table=conversion_table, 
                                          exchange_info=exchange_info)
@@ -88,11 +104,15 @@ def trade(client, to_asset, conversion_table, exchange_info, priority='accuracy'
             sleep(0.01)
         return request
 
-def make_empty_blacklist():
+def make_empty_blacklist() -> pd.DataFrame:
     return pd.DataFrame(columns=['symbol', 'base_asset', 'close', 'take_profit_count', 
                                  'stop_loss_count', 'profit_count', 'loss_count'])
 
-def add_entry_to_blacklist(blacklist, pair, conversion_table, exchange_info, reason='stop_loss'):
+def add_entry_to_blacklist(blacklist: pd.DataFrame, 
+                           pair: str, 
+                           conversion_table: pd.DataFrame, 
+                           exchange_info: pd.DataFrame, 
+                           reason: str = 'stop_loss') -> pd.DataFrame:
     base_asset_from_pair = exchange_info[exchange_info['symbol'] == pair]['base_asset'].iat[0]
     if base_asset_from_pair not in blacklist['base_asset'].tolist():
         new_blacklist_entry = conversion_table[conversion_table['symbol'] == pair][['symbol', 'close']].copy()
@@ -131,12 +151,17 @@ def add_entry_to_blacklist(blacklist, pair, conversion_table, exchange_info, rea
         blacklist.loc[blacklist['symbol'] == pair,'loss_count'] += 1
     return blacklist
 
-def check_if_asset_from_pair_is_buyable(blacklist, pair, exchange_info, 
-                                        take_profit=None, stop_loss=None, 
-                                        profit=None, loss=None, 
-                                        take_profit_count=2, 
-                                        stop_loss_count=1, profit_count=2, 
-                                        loss_count=1):
+def check_if_asset_from_pair_is_buyable(blacklist: pd.DataFrame, 
+                                        pair: str, 
+                                        exchange_info: pd.DataFrame, 
+                                        take_profit: Optional[float] = None, 
+                                        stop_loss: Optional[float] = None, 
+                                        profit: Optional[float] = None, 
+                                        loss: Optional[float] = None, 
+                                        take_profit_count: int = 2, 
+                                        stop_loss_count: int = 1, 
+                                        profit_count: int = 2, 
+                                        loss_count: int = 1) -> bool:
     base_asset_from_pair = exchange_info[exchange_info['symbol'] == pair]['base_asset'].iat[0]
     is_buyable = True
     if base_asset_from_pair in blacklist['base_asset'].tolist():
@@ -155,8 +180,14 @@ def check_if_asset_from_pair_is_buyable(blacklist, pair, exchange_info,
                 is_buyable = False
     return is_buyable
 
-def check_take_profit_and_stop_loss(blacklist, from_asset, to_asset, conversion_table, exchange_info, 
-                                    latest_asset, take_profit=None, stop_loss=None):
+def check_take_profit_and_stop_loss(blacklist: pd.DataFrame, 
+                                    from_asset: str, 
+                                    to_asset: str, 
+                                    conversion_table: pd.DataFrame, 
+                                    exchange_info: pd.DataFrame, 
+                                    latest_asset: str, 
+                                    take_profit: Optional[float] = None, 
+                                    stop_loss: Optional[float] = None) -> Tuple[pd.DataFrame, str]:
     if from_asset in blacklist['base_asset'].tolist():
         pair = blacklist[blacklist['base_asset'] == from_asset]['symbol'].iat[0]
         purchased_price = blacklist[blacklist['base_asset'] == from_asset]['close'].iat[0]
@@ -174,8 +205,14 @@ def check_take_profit_and_stop_loss(blacklist, from_asset, to_asset, conversion_
                     blacklist, pair, conversion_table, exchange_info, reason='stop_loss')
     return blacklist, to_asset
 
-def check_profit_and_loss(blacklist, from_asset, to_asset, conversion_table, exchange_info, 
-                          latest_asset, profit=None, loss=None):
+def check_profit_and_loss(blacklist: pd.DataFrame, 
+                          from_asset: str, 
+                          to_asset: str, 
+                          conversion_table: pd.DataFrame, 
+                          exchange_info: pd.DataFrame, 
+                          latest_asset: str, 
+                          profit: Optional[float] = None, 
+                          loss: Optional[float] = None) -> Tuple[pd.DataFrame, str]:
     if from_asset in blacklist['base_asset'].tolist():
         pair = blacklist[blacklist['base_asset'] == from_asset]['symbol'].iat[0]
         purchased_price = blacklist[blacklist['base_asset'] == from_asset]['close'].iat[0]
@@ -193,15 +230,27 @@ def check_profit_and_loss(blacklist, from_asset, to_asset, conversion_table, exc
                     blacklist, pair, conversion_table, exchange_info, reason='loss')
     return blacklist, to_asset
 
-def remove_older_entries_in_blacklist(blacklist, frequency='15min'):
+def remove_older_entries_in_blacklist(blacklist: pd.DataFrame, frequency: str = '15min') -> pd.DataFrame:
     frequency = pd.tseries.frequencies.to_offset(frequency)
     return blacklist.loc[(pd.Timestamp.utcnow().tz_localize(None) - blacklist.index) < frequency]
 
-def choose_to_asset(ssh, blacklist, sell_asset, from_asset, to_asset, 
-                    latest_asset, take_profit, stop_loss, profit, loss, 
-                    take_profit_count, stop_loss_count, profit_count, 
-                    loss_count, conversion_table, exchange_info, 
-                    output_log_screened):
+def choose_to_asset(ssh: paramiko.SSHClient, 
+                    blacklist: pd.DataFrame, 
+                    sell_asset: str, 
+                    from_asset: str, 
+                    to_asset: str, 
+                    latest_asset: str, 
+                    take_profit: Optional[float], 
+                    stop_loss: Optional[float], 
+                    profit: Optional[float], 
+                    loss: Optional[float], 
+                    take_profit_count: int, 
+                    stop_loss_count: int, 
+                    profit_count: int, 
+                    loss_count: int, 
+                    conversion_table: pd.DataFrame, 
+                    exchange_info: pd.DataFrame, 
+                    output_log_screened: str = 'output_log_screened.txt') -> Tuple[str, str]:
     tradable_pairs = ssh.get_logs_from_server(
         server_log=ssh.output_log_screened)
     if tradable_pairs is None:
@@ -234,8 +283,16 @@ def choose_to_asset(ssh, blacklist, sell_asset, from_asset, to_asset,
             to_asset = latest_asset if is_buyable else sell_asset
     return latest_asset, to_asset
 
-def trade_conditionally(ssh, blacklist, client, exchange_info, to_asset, 
-                        latest_asset, sell_asset, profit, loss, offset_s):
+def trade_conditionally(ssh: paramiko.SSHClient, 
+                        blacklist: pd.DataFrame, 
+                        client: Client, 
+                        exchange_info: pd.DataFrame, 
+                        to_asset: str, 
+                        latest_asset: str, 
+                        sell_asset: str, 
+                        profit: Optional[float], 
+                        loss: Optional[float], 
+                        offset_s: float):
     #conversion_table = ssh.get_logs_from_server(server_log=ssh.input_log)
     conversion_table = get_conversion_table(
         client=client, exchange_info=exchange_info, offset_s=offset_s, 

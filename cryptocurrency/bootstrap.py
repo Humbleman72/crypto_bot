@@ -11,12 +11,20 @@ from .conversion_ohlcv import convert_ohlcvs_from_pairs_to_assets
 from .ohlcvs import download_pairs
 from .resample import resample
 from .volume_conversion import add_rolling_volumes
+from typing import Dict, List, Optional
+from binance.client import Client
 from tqdm import tqdm
 import pandas as pd
 
 # Function definitions.
-def bootstrap_loggers(client, assets, pairs=None, additional_intervals=None, upsampled_intervals=None, 
-                      download_interval='1m', exchange_info=None, as_pair=False):
+def bootstrap_loggers(client: Client, 
+                      assets: List[str], 
+                      pairs: Optional[Dict[str, pd.DataFrame]] = None, 
+                      additional_intervals: Optional[List[str]] = None, 
+                      upsampled_intervals: Optional[List[str]] = None, 
+                      download_interval: str = '1m', 
+                      exchange_info: Optional[Dict[str, Dict[str, List[str]]]] = None, 
+                      as_pair: bool = False) -> Dict[str, pd.DataFrame]:
     log_file = 'crypto_logs/crypto_output_log_{}.txt'
     period = 2880 if download_interval == '1m' else 60
     second_period = 60 if download_interval == '1m' else None

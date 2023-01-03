@@ -6,20 +6,22 @@
 # For          Myself
 # Description: Binance asset conversion.
 
+
 # Library imports.
-from typing import Union
+from typing import List, Tuple, Union
 from decimal import Decimal
 import time
+import pandas as pd
 
 # Function definitions.
-def get_timezone_offset_in_seconds():
+def get_timezone_offset_in_seconds() -> float:
     is_dst = time.localtime().tm_isdst
     timezone = time.tzname[is_dst]
     offset_s = time.altzone if is_dst else time.timezone
     #offset = (offset_s / 60 / 60)
     return offset_s
 
-def get_assets_from_pair(pair, exchange_info):
+def get_assets_from_pair(pair: str, exchange_info: pd.DataFrame) -> Union[List[str], None]:
      try:
          pair_info = exchange_info[exchange_info['symbol'] == pair]
          base_asset = pair_info['base_asset'].iat[-1]
@@ -30,22 +32,22 @@ def get_assets_from_pair(pair, exchange_info):
          print(pair_info)
      return None
 
-def get_base_asset_from_pair(pair, exchange_info):
+def get_base_asset_from_pair(pair: str, exchange_info: pd.DataFrame) -> Union[str, None]:
     asset = get_assets_from_pair(pair, exchange_info=exchange_info)
     base_asset = None
     if asset is not None:
         base_asset, quote_asset = asset
     return base_asset
 
-def get_quote_asset_from_pair(pair, exchange_info):
+def get_quote_asset_from_pair(pair: str, exchange_info: pd.DataFrame) -> Union[str, None]:
     asset = get_assets_from_pair(pair, exchange_info=exchange_info)
     quote_asset = None
     if asset is not None:
         base_asset, quote_asset = asset
     return quote_asset
 
-def get_connected_assets(asset, exchange_info, priority='accuracy'):
-    def reorder(connected_assets, priority):
+def get_connected_assets(asset: str, exchange_info: pd.DataFrame, priority: str = 'accuracy') -> List[str]:
+    def reorder(connected_assets: List[str], priority: str) -> List[str]:
         prioritized = \
             [asset for asset in priority if asset in connected_assets]
         order = {asset: i for i, asset in enumerate(prioritized)}
@@ -74,9 +76,9 @@ def get_connected_assets(asset, exchange_info, priority='accuracy'):
         list(set(connected_base_assets + connected_quote_assets))
     return reorder(connected_assets, priority)
 
-def select_pair_with_highest_quote_volume_from_base_asset(base_asset, 
-                                                          conversion_table, 
-                                                          exchange_info):
+def select_pair_with_highest_quote_volume_from_base_asset(base_asset: str, 
+                                                          conversion_table: pd.DataFrame, 
+                                                          exchange_info: pd.DataFrame) -> str:
     connected_pairs = exchange_info[exchange_info['base_asset'] == base_asset]
     connected_pairs = connected_pairs['symbol']
     connected_pairs = \
@@ -85,9 +87,11 @@ def select_pair_with_highest_quote_volume_from_base_asset(base_asset,
                                                   ascending=False)
     return connected_pairs['symbol'].iat[0]
 
-def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info, 
-                                          priority='accuracy'):
-    def get_shortest_path_between_assets(priority):
+def get_shortest_pair_path_between_assets(from_asset: str, 
+                                          to_asset: str, 
+                                          exchange_info: pd.DataFrame, 
+                                          priority: str = 'accuracy'):
+    def get_shortest_path_between_assets(priority: str) -> List[Union[str, None]]:
         path_list = [[from_asset]]
         path_index = 0
         previous_nodes = [from_asset]
@@ -110,7 +114,7 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info,
                     previous_nodes.append([next_node])
             path_index += 1
         return []
-    def get_pair_from_assets(from_asset, to_asset):
+    def get_pair_from_assets(from_asset: str, to_asset: str) -> Union[str, None]:
         from_asset_is_base = exchange_info['base_asset'] == from_asset
         from_asset_is_quote = exchange_info['quote_asset'] == from_asset
         to_asset_is_base = exchange_info['base_asset'] == to_asset
@@ -137,8 +141,11 @@ def get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info,
         shortest_path = shortest_path[1:]
     return pairs
 
-def make_tradable_quantity(pair, coins_available, exchange_info, subtract=0):
-    def compact_float_string(number, precision):
+def make_tradable_quantity(pair: str, 
+                           coins_available: Union[float, str], 
+                           exchange_info: pd.DataFrame, 
+                           subtract: float = 0) -> float:
+    def compact_float_string(number: Union[str, float], precision: int) -> str:
         return "{:0.0{}f}".format(number, precision).rstrip('0').rstrip('.')
     def round_step_size(quantity: Union[float, Decimal], 
                         step_size: Union[float, Decimal]) -> float:
@@ -157,8 +164,14 @@ def make_tradable_quantity(pair, coins_available, exchange_info, subtract=0):
     quantity = round_step_size(quantity=coins_available, step_size=tick_size)
     return compact_float_string(float(quantity), precision)
 
-def convert_price(size, from_asset, to_asset, conversion_table, exchange_info, 
-                  key='close', priority='accuracy', shortest_path=None):
+def convert_price(size: Union[float, str], 
+                  from_asset: str, 
+                  to_asset: str, 
+                  conversion_table: pd.DataFrame, 
+                  exchange_info: pd.DataFrame, 
+                  key: str = 'close', 
+                  priority: str = 'accuracy', 
+                  shortest_path: Union[List[Tuple[str]], None] = None) -> str:
     if from_asset != to_asset:
         size = float(size)
         if shortest_path is None:
@@ -175,4 +188,3 @@ def convert_price(size, from_asset, to_asset, conversion_table, exchange_info,
         size = make_tradable_quantity(pair, float(size), subtract=0, 
                                       exchange_info=exchange_info)
     return size
-

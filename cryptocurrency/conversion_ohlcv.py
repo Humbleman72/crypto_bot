@@ -15,6 +15,72 @@ import pandas as pd
 
 # Function definitions.
 '''
+
+def convert_ohlcv(from_asset: str, to_asset: str, conversion_table: pd.DataFrame, frame: pd.DataFrame):
+    if not isinstance(conversion_table, pd.DataFrame):
+        raise ValueError("'conversion_table' must be a pd.DataFrame.")
+    if not isinstance(frame, pd.DataFrame):
+        raise ValueError("'frame' must be a pd.DataFrame.")
+
+    if not isinstance(from_asset, str) or not isinstance(to_asset, str):
+        raise ValueError("'from_asset' and 'to_asset' must be of type str.")
+
+    if not isinstance(conversion_table.index, pd.DatetimeIndex):
+        raise ValueError("'conversion_table.index' must be a pd.DatetimeIndex.")
+
+    if not isinstance(frame.index, pd.DatetimeIndex):
+        raise ValueError("'frame.index' must be a pd.DatetimeIndex.")
+
+    if not isinstance(conversion_table.columns, pd.MultiIndex):
+        raise ValueError("'conversion_table.columns' must be a pd.MultiIndex.")
+
+    if not isinstance(frame.columns, pd.MultiIndex):
+        raise ValueError("'frame.columns' must be a pd.MultiIndex.")
+
+    # Ensure that conversion_table is a 2-level MultiIndex.
+    if len(conversion_table.columns.levels) != 2:
+        raise ValueError("'conversion_table' must be a 2-level MultiIndex.")
+
+    # Ensure that frame is a 2-level MultiIndex.
+    if len(frame.columns.levels) != 2:
+        raise ValueError("'frame' must be a 2-level MultiIndex.")
+
+    # Ensure that conversion_table.columns.codes[0] is not a duplicate.
+    if len(set(conversion_table.columns.codes[0])) != len(conversion_table.columns.codes[0]):
+        raise ValueError("'conversion_table' must not have duplicate columns.")
+    
+    # Ensure that frame.columns.codes[0] is not a duplicate.
+    if len(set(frame.columns.codes[0])) != len(frame.columns.codes[0]):
+        raise ValueError("'frame' must not have duplicate columns.")
+
+    # Ensure that conversion_table.columns.codes[1] is not a duplicate.
+    if len(set(conversion_table.columns.codes[1])) != len(conversion_table.columns.codes[1]):
+        raise ValueError("'conversion_table' must not have duplicate columns.")
+
+    # Ensure that frame.columns.codes[1] is not a duplicate.
+    if len(set(frame.columns.codes[1])) != len(frame.columns.codes[1]):
+        raise ValueError("'frame' must not have duplicate columns.")
+
+    # Ensure that conversion_table.index.codes[0] is not a duplicate.
+    if len(set(conversion_table.index.codes[0])) != len(conversion_table.index.codes[0]):
+        raise ValueError("'conversion_table' must not have duplicate indices.")
+
+    # Ensure that frame.index.codes[0] is not a duplicate.
+    if len(set(frame.index.codes[0])) != len(frame.index.codes[0]):
+        raise ValueError("'frame' must not have duplicate indices.")
+
+    # Ensure that conversion_table.index.codes[1] is not a duplicate.
+    if len(set(conversion_table.index.codes[1])) != len(conversion_table.index.codes[1]):
+        raise ValueError("'conversion_table' must not have duplicate indices.")
+
+    # Ensure that conversion_table.columns.codes[0] is not a duplicate.
+    if len(set(frame.index.codes[1])) != len(frame.index.codes[1]):
+        raise ValueError("'frame' must not have duplicate indices.")
+
+    # Create the converter and save it in the table.
+    converter = lambda x: convert_ohlcv_prices(
+        from_asset=from_asset, to_asset=to_asset, conversion_table=conversion_table, frame = x)
+    return frame.groupby(level=0).apply(converter)
 def convert_ohlcv(from_asset, to_asset, conversion_table, exchange_info):
     shortest_path = get_shortest_pair_path_between_assets(from_asset=from_asset, 
                                                           to_asset=to_asset, 
@@ -109,7 +175,9 @@ def convert_ohlcvs(to_asset, conversion_table, exchange_info):
     return volume_conversion_table
 
 def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
+    # Statically-typed python function.
     def add_base_asset_level_to_pairs(df, exchange_info):
+        # Statically-typed python function.
         def named_pairs_to_5dim_df(symbols, pairs):
             df = pd.DataFrame()
             column_names = pairs[0].columns.tolist()
@@ -125,10 +193,13 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
         symbols = df.columns.get_level_values(0).unique().tolist()
         df = [df[symbol] for symbol in tqdm(symbols, unit=' pair')]
         return named_pairs_to_5dim_df(symbols, df)
+    # Statically-typed python.
     def add_quote_asset_level_to_pairs_and_reverse(df, exchange_info):
+        # Statically-typed python.
         def invert_symbol(symbol, exchange_info):
             base_asset, quote_asset = get_assets_from_pair(symbol, exchange_info)
             return quote_asset + base_asset
+        # Statically-typed python.
         def named_pairs_to_5dim_df(symbols, pairs):
             df = pd.DataFrame()
             column_names = pairs[0].columns.tolist()
@@ -145,7 +216,9 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info):
         symbols = df.columns.get_level_values(0).unique().tolist()
         df = [df[symbol] for symbol in tqdm(symbols, unit=' pair')]
         return named_pairs_to_5dim_df(symbols, df)
+    # Statically-typed python.
     def invert_pairs(conversion_table, exchange_info):
+        # Statically-typed python.
         def invert_symbol(symbol, exchange_info):
             base_asset, quote_asset = get_assets_from_pair(symbol, exchange_info)
             return quote_asset + base_asset

@@ -7,20 +7,26 @@
 # Description: Simple Binance logger circular buffered for N time precision.
 
 # Library imports.
+from typing import List, Tuple, Union
 from .crypto_logger_base import Crypto_logger_base
 from .authentication import Cryptocurrency_authenticator
 from .exchange import Cryptocurrency_exchange
 from .conversion import get_shortest_pair_path_between_assets
 from .conversion import get_timezone_offset_in_seconds
 from .conversion_table import get_conversion_table, get_tradable_tickers_info
-
 import pandas as pd
-pd.options.mode.chained_assignment = None
+#pd.options.mode.chained_assignment = None
 
 # Class definition.
 class Crypto_logger_input(Crypto_logger_base):
-    def __init__(self, interval='15s', buffer_size=3000, price_percent=5.0, 
-                 volume_percent=0.0, as_pair=False, append=False, roll=1000):
+    def __init__(self, 
+                 interval: str = '15s', 
+                 buffer_size: int = 3000, 
+                 price_percent: float = 5.0, 
+                 volume_percent: float = 0.0, 
+                 as_pair: bool = False, 
+                 append: bool = False, 
+                 roll: int = 1000):
         """
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param buffer_size: buffer size to avoid crashing on memory accesses.
@@ -47,7 +53,11 @@ class Crypto_logger_input(Crypto_logger_base):
 
         self.offset_s = get_timezone_offset_in_seconds()
 
-    def filter_movers(self, dataset, count=1000, price_percent=5.0, volume_percent=0.0):
+    def filter_movers(self, 
+                      dataset: pd.DataFrame, 
+                      count: int = 1000, 
+                      price_percent: float = 5.0, 
+                      volume_percent: float = 0.0) -> pd.DataFrame:
         dataset = dataset.reset_index()
         dataset[['price_change_percent', 'rolling_base_volume']] = \
             dataset[['price_change_percent', 'rolling_base_volume']].astype(float)
@@ -79,7 +89,10 @@ class Crypto_logger_input(Crypto_logger_base):
         dataset = dataset.set_index('date')
         return dataset.drop_duplicates(subset=['symbol', 'count'], keep='last')
 
-    def screen(self, dataset, dataset_screened=None, live_filtered=None):
+    def screen(self, 
+               dataset: pd.DataFrame, 
+               dataset_screened: Union[pd.DataFrame, None] = None, 
+               live_filtered: Union[pd.DataFrame, None] = None) -> Tuple[pd.DataFrame, List[str]]:
         if dataset is None:
             live_filtered = []
         else:
@@ -89,7 +102,7 @@ class Crypto_logger_input(Crypto_logger_base):
                                                   volume_percent=self.volume_percent)
         return dataset_screened, live_filtered
 
-    def get(self, dataset=None):
+    def get(self, dataset: Union[pd.DataFrame, None] = None) -> pd.DataFrame:
         """Get all pairs data from Binance API."""
         dataset = get_conversion_table(client=self.client, exchange_info=self.exchange_info, 
                                        offset_s=self.offset_s, dump_raw=False, as_pair=self.as_pair, 

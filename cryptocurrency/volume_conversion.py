@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 # Function definitions.
-def add_rolling_volumes(df):
+def add_rolling_volumes(df: pd.DataFrame) -> pd.DataFrame:
     df.sort_index(axis='columns', inplace=True)
     df.columns = df.columns.swaplevel(0, 1)
     df_rolling = df[['base_volume', 'quote_volume']].copy()
@@ -25,7 +25,7 @@ def add_rolling_volumes(df):
     df.columns = df.columns.swaplevel(0, 1)
     return df
 
-def recalculate_volumes(df):
+def recalculate_volumes(df: pd.DataFrame) -> pd.DataFrame:
     df.iloc[-2:,df.columns.get_level_values(1) == 'base_volume'] = \
         df.xs('rolling_base_volume', axis=1, level=1).diff(1).tail(2) + \
         df.xs('base_volume', axis=1, level=1).shift(1440).tail(2)

@@ -7,20 +7,26 @@
 # Description: Simple Binance logger base class.
 
 # Library imports.
+from typing import List, Tuple, Union
+from decimal import Decimal
 from .resample import resample
 from abc import abstractmethod, ABC
 from os.path import exists, join
 from os import mkdir
-import errno
-import os
-import time
 import pandas as pd
 
 # Class definition.
 class Crypto_logger_base(ABC):
-    def __init__(self, interval='15s', interval_input='', buffer_size=3000, 
-                 directory='crypto_logs', log_name='crypto_log', input_log_name='', 
-                 raw=False, append=False, roll=0):
+    def __init__(self, 
+                 interval: str = '15s', 
+                 interval_input: str = '', 
+                 buffer_size: int = 3000, 
+                 directory: str = 'crypto_logs', 
+                 log_name: str = 'crypto_log', 
+                 input_log_name: str = '', 
+                 raw: bool = False, 
+                 append: bool = False, 
+                 roll: int = 0):
         """
         :param interval: OHLCV interval to log. Default is 15 seconds.
         :param interval_input: OHLCV interval from input log. Default is 15 seconds.
@@ -52,7 +58,10 @@ class Crypto_logger_base(ABC):
         if not exists(directory):
             mkdir(directory)
 
-    def maybe_get_from_file(self, dataset=None, inputs=False, screened=False):
+    def maybe_get_from_file(self, 
+                            dataset: Union[pd.DataFrame, None] = None, 
+                            inputs: bool = False, 
+                            screened: bool = False) -> Union[pd.DataFrame, None]:
         if dataset is None:
             if screened:
                 header = 0
@@ -95,7 +104,9 @@ class Crypto_logger_base(ABC):
     def screen(self, **kwargs):
         raise NotImplementedError()
 
-    def get_and_put_next(self, old_dataset=None, dataset=None):
+    def get_and_put_next(self, 
+                         old_dataset: Union[pd.DataFrame, None] = None, 
+                         dataset: Union[pd.DataFrame, None] = None) -> Union[pd.DataFrame, None]:
         """Concatenate old dataset with new dataset in main logger loop and process."""
         dataset = self.maybe_get_from_file(dataset=dataset, inputs=self.raw, screened=False)
         if self.raw:
@@ -124,22 +135,32 @@ class Crypto_logger_base(ABC):
                 dataset = dataset.tail(self.buffer_size)
         return dataset
 
-    def screen_next(self, old_dataset_screened=None, dataset_screened=None, dataset=None, live_filtered=None):
+    def screen_next(self, 
+                    old_dataset_screened: Union[pd.DataFrame, None] = None, 
+                    dataset_screened: Union[pd.DataFrame, None] = None, 
+                    dataset: Union[pd.DataFrame, None] = None, 
+                    live_filtered: Union[List[str], None] = None) -> Tuple[Union[pd.DataFrame, None], Union[List[str], None]]:
         """Screen dataset in main logger loop."""
         if not self.raw:
-            dataset_screened = self.maybe_get_from_file(dataset=dataset_screened, inputs=True, screened=True)
+            dataset_screened = self.maybe_get_from_file(
+                dataset=dataset_screened, inputs=True, screened=True)
         dataset_screened, live_filtered = \
-            self.screen(dataset, dataset_screened=dataset_screened, live_filtered=live_filtered)
+            self.screen(dataset, dataset_screened=dataset_screened, 
+                        live_filtered=live_filtered)
         if dataset_screened is not None:
             dataset_screened = dataset_screened.sort_index(axis='index')
             if self.append and dataset_screened is not None:
-                dataset_screened = pd.concat([old_dataset_screened, dataset_screened], axis='index')
-                dataset_screened = dataset_screened.drop_duplicates(subset=['symbol'], keep='last')
+                dataset_screened = pd.concat([
+                    old_dataset_screened, dataset_screened], axis='index')
+                dataset_screened = dataset_screened.drop_duplicates(
+                    subset=['symbol'], keep='last')
             if self.roll > 0:
                 dataset_screened = dataset_screened.tail(self.roll)
         return dataset_screened, live_filtered
 
-    def log_next(self, dataset=None, dataset_screened=None):
+    def log_next(self, 
+                 dataset: Union[pd.DataFrame, None] = None, 
+                 dataset_screened: Union[pd.DataFrame, None] = None) -> None:
         """Log dataset in main logger loop."""
         if dataset is not None:
             dataset.to_csv(self.log_name)

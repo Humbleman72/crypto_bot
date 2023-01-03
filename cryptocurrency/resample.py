@@ -11,7 +11,7 @@ from .volume_conversion import recalculate_volumes
 import pandas as pd
 
 # Function definitions.
-def resample(df, interval='1min'):
+def resample(df: pd.DataFrame, interval: str = '1min') -> pd.DataFrame:
     df.index = pd.DatetimeIndex(df.index).round(interval)
     df = df.stack(level=0).reset_index(level=1)
     frequency = (df.index[1:] - df.index[:-1]).min()

@@ -7,11 +7,12 @@
 # Description: Download OHLCV precomputed DataFrame from the Binance API.
 
 # Library imports.
+from binance.client import Client
 from datetime import datetime
 import pandas as pd
 
 # Function definitions.
-def fix_DST_bug(df):
+def fix_DST_bug(df: pd.DataFrame) -> pd.DataFrame:
     timeseries_size = df.shape[0]
     if timeseries_size > 4:
         mid_series = timeseries_size // 2
@@ -24,8 +25,12 @@ def fix_DST_bug(df):
                 df.index = pd.date_range(end=df.index[-1], periods=timeseries_size, freq=frequency, name='date')
     return df
 
-def download_pair(client, symbol, interval='1m', period=60, offset_s=0):
-    def get_n_periods_from_time(period=60):
+def download_pair(client: Client, 
+                  symbol: str, 
+                  interval: str = '1m', 
+                  period: int = 60, 
+                  offset_s: float = 0) -> pd.DataFrame:
+    def get_n_periods_from_time(period: int = 60) -> str:
         interval_digits = int(''.join(filter(str.isdigit, interval)))
         interval_string = str(''.join(filter(str.isalpha, interval)))
         return str(interval_digits * period) + interval_string

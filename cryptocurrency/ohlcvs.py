@@ -7,20 +7,22 @@
 # Description: Populate OHLCV DataFrames from the Binance API.
 
 # Library imports.
+from typing import List, Optional
+from binance.client import Client
 from .ohlcv import download_pair
 from tqdm import tqdm
 import time
 import pandas as pd
 
 # Function definitions.
-def get_timezone_offset_in_seconds():
+def get_timezone_offset_in_seconds() -> float:
     is_dst = time.localtime().tm_isdst
     timezone = time.tzname[is_dst]
     offset_s = time.altzone if is_dst else time.timezone
     #offset = (offset_s / 60 / 60)
     return offset_s
 
-def named_pairs_to_df(assets, pairs):
+def named_pairs_to_df(assets: List[str], pairs: List[pd.DataFrame]) -> pd.DataFrame:
     df = pd.DataFrame()
     column_names = pairs[0].columns.tolist()
     for (asset, pair) in tqdm(zip(assets, pairs), unit=' named pair'):
@@ -29,7 +31,11 @@ def named_pairs_to_df(assets, pairs):
         df = pd.concat([df, pair], axis='columns')
     return df
 
-def download_pairs(client, assets, interval='1m', period=2880, second_period=None):
+def download_pairs(client: Client, 
+                   assets: List[str], 
+                   interval: str = '1m', 
+                   period: int = 2880, 
+                   second_period: Optional[int] = None) -> pd.DataFrame:
     def download_pairs_helper(period=2880, offset_s=0):
         pairs = [download_pair(client=client, symbol=symbol, interval=interval, 
                                period=period, offset_s=offset_s) 

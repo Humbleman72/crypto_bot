@@ -7,6 +7,8 @@
 # Description: Binance pair conversion table retrieval and preparation.
 
 # Library imports.
+from binance.client import Client
+from typing import List, Tuple, Union
 from .conversion import convert_price
 from .conversion import get_base_asset_from_pair, get_quote_asset_from_pair
 from .conversion import get_shortest_pair_path_between_assets
@@ -14,8 +16,10 @@ import datetime
 import pandas as pd
 
 # Function definitions.
-def get_conversion_table_from_binance(client, exchange_info, offset_s=0, 
-                                      dump_raw=False):
+def get_conversion_table_from_binance(client: Client, 
+                                      exchange_info: pd.DataFrame, 
+                                      offset_s: float = 0, 
+                                      dump_raw: bool = False) -> pd.DataFrame:
     conversion_table = pd.DataFrame(client.get_ticker())
     conversion_table = conversion_table[conversion_table['symbol'].isin(
         exchange_info['symbol'])]
@@ -60,9 +64,13 @@ def get_conversion_table_from_binance(client, exchange_info, offset_s=0,
     conversion_table['date'] = pd.DatetimeIndex(conversion_table['date'])
     return conversion_table.sort_values(by='date')
 
-def process_conversion_table(conversion_table, exchange_info, as_pair=False, 
-                             minimal=False, extra_minimal=True, 
-                             super_extra_minimal=False, convert_to_USDT=False):
+def process_conversion_table(conversion_table: pd.DataFrame, 
+                             exchange_info: pd.DataFrame, 
+                             as_pair: bool = False, 
+                             minimal: bool = False, 
+                             extra_minimal: bool = True, 
+                             super_extra_minimal: bool = False, 
+                             convert_to_USDT: bool = False) -> pd.DataFrame:
     """
     Fetches and calculates data used for prices, volumes and other stats.
     :param client: \
@@ -574,9 +582,15 @@ def process_conversion_table(conversion_table, exchange_info, as_pair=False,
     #    columns=['base_asset', 'quote_asset'])
     return conversion_table.set_index('date').sort_index(axis='index')
 
-def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False, 
-                         as_pair=True, minimal=False, extra_minimal=False, 
-                         super_extra_minimal=False, convert_to_USDT=False):
+def get_conversion_table(client: Client, 
+                         exchange_info: pd.DataFrame, 
+                         offset_s: float = 0, 
+                         dump_raw: bool = False, 
+                         as_pair: bool = True, 
+                         minimal: bool = False, 
+                         extra_minimal: bool = False, 
+                         super_extra_minimal: bool = False, 
+                         convert_to_USDT: bool = False) -> pd.DataFrame:
     conversion_table = get_conversion_table_from_binance(
         client=client, exchange_info=exchange_info, offset_s=offset_s, 
         dump_raw=dump_raw)
@@ -586,10 +600,10 @@ def get_conversion_table(client, exchange_info, offset_s=0, dump_raw=False,
         super_extra_minimal=super_extra_minimal, 
         convert_to_USDT=convert_to_USDT)
 
-def get_new_tickers(conversion_table):
+def get_new_tickers(conversion_table: pd.DataFrame) -> List[str]:
     return conversion_table['symbol'].unique().tolist()
 
-def get_tradable_tickers_info(conversion_table):
+def get_tradable_tickers_info(conversion_table: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
     conversion_table = conversion_table[[
         'symbol', 'close', 'price_change_percent', 'bid_price', 'ask_price', 
         'bid_volume', 'ask_volume', 'bid_ask_percent_change', 
@@ -616,6 +630,6 @@ def get_tradable_tickers_info(conversion_table):
         conversion_table_live_filtered['count'] > 1000]
     return conversion_table, get_new_tickers(conversion_table_live_filtered)
 
-def get_new_filtered_tickers(conversion_table):
+def get_new_filtered_tickers(conversion_table: pd.DataFrame) -> List[str]:
     return get_tradable_tickers_info(
         conversion_table=conversion_table)[0]['symbol'].unique().tolist()

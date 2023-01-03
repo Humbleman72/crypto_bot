@@ -6,14 +6,19 @@
 # Description: This file handles python-binance global exchange info.
 
 # Library imports.
+from typing import Optional
+from binance.client import Client
 from os import mkdir
 from os.path import exists, join
 import pandas as pd
 
 # Class definition.
 class Cryptocurrency_exchange:
-    def __init__(self, client=None, directory='crypto_logs'):
-        self.client, self.info_path = client, join('crypto_logs', 'crypto_exchange_info.txt')
+    def __init__(self, 
+                 client: Optional[Client] = None, 
+                 directory: str = 'crypto_logs'):
+        self.client = client
+        self.info_path = join('crypto_logs', 'crypto_exchange_info.txt')
         if not exists(directory):
             mkdir(directory)
         if exists(self.info_path):
@@ -22,8 +27,8 @@ class Cryptocurrency_exchange:
             self.get_exchange_info()
             self.info.to_csv(self.info_path)
 
-    def get_exchange_info(self):
-        def build_filters(symbols_info, index):
+    def get_exchange_info(self) -> None:
+        def build_filters(symbols_info: pd.DataFrame, index: int) -> pd.DataFrame:
             symbol = symbols_info['symbol'].iat[index]
             df = pd.DataFrame(symbols_info['filters'].iat[index])
             min_price = df[df['filterType'] == 'PRICE_FILTER']['minPrice'].iat[0]

@@ -6,18 +6,20 @@
 # Description: Convenience script to bootstrap and start crypto_logger services.
 # Usage:       bash bootstrap.sh
 
-CONDA_ENV_NAME="crypto_logger"
-
-read -s -p "Password: " PASSWORD
-
-echo $PASSWORD | sudo -S supervisorctl stop all
-echo $PASSWORD | sudo -S rm -rf /tmp/crypto.[err,out]
-echo $PASSWORD | sudo -S supervisorctl status all
-
+CONDA_ENV_NAME="crypto_logger" && \
+read -s -p "Password: " PASSWORD && \
+echo $PASSWORD | sudo -S supervisorctl stop all && \
+echo $PASSWORD | sudo -S rm -rf /tmp/crypto.[err,out] && \
+echo $PASSWORD | sudo -S rm -rf ~/workspace/build && \
+echo $PASSWORD | sudo -S rm -rf *.[c,cpp,so] && \
+echo $PASSWORD | sudo -S rm -rf cryptocurrency/*.[c,cpp,so] && \
+echo $PASSWORD | sudo -S rm -rf cryptocurrency/trader/*.[c,cpp,so] && \
+echo $PASSWORD | sudo -S supervisorctl status all && \
 source activate ${CONDA_ENV_NAME} && \
 if [[ "$(echo $PS1 | cut -d' ' -f1 | tr -d '()')" == "${CONDA_ENV_NAME}" ]]
 then
-    python bootstrap.py
+    python bootstrap.py && \
+    python setup.py build_ext --inplace
 else
     echo "Could not source activate ${CONDA_ENV_NAME}..."
 fi

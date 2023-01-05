@@ -7,8 +7,8 @@
 # Description: Binance pair conversion table retrieval and preparation.
 
 # Library imports.
+from typing import Dict, List, Tuple, Union, Optional
 from binance.client import Client
-from typing import List, Tuple, Union
 from .conversion import convert_price
 from .conversion import get_base_asset_from_pair, get_quote_asset_from_pair
 from .conversion import get_shortest_pair_path_between_assets
@@ -70,7 +70,11 @@ def process_conversion_table(conversion_table: pd.DataFrame,
                              minimal: bool = False, 
                              extra_minimal: bool = True, 
                              super_extra_minimal: bool = False, 
-                             convert_to_USDT: bool = False) -> pd.DataFrame:
+                             convert_to_USDT: bool = False, 
+                             pair_paths: Optional[Dict[str, Dict[str, 
+                                             Dict[str, List[Tuple[str, 
+                                                 str]]]]]] = None) -> \
+        pd.DataFrame:
     """
     Fetches and calculates data used for prices, volumes and other stats.
     :param client: \
@@ -157,20 +161,7 @@ def process_conversion_table(conversion_table: pd.DataFrame,
         conversion_table['rolling_quote_volume'] / conversion_table['close']
 
     if convert_to_USDT:
-        if 'USDT' in exchange_info.columns:
-            temp_exchange_info = exchange_info[['base_asset', 'USDT']]
-            temp_exchange_info = temp_exchange_info.drop_duplicates(
-                subset=['base_asset'], keep='first')
-            temp_exchange_info = temp_exchange_info.set_index('base_asset')
-            conversion_table['shortest_path'] = conversion_table.apply(
-                lambda x: temp_exchange_info.loc[x['base_asset']], 
-                axis='columns')
-        else:
-            conversion_table['shortest_path'] = conversion_table.apply(
-                lambda x: get_shortest_pair_path_between_assets(
-                    from_asset=x['base_asset'], to_asset='USDT', 
-                    exchange_info=exchange_info, priority='accuracy'), 
-                axis='columns')
+        shortest_path = pair_paths
 
         if not extra_minimal:
             conversion_table['high_pre_conversion'] = \
@@ -189,7 +180,7 @@ def process_conversion_table(conversion_table: pd.DataFrame,
 
         if not super_extra_minimal:
             temp_conversion_table = conversion_table[[
-                'base_asset', 'open', 'shortest_path']]
+                'base_asset', 'open']]
             temp_conversion_table = temp_conversion_table.drop_duplicates(
                 subset=['base_asset'], keep='first')
             conversion_table['USDT_open'] = \
@@ -199,14 +190,14 @@ def process_conversion_table(conversion_table: pd.DataFrame,
                         to_asset='USDT', 
                         conversion_table=conversion_table, 
                         exchange_info=exchange_info, 
-                        shortest_path=x['shortest_path'], 
+                        shortest_path=shortest_path, 
                         key='open', priority='accuracy'), axis='columns')
             conversion_table['USDT_open'] = conversion_table[[
                 'base_asset', 'USDT_open']].groupby(
                     by=['base_asset']).fillna(method='pad')['USDT_open']
 
         temp_conversion_table = conversion_table[[
-            'base_asset', 'close', 'shortest_path']]
+            'base_asset', 'close']]
         temp_conversion_table = temp_conversion_table.drop_duplicates(
             subset=['base_asset'], keep='first')
         conversion_table['USDT_price'] = \
@@ -216,7 +207,7 @@ def process_conversion_table(conversion_table: pd.DataFrame,
                     to_asset='USDT', 
                     conversion_table=conversion_table, 
                     exchange_info=exchange_info, 
-                    shortest_path=x['shortest_path'], 
+                    shortest_path=shortest_path, 
                     key='close', priority='accuracy'), axis='columns')
         conversion_table['USDT_price'] = conversion_table[[
             'base_asset', 'USDT_price']].groupby(
@@ -590,7 +581,10 @@ def get_conversion_table(client: Client,
                          minimal: bool = False, 
                          extra_minimal: bool = False, 
                          super_extra_minimal: bool = False, 
-                         convert_to_USDT: bool = False) -> pd.DataFrame:
+                         convert_to_USDT: bool = False, 
+                         pair_paths: Optional[Dict[str, Dict[str, Dict[str, 
+                                         List[Tuple[str, str]]]]]] = None) \
+        -> pd.DataFrame:
     conversion_table = get_conversion_table_from_binance(
         client=client, exchange_info=exchange_info, offset_s=offset_s, 
         dump_raw=dump_raw)
@@ -598,7 +592,7 @@ def get_conversion_table(client: Client,
         conversion_table=conversion_table, exchange_info=exchange_info, 
         as_pair=as_pair, minimal=minimal, extra_minimal=extra_minimal, 
         super_extra_minimal=super_extra_minimal, 
-        convert_to_USDT=convert_to_USDT)
+        convert_to_USDT=convert_to_USDT, pair_paths=pair_paths)
 
 def get_new_tickers(conversion_table: pd.DataFrame) -> List[str]:
     return conversion_table['symbol'].unique().tolist()
@@ -621,11 +615,11 @@ def get_tradable_tickers_info(conversion_table: pd.DataFrame) -> Tuple[pd.DataFr
             'rolling_quote_volume', 'count']].astype(float)
     conversion_table = conversion_table.sort_index(axis='index')
     conversion_table_live_filtered = \
-        conversion_table[conversion_table['bid_ask_percent_change'] < 0.8]
+        conversion_table[conversion_table['bid_ask_percent_change'] < 0.3]
     #conversion_table_live_filtered = conversion_table_live_filtered[
     #    conversion_table_live_filtered['bid_ask_volume_percent_change'] > 0.0]
     conversion_table_live_filtered = conversion_table_live_filtered[
-        conversion_table_live_filtered['rolling_quote_volume'] > 1000000]
+        conversion_table_live_filtered['rolling_quote_volume'] > 10000000]
     conversion_table_live_filtered = conversion_table_live_filtered[
         conversion_table_live_filtered['count'] > 1000]
     return conversion_table, get_new_tickers(conversion_table_live_filtered)

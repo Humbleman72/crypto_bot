@@ -7,7 +7,7 @@
 # Description: Binance asset trading.
 
 # Library imports.
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from binance.client import Client
 from ..conversion import make_tradable_quantity, convert_price
 from ..conversion import get_shortest_pair_path_between_assets
@@ -30,13 +30,15 @@ def trade_assets(client: Client,
                  conversion_table: pd.DataFrame, 
                  exchange_info: pd.DataFrame, 
                  priority: str = 'accuracy', 
-                 verbose: bool = False) -> Dict[str, float]:
+                 verbose: bool = False, 
+                 pair_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
+                                 str, str]]]]]] = None) -> Dict[str, float]:
     pair = base_asset + quote_asset
     side = 'BUY' if from_asset != base_asset else 'SELL'
     if side == 'SELL':
         quantity = convert_price(float(quantity), from_asset=from_asset, to_asset=to_asset, 
                                  conversion_table=conversion_table, exchange_info=exchange_info, 
-                                 key='close', priority=priority)
+                                 key='close', priority=priority, shortest_path=pair_paths)
     ticks = 0
     while True:
         try:
@@ -71,13 +73,20 @@ def trade(client: Client,
           conversion_table: pd.DataFrame, 
           exchange_info: pd.DataFrame, 
           priority: str = 'accuracy', 
-          verbose: bool = True) -> Dict[str, float]:
+          verbose: bool = True, 
+          pair_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
+                          str, str]]]]]] = None) -> Dict[str, float]:
     from_asset, converted_quantity, quantity, priority = \
-        select_asset_with_biggest_wallet(client=client, conversion_table=conversion_table, 
-                                         exchange_info=exchange_info)
-    shortest_path = \
-        get_shortest_pair_path_between_assets(from_asset, to_asset, exchange_info=exchange_info, 
-                                              priority=priority)
+        select_asset_with_biggest_wallet(
+            client=client, conversion_table=conversion_table, 
+            exchange_info=exchange_info, pair_paths=pair_paths)
+    if pair_paths is None:
+        shortest_path = \
+            get_shortest_pair_path_between_assets(
+                from_asset, to_asset, exchange_info=exchange_info, 
+                priority=priority)
+    else:
+        shortest_path = pair_paths[priority][from_asset][to_asset]
     if verbose:
         print(shortest_path)
     if from_asset == to_asset:
@@ -92,12 +101,15 @@ def trade(client: Client,
             else:
                 from_asset = quote_asset
                 to_asset = base_asset
-            request = trade_assets(client=client, quantity=quantity, from_asset=from_asset, 
-                                   to_asset=to_asset, base_asset=base_asset, quote_asset=quote_asset, 
-                                   conversion_table=conversion_table, exchange_info=exchange_info, 
-                                   priority=priority, verbose=False)
+            request = trade_assets(
+                client=client, quantity=quantity, from_asset=from_asset, 
+                to_asset=to_asset, base_asset=base_asset, 
+                quote_asset=quote_asset, conversion_table=conversion_table, 
+                exchange_info=exchange_info, priority=priority, verbose=False, 
+                pair_paths=pair_paths)
             if request is None:
-                return trade(client=client, to_asset=to_asset, conversion_table=conversion_table, 
+                return trade(client=client, to_asset=to_asset, 
+                             conversion_table=conversion_table, 
                              exchange_info=exchange_info)
             quantity = request['cummulativeQuoteQty']
             from_asset = to_asset
@@ -292,16 +304,19 @@ def trade_conditionally(ssh: paramiko.SSHClient,
                         sell_asset: str, 
                         profit: Optional[float], 
                         loss: Optional[float], 
-                        offset_s: float):
+                        offset_s: float, 
+                        pair_paths: Optional[Dict[str, Dict[str, Dict[
+                                        str, List[Tuple[str, str]]]]]] = None):
     #conversion_table = ssh.get_logs_from_server(server_log=ssh.input_log)
     conversion_table = get_conversion_table(
         client=client, exchange_info=exchange_info, offset_s=offset_s, 
         dump_raw=False, as_pair=True, minimal=False, extra_minimal=False, 
-        super_extra_minimal=False, convert_to_USDT=False)
+        super_extra_minimal=False, convert_to_USDT=False, 
+        pair_paths=pair_paths)
     from_asset, converted_quantity, quantity, priority = \
         select_asset_with_biggest_wallet(
             client=client, conversion_table=conversion_table, 
-            exchange_info=exchange_info)
+            exchange_info=exchange_info, pair_paths=pair_paths)
     request = trade(
         client=client, to_asset=to_asset, conversion_table=conversion_table, 
         exchange_info=exchange_info, priority=priority)
@@ -311,10 +326,14 @@ def trade_conditionally(ssh: paramiko.SSHClient,
                 to_asset, conversion_table, exchange_info)
             blacklist = add_entry_to_blacklist(
                 blacklist, pair, conversion_table, exchange_info, reason=None)
-            base_asset_from_pair = exchange_info[exchange_info['symbol'] == pair]['base_asset'].iat[0]
-            pair = blacklist[blacklist['base_asset'] == base_asset_from_pair]['symbol'].iat[0]
-            blacklist.loc[blacklist['symbol'] == pair,'symbol'] = request['symbol']
-            blacklist.loc[blacklist['symbol'] == pair,'close'] = float(request['fills'][0]['price'])
+            base_asset_from_pair = exchange_info[
+                exchange_info['symbol'] == pair]['base_asset'].iat[0]
+            pair = blacklist[blacklist['base_asset'] == base_asset_from_pair][
+                'symbol'].iat[0]
+            blacklist.loc[blacklist['symbol'] == pair,'symbol'] = \
+                request['symbol']
+            blacklist.loc[blacklist['symbol'] == pair,'close'] = \
+                float(request['fills'][0]['price'])
             blacklist, to_asset, check_profit_and_loss(
                 blacklist, from_asset, to_asset, conversion_table, 
                 exchange_info, latest_asset, profit=profit, loss=loss)

@@ -8,9 +8,12 @@
 
 
 # Library imports.
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Optional, Union
+from os.path import exists
 from decimal import Decimal
+from tqdm import tqdm
 import time
+import pickle
 import pandas as pd
 
 # Function definitions.
@@ -21,7 +24,7 @@ def get_timezone_offset_in_seconds() -> float:
     #offset = (offset_s / 60 / 60)
     return offset_s
 
-def get_assets_from_pair(pair: str, exchange_info: pd.DataFrame) -> Union[List[str], None]:
+def get_assets_from_pair(pair: str, exchange_info: pd.DataFrame) -> Optional[List[str]]:
      try:
          pair_info = exchange_info[exchange_info['symbol'] == pair]
          base_asset = pair_info['base_asset'].iat[-1]
@@ -32,14 +35,14 @@ def get_assets_from_pair(pair: str, exchange_info: pd.DataFrame) -> Union[List[s
          print(pair_info)
      return None
 
-def get_base_asset_from_pair(pair: str, exchange_info: pd.DataFrame) -> Union[str, None]:
+def get_base_asset_from_pair(pair: str, exchange_info: pd.DataFrame) -> Optional[str]:
     asset = get_assets_from_pair(pair, exchange_info=exchange_info)
     base_asset = None
     if asset is not None:
         base_asset, quote_asset = asset
     return base_asset
 
-def get_quote_asset_from_pair(pair: str, exchange_info: pd.DataFrame) -> Union[str, None]:
+def get_quote_asset_from_pair(pair: str, exchange_info: pd.DataFrame) -> Optional[str]:
     asset = get_assets_from_pair(pair, exchange_info=exchange_info)
     quote_asset = None
     if asset is not None:
@@ -114,7 +117,7 @@ def get_shortest_pair_path_between_assets(from_asset: str,
                     previous_nodes.append([next_node])
             path_index += 1
         return []
-    def get_pair_from_assets(from_asset: str, to_asset: str) -> Union[str, None]:
+    def get_pair_from_assets(from_asset: str, to_asset: str) -> Optional[str]:
         from_asset_is_base = exchange_info['base_asset'] == from_asset
         from_asset_is_quote = exchange_info['quote_asset'] == from_asset
         to_asset_is_base = exchange_info['base_asset'] == to_asset
@@ -140,6 +143,46 @@ def get_shortest_pair_path_between_assets(from_asset: str,
         pairs += [(base_asset, quote_asset)]
         shortest_path = shortest_path[1:]
     return pairs
+
+def precompute_pair_paths(exchange_info: pd.DataFrame, 
+                          priority: Optional[str] = None, 
+                          pair_paths_file: str = 'crypto_logs/pair_paths.pkl') \
+        -> Dict[str, Dict[str, Dict[str, List[Tuple[str, str]]]]]:
+    if exists(pair_paths_file):
+        with open(pair_paths_file, 'rb') as f:
+            pair_paths = pickle.load(f)
+    else:
+        pair_paths = {}
+        base_assets = exchange_info['base_asset'].tolist()
+        quote_assets = exchange_info['quote_asset'].tolist()
+        assets = list(set(base_assets + quote_assets))
+        priorities = ['accuracy', 'fees', 'wallet'] if priority is None else [priority]
+        for priority in priorities:
+            pair_paths[priority] = {}
+            for from_asset in tqdm(assets, unit='asset'):
+                pair_paths[priority][from_asset] = {}
+                for to_asset in assets:
+                    if from_asset != to_asset:
+                        precomputed_pair_path = None
+                        if pair_paths[priority].get(to_asset, None) is not None:
+                            precomputed_pair_path = \
+                                pair_paths[priority][to_asset].get(from_asset, None)
+                        if precomputed_pair_path is None:
+                            pair_paths[priority][from_asset][to_asset] = \
+                                get_shortest_pair_path_between_assets(
+                                    from_asset=from_asset, 
+                                    to_asset=to_asset, 
+                                    exchange_info=exchange_info, 
+                                    priority=priority)
+                        else:
+                            precomputed_pair_path_reversed = \
+                                precomputed_pair_path.copy()
+                            precomputed_pair_path_reversed.reverse()
+                            pair_paths[priority][from_asset][to_asset] = \
+                                precomputed_pair_path_reversed
+        with open(pair_paths_file, 'wb') as f:
+            pickle.dump(pair_paths, f)
+    return pair_paths
 
 def make_tradable_quantity(pair: str, 
                            coins_available: Union[float, str], 
@@ -171,13 +214,17 @@ def convert_price(size: Union[float, str],
                   exchange_info: pd.DataFrame, 
                   key: str = 'close', 
                   priority: str = 'accuracy', 
-                  shortest_path: Union[List[Tuple[str]], None] = None) -> str:
+                  shortest_path: Union[List[Tuple[str, str]], 
+                                       Dict[str, Dict[str, Dict[str, List[Tuple[str, str]]]]], 
+                                       None] = None) -> str:
     if from_asset != to_asset:
         size = float(size)
         if shortest_path is None:
             shortest_path = get_shortest_pair_path_between_assets(
                 from_asset=from_asset, to_asset=to_asset, 
                 exchange_info=exchange_info, priority=priority)
+        elif type(shortest_path) is dict:
+            shortest_path = shortest_path[priority][from_asset][to_asset]
         for (base_asset, quote_asset) in shortest_path:
             to_asset = quote_asset if from_asset == base_asset else base_asset
             pair = base_asset + quote_asset

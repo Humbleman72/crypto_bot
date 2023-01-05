@@ -7,7 +7,7 @@
 # Description: Binance asset trading.
 
 # Variable definitions.
-sell_asset = 'BUSD'
+sell_asset = 'BTC'
 frequency = '15min'
 take_profit = 6
 stop_loss = 2
@@ -29,6 +29,7 @@ t1 = time.time()
 # Import libraries.
 from utils.authentication import Cryptocurrency_authenticator
 from utils.exchange import Cryptocurrency_exchange
+from utils.conversion import precompute_pair_paths
 from utils.conversion import get_timezone_offset_in_seconds
 from utils.conversion_table import get_conversion_table
 from utils.trader.ssh import Ssh
@@ -49,6 +50,11 @@ client = authenticator.spot_client
 exchange = Cryptocurrency_exchange(client=client, directory='crypto_logs')
 exchange_info = exchange.info
 
+# Pre-compute pair paths.
+pair_paths = precompute_pair_paths(exchange_info, 
+                                   priority=None, 
+                                   pair_paths_file='crypto_logs/pair_paths.pkl')
+
 # Precalculate UTC offset for inter-server communication coherence.
 offset_s = get_timezone_offset_in_seconds()
 
@@ -61,13 +67,15 @@ conversion_table = get_conversion_table(client=client,
                                         minimal=False, 
                                         extra_minimal=False, 
                                         super_extra_minimal=False, 
-                                        convert_to_USDT=False)
+                                        convert_to_USDT=False, 
+                                        pair_paths=pair_paths)
 
 # Get highest USDT-converted held asset and determine priority.
 from_asset, converted_quantity, quantity, priority = \
     select_asset_with_biggest_wallet(client=client, 
                                      conversion_table=conversion_table, 
-                                     exchange_info=exchange_info)
+                                     exchange_info=exchange_info, 
+                                     pair_paths=pair_paths)
 
 # Initialize an empty blacklist.
 blacklist = make_empty_blacklist()
@@ -95,7 +103,8 @@ try:
                 ssh=ssh, blacklist=blacklist, client=client, 
                 exchange_info=exchange_info, to_asset=to_asset, 
                 latest_asset=latest_asset, sell_asset=sell_asset, 
-                profit=profit, loss=loss, offset_s=offset_s)
+                profit=profit, loss=loss, offset_s=offset_s, 
+                pair_paths=pair_paths)
         elif from_asset != sell_asset:
             #conversion_table = ssh.get_logs_from_server(
             #    server_log=ssh.input_log)
@@ -103,7 +112,8 @@ try:
                 client=client, exchange_info=exchange_info, 
                 offset_s=offset_s, dump_raw=False, as_pair=True, 
                 minimal=False, extra_minimal=False, 
-                super_extra_minimal=False, convert_to_USDT=False)
+                super_extra_minimal=False, convert_to_USDT=False, 
+                pair_paths=pair_paths)
             blacklist, to_asset = check_take_profit_and_stop_loss(
                 blacklist, from_asset, to_asset, conversion_table, 
                 exchange_info, latest_asset, take_profit=take_profit, 

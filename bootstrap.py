@@ -10,6 +10,7 @@
 from utils.authentication import Cryptocurrency_authenticator
 from utils.exchange import Cryptocurrency_exchange
 from utils.conversion import get_timezone_offset_in_seconds
+from utils.conversion import precompute_pair_paths
 from utils.conversion_table import get_conversion_table, get_new_tickers
 from utils.bootstrap import bootstrap_loggers
 import os
@@ -25,22 +26,30 @@ def main():
     client = authenticator.spot_client
     exchange = Cryptocurrency_exchange(client=client, directory=directory)
     exchange_info = exchange.info
+    pair_paths = precompute_pair_paths(
+        exchange_info, priority=None, 
+        pair_paths_file='crypto_logs/pair_paths.pkl')
     offset_s = get_timezone_offset_in_seconds()
-    conversion_table = get_conversion_table(client=client, exchange_info=exchange_info, 
-                                            offset_s=offset_s, dump_raw=False, 
-                                            as_pair=True, minimal=False, 
-                                            extra_minimal=False, convert_to_USDT=True)
+    conversion_table = get_conversion_table(
+        client=client, exchange_info=exchange_info, offset_s=offset_s, 
+        dump_raw=False, as_pair=True, minimal=False, extra_minimal=False, 
+        convert_to_USDT=True)
     assets = get_new_tickers(conversion_table=conversion_table)
-    #pairs = bootstrap_loggers(client=client, assets=assets, pairs={}, 
-    #                          download_interval='1d', exchange_info=exchange_info, as_pair=as_pair)
-    #pairs = bootstrap_loggers(client=client, assets=assets, pairs=pairs, 
-    #                          download_interval='1h', exchange_info=exchange_info, as_pair=as_pair)
-    #pairs = bootstrap_loggers(client=client, assets=assets, additional_intervals=['30min'], 
-    #                          upsampled_intervals=['5s', '15s'], pairs=pairs, 
-    #                          download_interval='1m', exchange_info=exchange_info, as_pair=as_pair)
-    pairs = bootstrap_loggers(client=client, assets=assets, additional_intervals=['30min'], 
-                              upsampled_intervals=['5s', '15s'], pairs={}, 
-                              download_interval='1m', exchange_info=exchange_info, as_pair=as_pair)
+    #pairs = bootstrap_loggers(
+    #    client=client, assets=assets, pairs={}, download_interval='1d', 
+    #    exchange_info=exchange_info, as_pair=as_pair, pair_paths=pair_paths)
+    #pairs = bootstrap_loggers(
+    #    client=client, assets=assets, pairs=pairs, download_interval='1h', 
+    #    exchange_info=exchange_info, as_pair=as_pair, pair_paths=pair_paths)
+    #pairs = bootstrap_loggers(
+    #    client=client, assets=assets, additional_intervals=['30min'], 
+    #    upsampled_intervals=['5s', '15s'], pairs=pairs, 
+    #    download_interval='1m', exchange_info=exchange_info, as_pair=as_pair, 
+    #    pair_paths=pair_paths)
+    pairs = bootstrap_loggers(
+        client=client, assets=assets, additional_intervals=['30min'], 
+        upsampled_intervals=['5s', '15s'], pairs={}, download_interval='1m', 
+        exchange_info=exchange_info, as_pair=as_pair, pair_paths=pair_paths)
     print('Bootstrapping done!')
 
 if __name__ == '__main__':

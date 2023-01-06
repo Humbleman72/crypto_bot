@@ -31,14 +31,14 @@ def trade_assets(client: Client,
                  exchange_info: pd.DataFrame, 
                  priority: str = 'accuracy', 
                  verbose: bool = False, 
-                 pair_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
+                 shortest_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
                                  str, str]]]]]] = None) -> Dict[str, float]:
     pair = base_asset + quote_asset
     side = 'BUY' if from_asset != base_asset else 'SELL'
     if side == 'SELL':
         quantity = convert_price(float(quantity), from_asset=from_asset, to_asset=to_asset, 
                                  conversion_table=conversion_table, exchange_info=exchange_info, 
-                                 key='close', priority=priority, shortest_path=pair_paths)
+                                 key='close', priority=priority, shortest_path=shortest_paths)
     ticks = 0
     while True:
         try:
@@ -74,19 +74,19 @@ def trade(client: Client,
           exchange_info: pd.DataFrame, 
           priority: str = 'accuracy', 
           verbose: bool = True, 
-          pair_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
+          shortest_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
                           str, str]]]]]] = None) -> Dict[str, float]:
     from_asset, converted_quantity, quantity, priority = \
         select_asset_with_biggest_wallet(
             client=client, conversion_table=conversion_table, 
-            exchange_info=exchange_info, pair_paths=pair_paths)
-    if pair_paths is None:
+            exchange_info=exchange_info, shortest_paths=shortest_paths)
+    if shortest_paths is None:
         shortest_path = \
             get_shortest_pair_path_between_assets(
                 from_asset, to_asset, exchange_info=exchange_info, 
                 priority=priority)
     else:
-        shortest_path = pair_paths[priority][from_asset][to_asset]
+        shortest_path = shortest_paths[priority][from_asset][to_asset]
     if verbose:
         print(shortest_path)
     if from_asset == to_asset:
@@ -106,7 +106,7 @@ def trade(client: Client,
                 to_asset=to_asset, base_asset=base_asset, 
                 quote_asset=quote_asset, conversion_table=conversion_table, 
                 exchange_info=exchange_info, priority=priority, verbose=False, 
-                pair_paths=pair_paths)
+                shortest_paths=shortest_paths)
             if request is None:
                 return trade(client=client, to_asset=to_asset, 
                              conversion_table=conversion_table, 
@@ -305,18 +305,18 @@ def trade_conditionally(ssh: paramiko.SSHClient,
                         profit: Optional[float], 
                         loss: Optional[float], 
                         offset_s: float, 
-                        pair_paths: Optional[Dict[str, Dict[str, Dict[
+                        shortest_paths: Optional[Dict[str, Dict[str, Dict[
                                         str, List[Tuple[str, str]]]]]] = None):
     #conversion_table = ssh.get_logs_from_server(server_log=ssh.input_log)
     conversion_table = get_conversion_table(
         client=client, exchange_info=exchange_info, offset_s=offset_s, 
         dump_raw=False, as_pair=True, minimal=False, extra_minimal=False, 
         super_extra_minimal=False, convert_to_USDT=False, 
-        pair_paths=pair_paths)
+        shortest_paths=shortest_paths)
     from_asset, converted_quantity, quantity, priority = \
         select_asset_with_biggest_wallet(
             client=client, conversion_table=conversion_table, 
-            exchange_info=exchange_info, pair_paths=pair_paths)
+            exchange_info=exchange_info, shortest_paths=shortest_paths)
     request = trade(
         client=client, to_asset=to_asset, conversion_table=conversion_table, 
         exchange_info=exchange_info, priority=priority)

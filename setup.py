@@ -19,7 +19,24 @@ import numpy
 
 env = "crypto_bot"
 version_info = sys.version_info
-include_path = ["/opt/conda/envs/{}/include/python{}.{}/".format(env, version_info.major, version_info.minor)]
+include_path = "/opt/conda/envs/{}/include/python{}.{}/"
+include_path = [include_path.format(env, 
+                                    version_info.major, 
+                                    version_info.minor)]
+extra_compile_args = ["-Os", 
+                      "-fno-strict-aliasing", 
+                      "-mtune=native", 
+                      "-march=native", 
+                      "-fPIC", 
+                      "-fwrapv", 
+                      "-Wall", 
+                      "-pthread", 
+                      "-shared", 
+                      "-Wno-unused-function", 
+                      "-Wno-maybe-uninitialized", 
+                      "-Wno-unused-variable", 
+                      "-Wno-unused-but-set-variable", 
+                      "-Wno-unused-result"]
 
 setup(
     name="crypto_logger", 
@@ -30,31 +47,31 @@ setup(
             Extension(
                 name="bootstrap", 
                 sources=["bootstrap.py"], 
-                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
+                extra_compile_args=extra_compile_args, 
                 language="c++", 
             ), 
             Extension(
                 name="crypto_logger", 
                 sources=["crypto_logger.py"], 
-                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
+                extra_compile_args=extra_compile_args, 
                 language="c++", 
             ), 
             Extension(
                 name="crypto_trader", 
                 sources=["crypto_trader.py"], 
-                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
+                extra_compile_args=extra_compile_args, 
                 language="c++", 
             ), 
             Extension(
                 name="crypto_mqtt_pub", 
                 sources=["crypto_mqtt_pub.py"], 
-                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
+                extra_compile_args=extra_compile_args, 
                 language="c++", 
             ), 
             Extension(
                 name="crypto_mqtt_sub", 
                 sources=["crypto_mqtt_sub.py"], 
-                extra_compile_args=["-Os", "-fno-strict-aliasing", "-mtune=native"], 
+                extra_compile_args=extra_compile_args, 
                 language="c++", 
             ), 
         ], 

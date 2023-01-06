@@ -144,31 +144,31 @@ def get_shortest_pair_path_between_assets(from_asset: str,
         shortest_path = shortest_path[1:]
     return pairs
 
-def precompute_pair_paths(exchange_info: pd.DataFrame, 
+def precompute_shortest_paths(exchange_info: pd.DataFrame, 
                           priority: Optional[str] = None, 
-                          pair_paths_file: str = 'crypto_logs/pair_paths.pkl') \
+                          shortest_paths_file: str = 'crypto_logs/shortest_paths.pkl') \
         -> Dict[str, Dict[str, Dict[str, List[Tuple[str, str]]]]]:
-    if exists(pair_paths_file):
-        with open(pair_paths_file, 'rb') as f:
-            pair_paths = pickle.load(f)
+    if exists(shortest_paths_file):
+        with open(shortest_paths_file, 'rb') as f:
+            shortest_paths = pickle.load(f)
     else:
-        pair_paths = {}
+        shortest_paths = {}
         base_assets = exchange_info['base_asset'].tolist()
         quote_assets = exchange_info['quote_asset'].tolist()
         assets = list(set(base_assets + quote_assets))
         priorities = ['accuracy', 'fees', 'wallet'] if priority is None else [priority]
         for priority in priorities:
-            pair_paths[priority] = {}
+            shortest_paths[priority] = {}
             for from_asset in tqdm(assets, unit='asset'):
-                pair_paths[priority][from_asset] = {}
+                shortest_paths[priority][from_asset] = {}
                 for to_asset in assets:
                     if from_asset != to_asset:
                         precomputed_pair_path = None
-                        if pair_paths[priority].get(to_asset, None) is not None:
+                        if shortest_paths[priority].get(to_asset, None) is not None:
                             precomputed_pair_path = \
-                                pair_paths[priority][to_asset].get(from_asset, None)
+                                shortest_paths[priority][to_asset].get(from_asset, None)
                         if precomputed_pair_path is None:
-                            pair_paths[priority][from_asset][to_asset] = \
+                            shortest_paths[priority][from_asset][to_asset] = \
                                 get_shortest_pair_path_between_assets(
                                     from_asset=from_asset, 
                                     to_asset=to_asset, 
@@ -178,11 +178,11 @@ def precompute_pair_paths(exchange_info: pd.DataFrame,
                             precomputed_pair_path_reversed = \
                                 precomputed_pair_path.copy()
                             precomputed_pair_path_reversed.reverse()
-                            pair_paths[priority][from_asset][to_asset] = \
+                            shortest_paths[priority][from_asset][to_asset] = \
                                 precomputed_pair_path_reversed
-        with open(pair_paths_file, 'wb') as f:
-            pickle.dump(pair_paths, f)
-    return pair_paths
+        with open(shortest_paths_file, 'wb') as f:
+            pickle.dump(shortest_paths, f)
+    return shortest_paths
 
 def make_tradable_quantity(pair: str, 
                            coins_available: Union[float, str], 

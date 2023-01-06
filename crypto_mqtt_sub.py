@@ -10,8 +10,6 @@
 # Library imports.
 from utils.mqtt_sub import MQTTSub
 from website.users import iterate_users, DummyLock, User
-#from crypto_monitor import CryptoMonitor
-#from crypto_logger_mqtt import init_loggers, loop_loggers
 from datetime import datetime
 from urllib.parse import urljoin
 

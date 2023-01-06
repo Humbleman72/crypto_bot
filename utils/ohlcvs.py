@@ -35,7 +35,8 @@ def download_pairs(client: Client,
                    assets: List[str], 
                    interval: str = '1m', 
                    period: int = 2880, 
-                   second_period: Optional[int] = None) -> pd.DataFrame:
+                   second_period: Optional[int] = None, 
+                   offset_s: float = 0) -> pd.DataFrame:
     def download_pairs_helper(period=2880, offset_s=0):
         pairs = [download_pair(client=client, symbol=symbol, interval=interval, 
                                period=period, offset_s=offset_s) 
@@ -46,8 +47,6 @@ def download_pairs(client: Client,
         pairs = pairs[['open', 'high', 'low', 'close', 'base_volume', 'quote_volume']]
         pairs.columns = pairs.columns.swaplevel(0, 1)
         return pairs.sort_index(axis='columns').sort_index(axis='index')
-
-    offset_s = get_timezone_offset_in_seconds()
     pairs_1 = download_pairs_helper(period=period, offset_s=offset_s)
     if second_period is None:
         pairs = pairs_1
@@ -60,3 +59,11 @@ def download_pairs(client: Client,
     pairs.iloc[:,pairs.columns.get_level_values(1) == 'quote_volume'] = \
         pairs.xs('quote_volume', axis=1, level=1).fillna(0)
     return pairs.fillna(method='pad')
+
+def download_pairs_bootstrapped(client: Client, assets: List[str], 
+                                interval: str = '1m', offset_s: float = 0) \
+        -> pd.DataFrame:
+    period = 2880 if interval == '1m' else 60
+    second_period = 60 if interval == '1m' else None
+    return download_pairs(client, assets, interval='1m', period=period, 
+                          second_period=second_period, offset_s=offset_s)

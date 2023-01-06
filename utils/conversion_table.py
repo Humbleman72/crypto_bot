@@ -11,7 +11,6 @@ from typing import Dict, List, Tuple, Union, Optional
 from binance.client import Client
 from .conversion import convert_price
 from .conversion import get_base_asset_from_pair, get_quote_asset_from_pair
-from .conversion import get_shortest_pair_path_between_assets
 import datetime
 import pandas as pd
 
@@ -71,7 +70,7 @@ def process_conversion_table(conversion_table: pd.DataFrame,
                              extra_minimal: bool = True, 
                              super_extra_minimal: bool = False, 
                              convert_to_USDT: bool = False, 
-                             pair_paths: Optional[Dict[str, Dict[str, 
+                             shortest_paths: Optional[Dict[str, Dict[str, 
                                              Dict[str, List[Tuple[str, 
                                                  str]]]]]] = None) -> \
         pd.DataFrame:
@@ -161,8 +160,6 @@ def process_conversion_table(conversion_table: pd.DataFrame,
         conversion_table['rolling_quote_volume'] / conversion_table['close']
 
     if convert_to_USDT:
-        shortest_path = pair_paths
-
         if not extra_minimal:
             conversion_table['high_pre_conversion'] = \
                 (((conversion_table['high'] - conversion_table['close']) / \
@@ -190,7 +187,7 @@ def process_conversion_table(conversion_table: pd.DataFrame,
                         to_asset='USDT', 
                         conversion_table=conversion_table, 
                         exchange_info=exchange_info, 
-                        shortest_path=shortest_path, 
+                        shortest_path=shortest_paths, 
                         key='open', priority='accuracy'), axis='columns')
             conversion_table['USDT_open'] = conversion_table[[
                 'base_asset', 'USDT_open']].groupby(
@@ -207,7 +204,7 @@ def process_conversion_table(conversion_table: pd.DataFrame,
                     to_asset='USDT', 
                     conversion_table=conversion_table, 
                     exchange_info=exchange_info, 
-                    shortest_path=shortest_path, 
+                    shortest_path=shortest_paths, 
                     key='close', priority='accuracy'), axis='columns')
         conversion_table['USDT_price'] = conversion_table[[
             'base_asset', 'USDT_price']].groupby(
@@ -582,7 +579,7 @@ def get_conversion_table(client: Client,
                          extra_minimal: bool = False, 
                          super_extra_minimal: bool = False, 
                          convert_to_USDT: bool = False, 
-                         pair_paths: Optional[Dict[str, Dict[str, Dict[str, 
+                         shortest_paths: Optional[Dict[str, Dict[str, Dict[str, 
                                          List[Tuple[str, str]]]]]] = None) \
         -> pd.DataFrame:
     conversion_table = get_conversion_table_from_binance(
@@ -592,7 +589,7 @@ def get_conversion_table(client: Client,
         conversion_table=conversion_table, exchange_info=exchange_info, 
         as_pair=as_pair, minimal=minimal, extra_minimal=extra_minimal, 
         super_extra_minimal=super_extra_minimal, 
-        convert_to_USDT=convert_to_USDT, pair_paths=pair_paths)
+        convert_to_USDT=convert_to_USDT, shortest_paths=shortest_paths)
 
 def get_new_tickers(conversion_table: pd.DataFrame) -> List[str]:
     return conversion_table['symbol'].unique().tolist()

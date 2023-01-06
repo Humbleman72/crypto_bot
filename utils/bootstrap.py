@@ -18,35 +18,31 @@ import pandas as pd
 
 # Function definitions.
 def bootstrap_loggers(client: Client, 
-                      assets: List[str], 
+                      assets: pd.DataFrame, 
                       exchange_info: Dict[str, Dict[str, List[str]]], 
                       download_interval: Optional[str] = '1m', 
                       as_pair: bool = False, 
                       pairs: Optional[Dict[str, pd.DataFrame]] = None, 
                       additional_intervals: Optional[List[str]] = None, 
                       upsampled_intervals: Optional[List[str]] = None, 
-                      pair_paths: Optional[Dict[str, Dict[str, Dict[str, 
+                      shortest_paths: Optional[Dict[str, Dict[str, Dict[str, 
                           List[Tuple[str, str]]]]]] = None) \
         -> Dict[str, pd.DataFrame]:
-    log_file = 'crypto_logs/crypto_output_log_{}.txt'
-    period = 2880 if download_interval == '1m' else 60
-    second_period = 60 if download_interval == '1m' else None
     base_interval = download_interval + 'in' \
         if download_interval[-1] == 'm' else download_interval
+    pairs[base_interval] = assets
     frequency_1min = pd.tseries.frequencies.to_offset('1min')
     frequency_1d = pd.tseries.frequencies.to_offset('1d')
     frequency = pd.tseries.frequencies.to_offset(base_interval)
-    pairs[base_interval] = download_pairs(
-        client=client, assets=assets, interval=download_interval, 
-        period=period, second_period=second_period)
     if not as_pair:
         pairs[base_interval] = convert_ohlcvs_from_pairs_to_assets(
-            pairs[base_interval], exchange_info, pair_paths=pair_paths)
+            pairs[base_interval], exchange_info, shortest_paths=shortest_paths)
     pairs[base_interval] = add_rolling_volumes(pairs[base_interval])
     if frequency < frequency_1d:
         pairs[base_interval] = \
             pairs[base_interval].loc[
                 pairs[base_interval].dropna().first_valid_index():]
+    log_file = 'crypto_logs/crypto_output_log_{}.txt'
     if additional_intervals is not None:
         for additional_interval in tqdm(additional_intervals, unit=' pair'):
             pairs[additional_interval] = resample(

@@ -16,7 +16,7 @@ import pandas as pd
 def select_asset_with_biggest_wallet(
     client: Client, conversion_table: pd.DataFrame, 
     exchange_info: pd.DataFrame, 
-    pair_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
+    shortest_paths: Optional[Dict[str, Dict[str, Dict[str, List[Tuple[
                     str, str]]]]]] = None) \
         -> Tuple[str, Union[str, float], Union[str, float], str]:
     def get_account_balances() -> pd.DataFrame:
@@ -33,7 +33,7 @@ def select_asset_with_biggest_wallet(
             size=quantity, from_asset=asset, to_asset='USDT', 
             conversion_table=conversion_table, 
             exchange_info=exchange_info, key='close', 
-            priority='accuracy', shortest_path=pair_paths)
+            priority='accuracy', shortest_path=shortest_paths)
         ls.append((asset, converted_quantity, quantity))
     from_asset, converted_quantity, quantity = \
         sorted(ls, key=lambda x: float(x[1]), reverse=True)[0]

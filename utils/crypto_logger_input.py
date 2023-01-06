@@ -11,9 +11,8 @@ from typing import List, Tuple, Union
 from .crypto_logger_base import Crypto_logger_base
 from .authentication import Cryptocurrency_authenticator
 from .exchange import Cryptocurrency_exchange
-from .conversion import get_shortest_pair_path_between_assets
 from .conversion import get_timezone_offset_in_seconds
-from .conversion import precompute_pair_paths
+from .conversion import precompute_shortest_paths
 from .conversion_table import get_conversion_table, get_tradable_tickers_info
 import pandas as pd
 
@@ -46,9 +45,9 @@ class Crypto_logger_input(Crypto_logger_base):
         exchange = Cryptocurrency_exchange(client=self.client, directory=self.directory)
         self.exchange_info = exchange.info
 
-        self.pair_paths = precompute_pair_paths(self.exchange_info, 
+        self.shortest_paths = precompute_shortest_paths(self.exchange_info, 
                                                 priority=None, 
-                                                pair_paths_file='crypto_logs/pair_paths.pkl')
+                                                shortest_paths_file='crypto_logs/shortest_paths.pkl')
 
         self.offset_s = get_timezone_offset_in_seconds()
 
@@ -106,6 +105,6 @@ class Crypto_logger_input(Crypto_logger_base):
         dataset = get_conversion_table(client=self.client, exchange_info=self.exchange_info, 
                                        offset_s=self.offset_s, dump_raw=False, as_pair=self.as_pair, 
                                        minimal=False, extra_minimal=True, super_extra_minimal=False, 
-                                       convert_to_USDT=False, pair_paths=self.pair_paths)
+                                       convert_to_USDT=False, shortest_paths=self.shortest_paths)
         dataset.index = dataset.index.round(self.interval)
         return dataset

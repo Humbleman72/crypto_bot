@@ -45,12 +45,6 @@ setup(
     ext_modules=cythonize(
         [
             Extension(
-                name="bootstrap", 
-                sources=["bootstrap.py"], 
-                extra_compile_args=extra_compile_args, 
-                language="c++", 
-            ), 
-            Extension(
                 name="crypto_logger", 
                 sources=["crypto_logger.py"], 
                 extra_compile_args=extra_compile_args, 

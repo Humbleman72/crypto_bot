@@ -11,17 +11,11 @@ from typing import List, Optional
 from binance.client import Client
 from .ohlcv import download_pair
 from tqdm import tqdm
+from .timezone import get_timezone_offset_in_seconds
 import time
 import pandas as pd
 
 # Function definitions.
-def get_timezone_offset_in_seconds() -> float:
-    is_dst = time.localtime().tm_isdst
-    timezone = time.tzname[is_dst]
-    offset_s = time.altzone if is_dst else time.timezone
-    #offset = (offset_s / 60 / 60)
-    return offset_s
-
 def named_pairs_to_df(assets: List[str], pairs: List[pd.DataFrame]) -> pd.DataFrame:
     df = pd.DataFrame()
     column_names = pairs[0].columns.tolist()
@@ -46,7 +40,7 @@ def download_pairs(client: Client,
         pairs.columns = pairs.columns.swaplevel(0, 1)
         pairs = pairs[['open', 'high', 'low', 'close', 'base_volume', 'quote_volume']]
         pairs.columns = pairs.columns.swaplevel(0, 1)
-        return pairs.sort_index(axis='columns').sort_index(axis='index')
+        return pairs.sort_index(axis='columns')
     pairs_1 = download_pairs_helper(period=period, offset_s=offset_s)
     if second_period is None:
         pairs = pairs_1

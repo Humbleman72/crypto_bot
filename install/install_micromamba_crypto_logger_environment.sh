@@ -13,6 +13,7 @@ micromamba create --yes --name ${MICROMAMBA_ENV_NAME} gcc \
                                                       bottleneck \
                                                       numexpr \
                                                       numpy \
+                                                      numba \
                                                       pandas \
                                                       matplotlib \
                                                       scipy \

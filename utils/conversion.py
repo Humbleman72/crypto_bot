@@ -6,24 +6,16 @@
 # For          Myself
 # Description: Binance asset conversion.
 
-
 # Library imports.
 from typing import Dict, List, Tuple, Optional, Union
 from os.path import exists
 from decimal import Decimal
 from tqdm import tqdm
-import time
+from .timezone import get_timezone_offset_in_seconds
 import pickle
 import pandas as pd
 
 # Function definitions.
-def get_timezone_offset_in_seconds() -> float:
-    is_dst = time.localtime().tm_isdst
-    timezone = time.tzname[is_dst]
-    offset_s = time.altzone if is_dst else time.timezone
-    #offset = (offset_s / 60 / 60)
-    return offset_s
-
 def get_assets_from_pair(pair: str, exchange_info: pd.DataFrame) -> Optional[List[str]]:
      try:
          pair_info = exchange_info[exchange_info['symbol'] == pair]
@@ -50,6 +42,13 @@ def get_quote_asset_from_pair(pair: str, exchange_info: pd.DataFrame) -> Optiona
     return quote_asset
 
 def get_connected_assets(asset: str, exchange_info: pd.DataFrame, priority: str = 'accuracy') -> List[str]:
+    """Return a list of all assets connected to a given asset.
+    
+    Keyword arguments:
+    asset -- The asset to find all connected assets to.
+    exchange_info -- A pandas DataFrame containing the exchange info.
+    priority -- The order in which to prioritize assets.
+    """
     def reorder(connected_assets: List[str], priority: str) -> List[str]:
         prioritized = \
             [asset for asset in priority if asset in connected_assets]
@@ -69,15 +68,13 @@ def get_connected_assets(asset: str, exchange_info: pd.DataFrame, priority: str 
     priority += ['BRL', 'AUD']
     connected_base_assets = exchange_info['quote_asset'] == asset
     connected_base_assets = exchange_info[connected_base_assets]
-    connected_base_assets = connected_base_assets['base_asset']
-    connected_base_assets = connected_base_assets.tolist()
+    connected_base_assets = connected_base_assets['base_asset'].tolist()
     connected_quote_assets = exchange_info['base_asset'] == asset
     connected_quote_assets = exchange_info[connected_quote_assets]
-    connected_quote_assets = connected_quote_assets['quote_asset']
-    connected_quote_assets = connected_quote_assets.tolist()
-    connected_assets = \
-        list(set(connected_base_assets + connected_quote_assets))
-    return reorder(connected_assets, priority)
+    connected_quote_assets = connected_quote_assets['quote_asset'].tolist()
+    connected_assets = list(set(connected_base_assets + connected_quote_assets))
+    connected_assets = reorder(connected_assets, priority=priority)
+    return connected_assets
 
 def select_pair_with_highest_quote_volume_from_base_asset(base_asset: str, 
                                                           conversion_table: pd.DataFrame, 
@@ -235,3 +232,4 @@ def convert_price(size: Union[float, str],
         size = make_tradable_quantity(pair, float(size), subtract=0, 
                                       exchange_info=exchange_info)
     return size
+

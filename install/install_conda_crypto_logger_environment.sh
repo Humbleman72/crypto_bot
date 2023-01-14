@@ -15,6 +15,7 @@ CONDA_ENV_NAME="crypto_logger"
                                                                                  bottleneck \
                                                                                  numexpr \
                                                                                  numpy \
+                                                                                 numba \
                                                                                  pandas \
                                                                                  matplotlib \
                                                                                  scipy \

@@ -13,6 +13,7 @@ CONDA_ENV_NAME="crypto_bot"
                                                                                  gxx_linux-64 \
                                                                                  cython \
                                                                                  numpy \
+                                                                                 numba \
                                                                                  bottleneck \
                                                                                  numexpr \
                                                                                  pandas \

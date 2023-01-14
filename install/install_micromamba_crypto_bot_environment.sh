@@ -11,6 +11,7 @@ micromamba create --yes --name ${MICROMAMBA_ENV_NAME} gcc \
                                                       gxx_linux-64 \
                                                       cython \
                                                       numpy \
+                                                      numba \
                                                       bottleneck \
                                                       numexpr \
                                                       pandas \

@@ -32,7 +32,8 @@ def resample(df: pd.DataFrame, interval: str = '1min') -> pd.DataFrame:
     df['quote_volume'] = df['quote_volume'].fillna(0)
     df = df.fillna(method='pad').fillna(method='backfill') # Last resort.
     df.columns = df.columns.swaplevel(0, 1)
-    df = df.sort_index(axis='index')
+    df.sort_index(axis='index', inplace=True)
+    df.sort_index(axis='columns', inplace=True)
     if interval == '1min':
         df = recalculate_volumes(df)
     return df

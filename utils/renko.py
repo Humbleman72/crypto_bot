@@ -56,7 +56,7 @@ class Renko:
                 #num_new_bars = 0
 
             if is_new_brick:
-                # Add each brick
+                # Add each brick-
                 for d in range(start_brick, np.abs(gap_div)):
                     self.renko_prices.append(self.renko_prices[-1] + self.brick_size * np.sign(gap_div))
                     self.renko_directions.append(np.sign(gap_div))
@@ -68,12 +68,15 @@ class Renko:
         if len(prices) > 0:
             # Init by start values
             self.source_prices = prices
+            self.timed_renko_prices = []
+            self.timed_renko_prices.append(prices.iloc[0])
             self.renko_prices.append(prices.iloc[0])
             self.renko_directions.append(0)
 
             # For each price in history
             for p in self.source_prices[1:]:
                 self.__renko_rule(p)
+                self.timed_renko_prices.append(self.renko_prices[-1].copy())
 
         return len(self.renko_prices)
 
@@ -163,7 +166,7 @@ class Renko:
         plt.show()
 
 # Function definitions.
-def get_renko_trigger(data, compress=False, direction_type='long', trigger_type='simple', method='brent', plot=False):
+def get_renko_trigger(data, compress=False, direction_type='long', trigger_type='simple', method='brent', plot=False, return_raw=False):
     def identity(x):
         return x
 
@@ -258,5 +261,5 @@ def get_renko_trigger(data, compress=False, direction_type='long', trigger_type=
             trigger = directions[-1] == -1
             if trigger_type == 'entry':
                 trigger = trigger and directions[-2] == 1
-    return trigger
+    return renko_obj_sfo.timed_renko_prices if return_raw else trigger
 

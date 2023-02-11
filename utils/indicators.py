@@ -277,8 +277,7 @@ def screen_one(pair):
         pair['volume'] = pair['rolling_base_volume'].copy() \
             if frequency == frequency_1min else pair['base_volume'].copy()
         if frequency < frequency_1min: # 15s.
-            if get_not_square_wave_triggers(pair, multiplier_schedule=[2]):
-                return True
+            return True
         elif frequency < frequency_1d:
             if get_rising_volume_trigger(pair):
                 #if frequency == frequency_1min:

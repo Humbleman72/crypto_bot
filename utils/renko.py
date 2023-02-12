@@ -10,6 +10,7 @@
 from scipy.stats import iqr
 import math
 import numpy as np
+import pandas as pd
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -92,7 +93,7 @@ class Renko:
             return self.__renko_rule(last_price)
 
     # Simple method to get optimal brick size based on ATR
-    def __get_optimal_brick_size(self, HLC_history, atr_timeperiod=14):
+    def __get_optimal_brick_size(self, HLC_history, atr_timeperiod=9):
         brick_size = 0.0
 
         # If we have enough of data
@@ -203,7 +204,7 @@ def get_renko_trigger(data, compress=False, direction_type='long', trigger_type=
         atr = talib.ATR(high=np.double(data.high),
                         low=np.double(data.low),
                         close=np.double(data.close),
-                        timeperiod=10)
+                        timeperiod=25)
         atr = atr[np.isnan(atr) == False]
         if atr.shape[0] == 0:
             return False
@@ -220,7 +221,7 @@ def get_renko_trigger(data, compress=False, direction_type='long', trigger_type=
         atr = talib.ATR(high=np.double(data.high),
                         low=np.double(data.low),
                         close=np.double(data.close),
-                        timeperiod=10)
+                        timeperiod=25)
         atr = atr[np.isnan(atr) == False]
         if atr.shape[0] == 0:
             return False
@@ -235,7 +236,9 @@ def get_renko_trigger(data, compress=False, direction_type='long', trigger_type=
     opt_brick_size = renko_obj_sfo.set_brick_size(auto=False, brick_size=optimal_brick_sfo)
     if plot:
         print('Set brick size to optimal: ', opt_brick_size)
-    renko_obj_sfo.build_history(prices=data['close'])
+    #renko_obj_sfo.build_history(prices=data['close'])
+    hlc3 = (data['high'] + data['low'] + data['close']) / 3
+    renko_obj_sfo.build_history(prices=hlc3)
     prices = renko_obj_sfo.get_renko_prices()
     directions = renko_obj_sfo.get_renko_directions()
     evaluation = renko_obj_sfo.evaluate()
@@ -261,5 +264,5 @@ def get_renko_trigger(data, compress=False, direction_type='long', trigger_type=
             trigger = directions[-1] == -1
             if trigger_type == 'entry':
                 trigger = trigger and directions[-2] == 1
-    return renko_obj_sfo.timed_renko_prices if return_raw else trigger
 
+    return pd.Series(renko_obj_sfo.timed_renko_prices) if return_raw else trigger

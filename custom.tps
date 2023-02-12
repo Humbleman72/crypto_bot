@@ -2,10 +2,10 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // © Samuel Duclos
 
-strategy('Custom Strategy', overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100, initial_capital=1000000)
+strategy('Custom Strategy', overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100, initial_capital=100, calc_on_order_fills=true)
 max_bars_back = 1000
 
-RenkoATRLength = input(9, title='Renko ATR Length')
+RenkoATRLength = input(25, title='Renko ATR Length')
 CCILength = input(22, title='CCI Length')
 MACDFastLength = input(12, title='MACD Fast Length')
 MACDSlowLength = input(26, title='MACD Slow Length')
@@ -19,12 +19,12 @@ BOLLLength = input(11, title='Middle Bollinger Band Length')
 
 // Make input options that configure backtest date range.
 startDate = input.int(title='Start Date', defval=1, minval=1, maxval=31)
-startMonth = input.int(title='Start Month', defval=1, minval=1, maxval=12)
-startYear = input.int(title='Start Year', defval=2016, minval=1800, maxval=2100)
+startMonth = input.int(title='Start Month', defval=5, minval=1, maxval=12)
+startYear = input.int(title='Start Year', defval=2022, minval=1800, maxval=2100)
 
 endDate = input.int(title='End Date', defval=1, minval=1, maxval=31)
-endMonth = input.int(title='End Month', defval=1, minval=1, maxval=12)
-endYear = input.int(title='End Year', defval=2024, minval=1800, maxval=2100)
+endMonth = input.int(title='End Month', defval=4, minval=1, maxval=12)
+endYear = input.int(title='End Year', defval=2023, minval=1800, maxval=2100)
 
 // Look if the close time of the current bar falls inside the date range.
 inDateRange = time >= timestamp(syminfo.timezone, startYear, startMonth, startDate, 0, 0) and time < timestamp(syminfo.timezone, endYear, endMonth, endDate, 0, 0)
@@ -53,11 +53,13 @@ low_24min = request.security(syminfo.tickerid, '24', low)
 close_24min = request.security(syminfo.tickerid, '24', close)
 volume_24min = request.security(syminfo.tickerid, '24', volume)
 
-open_30min = request.security(syminfo.tickerid, '30', open)
-high_30min = request.security(syminfo.tickerid, '30', high)
-low_30min = request.security(syminfo.tickerid, '30', low)
-close_30min = request.security(syminfo.tickerid, '30', close)
-volume_30min = request.security(syminfo.tickerid, '30', volume)
+indexHighTF = barstate.isrealtime ? 1 : 0
+indexCurrTF = barstate.isrealtime ? 0 : 1
+open_30min = request.security(syminfo.tickerid, '30', open[indexHighTF])[indexCurrTF]
+high_30min = request.security(syminfo.tickerid, '30', high[indexHighTF])[indexCurrTF]
+low_30min = request.security(syminfo.tickerid, '30', low[indexHighTF])[indexCurrTF]
+close_30min = request.security(syminfo.tickerid, '30', close[indexHighTF])[indexCurrTF]
+volume_30min = request.security(syminfo.tickerid, '30', volume[indexHighTF])[indexCurrTF]
 
 open_1h = request.security(syminfo.tickerid, '60', open)
 high_1h = request.security(syminfo.tickerid, '60', high)
@@ -154,6 +156,9 @@ renko_trigger(open_, high_, low_, close_) =>
     hlc3_ = (high_ + low_ + close_) / 3
     renko_tickerid = ticker.renko(syminfo.tickerid, 'ATR', RenkoATRLength)
     renko_close = request.security(renko_tickerid, timeframe.period, hlc3_)
+    //renko_close = request.security(renko_tickerid, timeframe.period, close_)
+    //renko_close = request.security(renko_tickerid, timeframe.period, high_)
+    //renko_close = request.security(renko_tickerid, timeframe.period, low_)
     renko_close > renko_close[1]
 
 
@@ -183,6 +188,7 @@ pine_mfi_1(high_, low_, close_, length) =>
     ratio = positiveMf / negativeMf
     mfi = 100 - 100 / (1 + ratio)
     mfi
+
 pine_mfi_2(high_, low_, close_, length) =>
     x = (high_ + low_ + close_) / 3
     currentMf = 0.0
@@ -350,10 +356,12 @@ negative_timed_trigger(open_, high_, low_, close_) =>
 //condShort = (not condLong)
 
 condLong1min = positive_timed_trigger_1min(ha_open_1min, ha_high_1min, ha_low_1min, ha_close_1min)
+//condLong1min = positive_timed_trigger_1min(open_1min, high_1min, low_1min, close_1min)
 condLong5min = positive_timed_trigger_1min(ha_open_5min, ha_high_5min, ha_low_5min, ha_close_5min)
 condLong15min = positive_timed_trigger_1min(ha_open_15min, ha_high_15min, ha_low_15min, ha_close_15min)
 condLong24min = positive_timed_trigger(ha_open_24min, ha_high_24min, ha_low_24min, ha_close_24min)
-condLong30min = positive_timed_trigger(ha_open_30min, ha_high_30min, ha_low_30min, ha_close_30min)
+//condLong30min = positive_timed_trigger(ha_open_30min, ha_high_30min, ha_low_30min, ha_close_30min)
+condLong30min = positive_timed_trigger(open_30min, high_30min, low_30min, close_30min)
 condLong30min_cci = positive_timed_trigger_1min(ha_open_30min, ha_high_30min, ha_low_30min, ha_close_30min)
 condLong1h = positive_timed_trigger(ha_open_1h, ha_high_1h, ha_low_1h, ha_close_1h)
 condLong1h_cci = positive_timed_trigger_1min(ha_open_1h, ha_high_1h, ha_low_1h, ha_close_1h)
@@ -389,6 +397,31 @@ condShort1d = negative_timed_trigger(ha_open_1d, ha_high_1d, ha_low_1d, ha_close
 //condLong = (condLong1min and condLong5min and condLong30min)
 condLong = condLong30min
 condShort = not condLong
+
+
+
+
+
+renko_(open_, high_, low_, close_) =>
+    //hlc3_ = (ha_high_30min + ha_low_30min + ha_close_30min) / 3
+    //hlc3_ = (high_30min + low_30min + close_30min) / 3
+    hlc3_ = (high_ + low_ + close_) / 3
+    renko_tickerid = ticker.renko(syminfo.tickerid, 'ATR', RenkoATRLength)
+    renko_close = request.security(renko_tickerid, timeframe.period, hlc3_)
+    //renko_close = request.security(renko_tickerid, timeframe.period, close_)
+    //renko_close = request.security(renko_tickerid, timeframe.period, high_)
+    //renko_close = request.security(renko_tickerid, timeframe.period, low_)
+    renko_close
+
+
+
+condRenkoLong = renko_(open_30min, high_30min, low_30min, close_30min)
+plot(condRenkoLong)
+//hlc3_ = (high + low + close) / 3
+//hlc3_30min = (high_30min + low_30min + close_30min) / 3
+//plot(hlc3_)
+//plot(hlc3_30min)
+
 
 
 indicatorColor = input(false, title='Optional bar color')

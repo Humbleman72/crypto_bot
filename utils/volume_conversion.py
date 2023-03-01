@@ -7,11 +7,12 @@
 # Description: Whole market volume to/from 24h rolling volume conversion.
 
 # Library imports.
-import numba
+#import numba
 import numpy as np
 import pandas as pd
 
 # Function definitions.
+'''
 @numba.jit(nopython=True, nogil=True, cache=True)
 def add_rolling_volumes_numba(df: np.ndarray) -> np.ndarray:
     df_rolling = df[:,[0, 1]].copy()
@@ -26,6 +27,7 @@ def recalculate_volumes_numba(df: np.ndarray) -> np.ndarray:
     df[-2:,0] = df[-2:,6] - df[-2:,0] + df[-1442:-2,0]
     df[-2:,1] = df[-2:,7] - df[-2:,1] + df[-1442:-2,1]
     return df
+'''
 
 def add_rolling_volumes(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = df.columns.swaplevel(0, 1)

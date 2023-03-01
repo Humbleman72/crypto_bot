@@ -27,7 +27,7 @@ import time
 def init_loggers() -> Dict[str, Union[Crypto_logger_input, Crypto_logger_output]]:
     """Main logger initialization."""
     crypto_logger_input_5s = Crypto_logger_input(interval='5s', buffer_size=3000, 
-                                                 price_percent=5.0, volume_percent=0.0, 
+                                                 price_percent=1.0, volume_percent=0.0, 
                                                  as_pair=False, append=True, roll=10)
     crypto_logger_output_5s = Crypto_logger_output(interval_input='5s', 
                                                    interval='5s', 

@@ -75,32 +75,17 @@ def get_relative_volume_levels_at_time_smoothed_thresholded(data):
     trigger |= cum_rvol_dir_thresholded
     return trigger.iloc[-1]
 
-def get_not_square_wave_trigger_1(data):
-    return not (data.iloc[-4:]['close'].unique().size < 2)
-
-def get_not_square_wave_trigger_2(data):
-    return not (data.iloc[-15:]['close'].unique().size < 6)
-
-def get_not_square_wave_triggers(data, multiplier_schedule):
+def get_not_square_wave_triggers(data, multiplications=10):
+    multiplications = min(data.shape[0] // 5, multiplications)
     triggers = True
-    for multiplier in multiplier_schedule:
-        period_1 = -4 * multiplier
-        uniques_1 = 2 * multiplier
-        square_wave_trigger_1 = (data.iloc[period_1:]['close'].unique().size < uniques_1)
-        if square_wave_trigger_1:
+    for multiplier in range(1, multiplications + 1):
+        period = -5 * multiplier
+        uniques = 2 * multiplier
+        square_wave_trigger = (data.iloc[period:]['close'].unique().size < uniques)
+        if square_wave_trigger:
             triggers = False
             break
-        else:
-            period_2 = -15 * multiplier
-            uniques_2 = 6 * multiplier
-            square_wave_trigger_2 = (data.iloc[period_2:]['close'].unique().size < uniques_2)
-            if square_wave_trigger_2:
-                triggers = False
-                break
     return triggers
-
-def get_not_square_wave_trigger_3(data):
-    return (data[['open', 'high', 'low', 'close']].nunique(axis='columns') > 2).tail(2).all()
 
 def get_bullish_price_trigger(data):
     return (data['close'] > data['high'].shift(1)).iat[-1]
@@ -172,7 +157,7 @@ def get_daily_volume_change_trigger(data, threshold=50):
     """
     return ((data['volume'].pct_change(1) * 100) > threshold).iat[-1]
 
-def get_minute_daily_volume_change_trigger(data, threshold=50):
+def get_minute_daily_volume_change_trigger(data, threshold=300):
     """
     threshold: grows linearly from 50 to 300 at the end of a UTC day.
     """
@@ -267,7 +252,7 @@ def get_heikin_ashi_trigger(data):
               get_not_negative_trend_strength_trigger(heikin_ashi_dataset_1))
 
 def screen_one(pair):
-    if get_not_square_wave_triggers(pair, multiplier_schedule=[1]):
+    if get_not_square_wave_triggers(pair, multiplications=10):
         frequency = (pair.index[1:] - pair.index[:-1]).min()
         frequency = pd.tseries.frequencies.to_offset(frequency)
         frequency_1min = pd.tseries.frequencies.to_offset('1min')
@@ -276,17 +261,16 @@ def screen_one(pair):
         frequency_1d = pd.tseries.frequencies.to_offset('1d')
         pair['volume'] = pair['rolling_base_volume'].copy() \
             if frequency == frequency_1min else pair['base_volume'].copy()
-        if frequency < frequency_1min: # 15s.
+        if frequency < frequency_1min: # 5s.
             return True
         elif frequency < frequency_1d:
             if get_rising_volume_trigger(pair):
-                #if frequency == frequency_1min:
-                #    if get_not_square_wave_triggers(pair, multiplier_schedule=[3, 5, 15, 30]):
-                #        #if get_bullish_price_trigger(pair):
-                #        #if get_minute_daily_volume_minimum_trigger(pair):
-                #        #if get_minute_daily_volume_change_trigger(pair, threshold=5):
-                #        #if get_heikin_ashi_trigger(pair):
-                #        return True
+                if frequency == frequency_1min:
+                    #if get_bullish_price_trigger(pair):
+                    if get_minute_daily_volume_minimum_trigger(pair):
+                        if get_minute_daily_volume_change_trigger(pair, threshold=0):
+                            #if get_heikin_ashi_trigger(pair):
+                            return True
                 #if frequency == frequency_30min:
                 #    if get_renko_trigger(pair, compress=False, 
                 #                         direction_type='long', 
@@ -296,13 +280,13 @@ def screen_one(pair):
                 #elif frequency == frequency_1h:
                 #    if get_relative_volume_levels_at_time_smoothed_thresholded(pair):
                 #        return True
-                #else:
-                return True
+                else:
+                    return True
         #elif frequency == frequency_1d:
         #    #if get_daily_volume_minimum_trigger(pair):
-        #    #if get_daily_volume_change_trigger(pair, threshold=50):
-        #    #if get_relative_volume_levels_trigger(pair, average=10, threshold=0.1):
-        #    if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.2):
+        #    #if get_daily_volume_change_trigger(pair, threshold=0):
+        #    #if get_relative_volume_levels_trigger(pair, average=10, threshold=0.3):
+        #    if get_relative_volume_levels_smoothed_trigger(pair, average1=26, average2=14, threshold=0.3):
         #        return True
         else:
             return True

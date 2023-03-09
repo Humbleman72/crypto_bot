@@ -8,6 +8,7 @@
 
 # Library imports.
 from .volume_conversion import recalculate_volumes
+#from .ohlcv_cleaning import clean_data
 import pandas as pd
 
 # Function definitions.
@@ -31,6 +32,7 @@ def resample(df: pd.DataFrame, interval: str = '1min') -> pd.DataFrame:
     df['base_volume'] = df['base_volume'].fillna(0)
     df['quote_volume'] = df['quote_volume'].fillna(0)
     df = df.fillna(method='pad').fillna(method='backfill') # Last resort.
+    #df = clean_data(df)
     df.columns = df.columns.swaplevel(0, 1)
     df.sort_index(axis='index', inplace=True)
     df.sort_index(axis='columns', inplace=True)

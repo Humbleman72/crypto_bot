@@ -142,8 +142,8 @@ def get_shortest_pair_path_between_assets(from_asset: str,
     return pairs
 
 def precompute_shortest_paths(exchange_info: pd.DataFrame, 
-                          priority: Optional[str] = None, 
-                          shortest_paths_file: str = 'crypto_logs/shortest_paths.pkl') \
+                              priority: Optional[str] = None, 
+                              shortest_paths_file: Optional[str] = 'crypto_logs/shortest_paths.pkl') \
         -> Dict[str, Dict[str, Dict[str, List[Tuple[str, str]]]]]:
     if exists(shortest_paths_file):
         with open(shortest_paths_file, 'rb') as f:

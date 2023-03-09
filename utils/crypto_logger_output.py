@@ -60,11 +60,11 @@ class Crypto_logger_output(Crypto_logger_base):
         df = df.pivot_table(index=['date'], columns=['symbol'], values=values, aggfunc=aggfunc)
         df.columns = df.columns.droplevel(0)
         df = df.sort_index(axis='index').iloc[1:]
-        df.columns.names = ['pair', 'symbol']
+        df.columns.names = ['feature', 'symbol']
         df['base_volume'] = df['base_volume'].fillna(0)
         df['quote_volume'] = df['quote_volume'].fillna(0)
         df = df.fillna(method='pad').fillna(method='backfill') # Last resort.
-        df.columns = df.columns.swaplevel('pair', 'symbol')
+        df.columns = df.columns.swaplevel('feature', 'symbol')
         return df
 
     def get(self, dataset: Union[pd.DataFrame, None] = None) -> Union[pd.DataFrame, None]:

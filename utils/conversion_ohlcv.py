@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# File:        utils/conversion_ohlcv.py
+# File:        utils/data/download/binance/conversion_ohlcv.py
 # By:          Samuel Duclos
 # For          Myself
 # Description: Binance asset conversion.
@@ -10,6 +10,7 @@
 from .conversion import get_assets_from_pair, get_base_asset_from_pair
 from .conversion import get_quote_asset_from_pair, get_shortest_pair_path_between_assets
 from .ohlcvs import named_pairs_to_df
+from .ohlcv_cleaning import clean_data
 from tqdm import tqdm
 import pandas as pd
 
@@ -155,9 +156,10 @@ def convert_ohlcvs(to_asset, conversion_table, exchange_info, shortest_paths=Non
         price_size['base_volume'] = price_size['close'] * volume_size['base_volume']
         price_size['quote_volume'] = price_size['close'] * volume_size['quote_volume']
         price_size.replace([float('inf'), float('-inf')], float('nan'), inplace=True)
-        price_size.loc[:, ['base_volume', 'quote_volume']] = \
-            price_size.loc[:, ['base_volume', 'quote_volume']].fillna(0)
-        return price_size.fillna(method='pad')
+        #price_size.loc[:, ['base_volume', 'quote_volume']] = \
+        #    price_size.loc[:, ['base_volume', 'quote_volume']].fillna(0)
+        #return price_size.fillna(method='pad')
+        return price_size
     def convert_ohlcv_prices_helper(symbol, size, shortest_paths=None):
         from_asset = get_base_asset_from_pair(symbol, exchange_info)
         if from_asset == to_asset:
@@ -180,6 +182,7 @@ def convert_ohlcvs(to_asset, conversion_table, exchange_info, shortest_paths=Non
                                                      exchange_info) 
                                for symbol in tqdm(symbols, unit=' pair conversion')]
     volume_conversion_table = named_pairs_to_df(symbols, volume_conversion_table)
+    volume_conversion_table = clean_data(volume_conversion_table)
     return volume_conversion_table
 
 def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info, shortest_paths=None):
@@ -193,7 +196,7 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info, shortes
                 columns = [('not_inverted', get_base_asset_from_pair(symbol, exchange_info), 
                             symbol, column) for column in column_names]
                 pair.columns = pd.MultiIndex.from_tuples(
-                    columns, names=['is_inverted', 'asset', 'symbol', 'pair']
+                    columns, names=['is_inverted', 'asset', 'symbol', 'feature']
                 )
                 df = pd.concat([df, pair], axis='columns')
             return df
@@ -216,7 +219,7 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info, shortes
                             invert_symbol(symbol, exchange_info), column) 
                            for column in column_names]
                 pair.columns = pd.MultiIndex.from_tuples(
-                    columns, names=['is_inverted', 'asset', 'symbol', 'pair']
+                    columns, names=['is_inverted', 'asset', 'symbol', 'feature']
                 )
                 df = pd.concat([df, pair], axis='columns')
             return df
@@ -279,5 +282,5 @@ def convert_ohlcvs_from_pairs_to_assets(conversion_table, exchange_info, shortes
     conversion_table_mixed.columns = conversion_table_mixed.columns.swaplevel(0, 3)
     conversion_table_mixed.columns = conversion_table_mixed.columns.droplevel(3)
     conversion_table_mixed = conversion_table_mixed['not_inverted']
-    conversion_table_mixed.columns.names = ['symbol', 'pair']
+    conversion_table_mixed.columns.names = ['symbol', 'feature']
     return conversion_table_mixed

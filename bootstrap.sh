@@ -31,4 +31,4 @@ sleep 15
 echo $PASSWORD | sudo -S supervisorctl status all
 sleep 15
 
-watch -n 15 tail -n 40 ~/workspace/crypto_logs/crypto_input_log_*_screened.txt
+watch -n 5 tail -n 40 ~/workspace/crypto_logs/crypto_input_log_*_screened.txt

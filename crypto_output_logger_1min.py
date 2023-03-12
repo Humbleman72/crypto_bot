@@ -23,11 +23,12 @@ from typing import Dict, Union
 from utils.crypto_logger_input import Crypto_logger_input
 from utils.crypto_logger_output import Crypto_logger_output
 import time
+import pandas as pd
 
 def init_loggers() -> Dict[str, Union[Crypto_logger_input, Crypto_logger_output]]:
     """Main logger initialization."""
     #crypto_logger_input_5s = Crypto_logger_input(interval='5s', buffer_size=3000, 
-    #                                             price_percent=1.0, volume_percent=0.0, 
+    #                                             price_percent=5.0, volume_percent=0.0, 
     #                                             as_pair=False, append=True, roll=10)
     crypto_logger_output_5s = Crypto_logger_output(interval_input='5s', 
                                                    interval='5s', 
@@ -98,7 +99,9 @@ def loop_loggers(crypto_loggers: Dict[str, Union[Crypto_logger_input, Crypto_log
             print('Time spent for one loop:', t2 - t1)
             #input_5s = crypto_loggers['input_5s'].get_and_put_next(old_dataset=input_5s, dataset=None)
             #output_5s = crypto_loggers['output_5s'].get_and_put_next(old_dataset=output_5s, dataset=input_5s)
-            output_5s = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=False)
+            #output_5s = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=False)
+            output_5s = pd.read_csv('/home/sam/workspace/crypto_logs/crypto_output_log_5s.txt', header=[0, 1], index_col=0)
+            output_5s.index = pd.DatetimeIndex(output_5s.index)
             output_1min = crypto_loggers['output_1min'].get_and_put_next(old_dataset=output_1min, dataset=output_5s)
             #output_30min = crypto_loggers['output_30min'].get_and_put_next(old_dataset=output_30min, dataset=output_1min)
             #output_1h = crypto_loggers['output_1h'].get_and_put_next(old_dataset=output_1h, dataset=output_30min)
@@ -112,7 +115,9 @@ def loop_loggers(crypto_loggers: Dict[str, Union[Crypto_logger_input, Crypto_log
             #    crypto_loggers['output_5s'].screen_next(old_dataset_screened=output_5s_screened, 
             #                                            dataset_screened=input_5s_screened, 
             #                                            dataset=output_5s, live_filtered=live_filtered)
-            output_5s_screened = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=True)
+            #output_5s_screened = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=True)
+            output_5s_screened = pd.read_csv('/home/sam/workspace/crypto_logs/crypto_output_log_5s_screened.txt', header=[0], index_col=0)
+            output_5s_screened.index = pd.DatetimeIndex(output_5s_screened.index)
             output_1min_screened, _ = \
                 crypto_loggers['output_1min'].screen_next(old_dataset_screened=output_1min_screened, 
                                                           dataset_screened=output_5s_screened, 

@@ -39,14 +39,21 @@ extra_compile_args = ["-Os",
                       "-Wno-unused-result"]
 
 setup(
-    name="crypto_logger", 
+    name="crypto_bot", 
     cmdclass={'build_ext': build_ext}, 
     include_dirs = [numpy.get_include()], 
     ext_modules=cythonize(
         [
             Extension(
-                name="crypto_logger", 
-                sources=["crypto_logger.py"], 
+                name="crypto_logger_5s", 
+                sources=["crypto_logger_5s.py"], 
+                extra_compile_args=extra_compile_args, 
+                language="c++", 
+            ), 
+        [
+            Extension(
+                name="crypto_output_logger_1min", 
+                sources=["crypto_output_logger_1min.py"], 
                 extra_compile_args=extra_compile_args, 
                 language="c++", 
             ), 

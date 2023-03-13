@@ -28,9 +28,10 @@ read -s -p "Enter your local sudo password: " LOCAL_PASSWORD && \
 echo "" && \
 echo ${LOCAL_PASSWORD} | sudo -S apt-get update && \
 echo ${LOCAL_PASSWORD} | sudo -S apt-get install -y sshpass && \
-read "Press the <ENTER> key, type yes then <ENTER> again, then type the password and <ENTER> again." DUMMY && \
+echo "Press the <ENTER> key, type yes then <ENTER> again, then type the password and <ENTER> again." && \
 echo "Press the <ENTER> key, type the root password and <ENTER> again." && \
-read "Then on the server, type \"exit\" then <ENTER>..." DUMMY && \
-SERVER_IP=$(cat server_keys.txt | cut -d':' -f2-) && \
+echo "Then on the server, type \"exit\" then <ENTER>..." && \
+read && \
+SERVER_IP=$(cat server_keys.txt | cut -d':' -f1) && \
 ssh-keygen -f "${HOME}/.ssh/known_hosts" -R "${SERVER_IP}" && \
 ssh root@${SERVER_IP}

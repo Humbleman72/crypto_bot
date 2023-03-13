@@ -26,8 +26,11 @@ import time
 
 def init_loggers() -> Dict[str, Union[Crypto_logger_input, Crypto_logger_output]]:
     """Main logger initialization."""
+    #crypto_logger_input_5s = Crypto_logger_input(interval='5s', buffer_size=3000, 
+    #                                             price_percent=5.0, volume_percent=0.0, 
+    #                                             as_pair=False, append=True, roll=10)
     crypto_logger_input_5s = Crypto_logger_input(interval='5s', buffer_size=3000, 
-                                                 price_percent=5.0, volume_percent=0.0, 
+                                                 price_percent=10.0, volume_percent=0.0, 
                                                  as_pair=False, append=True, roll=10)
     crypto_logger_output_5s = Crypto_logger_output(interval_input='5s', 
                                                    interval='5s', 
@@ -132,7 +135,8 @@ def loop_loggers(crypto_loggers: Dict[str, Union[Crypto_logger_input, Crypto_log
             #                                            dataset_screened=output_1h_screened, 
             #                                            dataset=output_1d, live_filtered=None)
             crypto_loggers['input_5s'].log_next(dataset=input_5s, dataset_screened=input_5s_screened)
-            crypto_loggers['output_5s'].log_next(dataset=None, dataset_screened=output_5s_screened)
+            #crypto_loggers['output_5s'].log_next(dataset=None, dataset_screened=output_5s_screened)
+            crypto_loggers['output_5s'].log_next(dataset=output_5s, dataset_screened=output_5s_screened)
             #crypto_loggers['output_1min'].log_next(dataset=None, dataset_screened=output_1min_screened)
             #crypto_loggers['output_30min'].log_next(dataset=None, dataset_screened=output_30min_screened)
             #crypto_loggers['output_1h'].log_next(dataset=None, dataset_screened=output_1h_screened)

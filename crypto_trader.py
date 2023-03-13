@@ -18,7 +18,7 @@ stop_loss_count = 1
 profit_count = 20
 loss_count = 1
 keys_file = 'server_keys.txt'
-input_log = '~/workspace/crypto_logs/crypto_input_log_15s.txt'
+input_log = '~/workspace/crypto_logs/crypto_input_log_5s.txt'
 output_log_screened = \
     '~/workspace/crypto_logs/crypto_output_log_1min_screened.txt'
 

@@ -99,9 +99,7 @@ def loop_loggers(crypto_loggers: Dict[str, Union[Crypto_logger_input, Crypto_log
             print('Time spent for one loop:', t2 - t1)
             #input_5s = crypto_loggers['input_5s'].get_and_put_next(old_dataset=input_5s, dataset=None)
             #output_5s = crypto_loggers['output_5s'].get_and_put_next(old_dataset=output_5s, dataset=input_5s)
-            #output_5s = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=False)
-            output_5s = pd.read_csv('/home/sam/workspace/crypto_logs/crypto_output_log_5s.txt', header=[0, 1], index_col=0)
-            output_5s.index = pd.DatetimeIndex(output_5s.index)
+            output_5s = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=False)
             output_1min = crypto_loggers['output_1min'].get_and_put_next(old_dataset=output_1min, dataset=output_5s)
             #output_30min = crypto_loggers['output_30min'].get_and_put_next(old_dataset=output_30min, dataset=output_1min)
             #output_1h = crypto_loggers['output_1h'].get_and_put_next(old_dataset=output_1h, dataset=output_30min)
@@ -115,9 +113,7 @@ def loop_loggers(crypto_loggers: Dict[str, Union[Crypto_logger_input, Crypto_log
             #    crypto_loggers['output_5s'].screen_next(old_dataset_screened=output_5s_screened, 
             #                                            dataset_screened=input_5s_screened, 
             #                                            dataset=output_5s, live_filtered=live_filtered)
-            #output_5s_screened = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=True)
-            output_5s_screened = pd.read_csv('/home/sam/workspace/crypto_logs/crypto_output_log_5s_screened.txt', header=[0], index_col=0)
-            output_5s_screened.index = pd.DatetimeIndex(output_5s_screened.index)
+            output_5s_screened = crypto_loggers['output_5s'].maybe_get_from_file(dataset=None, inputs=False, screened=True)
             output_1min_screened, _ = \
                 crypto_loggers['output_1min'].screen_next(old_dataset_screened=output_1min_screened, 
                                                           dataset_screened=output_5s_screened, 
@@ -140,7 +136,8 @@ def loop_loggers(crypto_loggers: Dict[str, Union[Crypto_logger_input, Crypto_log
             #                                            dataset=output_1d, live_filtered=None)
             #crypto_loggers['input_5s'].log_next(dataset=input_5s, dataset_screened=input_5s_screened)
             #crypto_loggers['output_5s'].log_next(dataset=None, dataset_screened=output_5s_screened)
-            crypto_loggers['output_1min'].log_next(dataset=None, dataset_screened=output_1min_screened)
+            #crypto_loggers['output_1min'].log_next(dataset=None, dataset_screened=output_1min_screened)
+            crypto_loggers['output_1min'].log_next(dataset=output_1min, dataset_screened=output_1min_screened)
             #crypto_loggers['output_30min'].log_next(dataset=None, dataset_screened=output_30min_screened)
             #crypto_loggers['output_1h'].log_next(dataset=None, dataset_screened=output_1h_screened)
             #crypto_loggers['output_1d'].log_next(dataset=None, dataset_screened=output_1d_screened)

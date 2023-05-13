@@ -1,3 +1,3 @@
-# crypto_logger
-New version of crypto_bot to run partly on server.
-It does not include the data science part (yet).
+# crypto_bot
+Binance crypto bot.
+You are responsible for your own trading losses.

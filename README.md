@@ -1,9 +1,10 @@
 # crypto_bot
 
 ### Binance crypto bot
-- logger/screener
-- wallet/trader
-- should run on different machines to circumvent API limits
+- Logger/screener (doesn't need a Binance account).
+- Wallet/trader (needs a Binance account).
+- Should run on different machines (it circumvent API limits by IP).
+- Provide your API key only on the trading machine (follow install instructions).
 
 #### Instructions.
 
